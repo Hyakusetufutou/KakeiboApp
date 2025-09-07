@@ -16,30 +16,38 @@ struct ContentView: View {
         sortDescriptors: [NSSortDescriptor(keyPath: \Item.timestamp, ascending: true)],
         animation: .default)
     private var items: FetchedResults<Item>
+    
+    @State private var activeTab: TabModel = .home
+    @State private var isTabBarHidden = false
+    @State private var isPresentInputView = false
 
     var body: some View {
-        NavigationView {
-            List {
-                ForEach(items) { item in
-                    NavigationLink {
-                        Text("Item at \(item.timestamp!, formatter: itemFormatter)")
-                    } label: {
-                        Text(item.timestamp!, formatter: itemFormatter)
+        VStack(spacing: 0) {
+            TabView(selection: $activeTab) {
+                Text("Home")
+                .tag(TabModel.home)
+                .background {
+                    if !isTabBarHidden {
+                        HideTabBar {
+                            isTabBarHidden = true
+                        }
                     }
                 }
-                .onDelete(perform: deleteItems)
+                
+                Text("Calendar")
+                    .tag(TabModel.calendar)
+                
+                Text("Graph")
+                    .tag(TabModel.graph)
+                
+                Text("SettingView")
+                    .tag(TabModel.setting)
             }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
-                }
-                ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
-                    }
-                }
-            }
-            Text("Select an item")
+            
+            CustomTabBar(activeTab: $activeTab, isPresentInputView: $isPresentInputView)
+        }
+        .fullScreenCover(isPresented: $isPresentInputView) {
+            Text("InputView")
         }
     }
 
@@ -81,6 +89,26 @@ private let itemFormatter: DateFormatter = {
     formatter.timeStyle = .medium
     return formatter
 }()
+
+struct HideTabBar: UIViewRepresentable {
+    var result: () -> Void
+    func makeUIView(context: Context) -> UIView {
+        let view = UIView(frame: .zero)
+        view.backgroundColor = .clear
+        
+        DispatchQueue.main.async {
+            if let tabController = view.tabController {
+                tabController.tabBar.isHidden = true
+                result()
+            }
+        }
+        
+        return view
+    }
+    func updateUIView(_ uiView: UIViewType, context: Context) {
+        
+    }
+}
 
 #Preview {
     ContentView().environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
