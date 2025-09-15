@@ -1,9 +1,9 @@
 //
 //  ContentView.swift
 //  KakeiboApp
-//  
+//
 //  Created by Hyakusetufutou on 2025/09/07
-//  
+//
 //
 
 import SwiftUI
@@ -14,9 +14,10 @@ struct ContentView: View {
 
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \Item.timestamp, ascending: true)],
-        animation: .default)
+        animation: .default
+    )
     private var items: FetchedResults<Item>
-    
+
     @State private var activeTab: TabModel = .home
     @State private var isTabBarHidden = false
     @State private var isPresentInputView = false
@@ -24,26 +25,26 @@ struct ContentView: View {
     var body: some View {
         VStack(spacing: 0) {
             TabView(selection: $activeTab) {
-                Text("Home")
-                .tag(TabModel.home)
-                .background {
-                    if !isTabBarHidden {
-                        HideTabBar {
-                            isTabBarHidden = true
+                HomeView()
+                    .tag(TabModel.home)
+                    .background {
+                        if !isTabBarHidden {
+                            HideTabBar {
+                                isTabBarHidden = true
+                            }
                         }
                     }
-                }
-                
+
                 Text("Calendar")
                     .tag(TabModel.calendar)
-                
+
                 Text("Graph")
                     .tag(TabModel.graph)
-                
+
                 Text("SettingView")
                     .tag(TabModel.setting)
             }
-            
+
             CustomTabBar(activeTab: $activeTab, isPresentInputView: $isPresentInputView)
         }
         .fullScreenCover(isPresented: $isPresentInputView) {
@@ -95,21 +96,22 @@ struct HideTabBar: UIViewRepresentable {
     func makeUIView(context: Context) -> UIView {
         let view = UIView(frame: .zero)
         view.backgroundColor = .clear
-        
+
         DispatchQueue.main.async {
             if let tabController = view.tabController {
                 tabController.tabBar.isHidden = true
                 result()
             }
         }
-        
+
         return view
     }
     func updateUIView(_ uiView: UIViewType, context: Context) {
-        
+
     }
 }
 
 #Preview {
-    ContentView().environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
+    ContentView()
+        .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
 }

@@ -1,9 +1,9 @@
 //
 //  KakeiboAppTests.swift
 //  KakeiboAppTests
-//  
+//
 //  Created by Hyakusetufutou on 2025/09/07
-//  
+//
 //
 
 import XCTest

@@ -249,7 +249,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\n\n# フォーマットしたいフォルダを指定\nTARGET_DIR=\"$HOME/workspace/swift/develop/ExpenseTrackerApp\"\n\n# Xcode内蔵のswift-formatを使用してフォーマットを実行\nif xcrun --find swift-format >/dev/null; then\n  xcrun swift-format format --in-place --recursive \"$TARGET_DIR\"\n  xcrun swift-format lint --recursive \"$TARGET_DIR\"\nelse\n  echo \"warning: Xcodeにswift-formatが見つかりません。Xcode 16以降を使用してください。\"\nfi\n\n";
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\n\n# フォーマットしたいフォルダを指定\nTARGET_DIR=\"$HOME/workspace/swift/develop/KakeiboApp\"\n\n# Xcode内蔵のswift-formatを使用してフォーマットを実行\nif xcrun --find swift-format >/dev/null; then\n  xcrun swift-format format --in-place --recursive \"$TARGET_DIR\"\n  xcrun swift-format lint --recursive \"$TARGET_DIR\"\nelse\n  echo \"warning: Xcodeにswift-formatが見つかりません。Xcode 16以降を使用してください。\"\nfi\n\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -420,6 +420,7 @@
 				DEVELOPMENT_ASSET_PATHS = "\"KakeiboApp/Preview Content\"";
 				DEVELOPMENT_TEAM = 8H9PG65358;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -450,6 +451,7 @@
 				DEVELOPMENT_ASSET_PATHS = "\"KakeiboApp/Preview Content\"";
 				DEVELOPMENT_TEAM = 8H9PG65358;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;

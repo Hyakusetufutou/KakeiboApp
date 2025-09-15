@@ -1,9 +1,9 @@
 //
 //  TabModel.swift
 //  KakeiboApp
-//  
+//
 //  Created by Hyakusetufutou on 2025/09/07
-//  
+//
 //
 
 import Foundation
@@ -13,7 +13,7 @@ enum TabModel: String, CaseIterable {
     case calendar = "calendar"
     case graph = "chart.pie"
     case setting = "gearshape"
-    
+
     var title: String {
         switch self {
         case .home: "ホーム"
