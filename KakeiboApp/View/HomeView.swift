@@ -14,7 +14,7 @@ struct HomeView: View {
     @State private var startDate: Date = .now.startOfMonth
     @State private var endDate: Date = .now.endOfMonth
     @State private var showFilterView: Bool = false
-    @State private var selectedCategory: TransactionType = .expense
+    @State private var selectedType: TransactionType = .expense
 
     var body: some View {
         GeometryReader { geoRoot in
@@ -84,7 +84,7 @@ struct HomeView: View {
                 customSegmentedControl()
                     .padding(.bottom, 10)
 
-                ForEach(transactions.filter({ $0.type.rawValue == selectedCategory.rawValue })) {
+                ForEach(transactions.filter({ $0.type.rawValue == selectedType.rawValue })) {
                     transaction in
                     NavigationLink(value: transaction) {
                         TransactionCardView(transaction: transaction)
@@ -132,7 +132,7 @@ struct HomeView: View {
                     .hSpacing()
                     .padding(.vertical, 10)
                     .background {
-                        if type == selectedCategory {
+                        if type == selectedType {
                             Capsule()
                                 .fill(.background)
                         }
@@ -140,7 +140,7 @@ struct HomeView: View {
                     .contentShape(.capsule)
                     .onTapGesture {
                         withAnimation(.snappy) {
-                            selectedCategory = type
+                            selectedType = type
                         }
                     }
             }
