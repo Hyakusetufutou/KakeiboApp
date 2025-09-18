@@ -15,19 +15,19 @@ struct DateFilterView: View {
     var onClose: () -> Void
     var body: some View {
         VStack(spacing: 15) {
-            DatePicker("Start Date", selection: $start, displayedComponents: [.date])
+            DatePicker("開始日", selection: $start, displayedComponents: [.date])
 
-            DatePicker("End Date", selection: $end, displayedComponents: [.date])
+            DatePicker("終了日", selection: $end, displayedComponents: [.date])
 
             HStack(spacing: 15) {
-                Button("Cancel") {
+                Button("中止") {
                     onClose()
                 }
                 .buttonStyle(.borderedProminent)
                 .buttonBorderShape(.roundedRectangle(radius: 5))
                 .tint(.red)
 
-                Button("Filter") {
+                Button("確定") {
                     onSubmit(start, end)
                 }
                 .buttonStyle(.borderedProminent)

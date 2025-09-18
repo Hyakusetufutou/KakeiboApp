@@ -63,9 +63,10 @@ struct HomeView: View {
     @ViewBuilder
     func sectionView() -> some View {
         Button {
+            showFilterView = true
         } label: {
             Text(
-                "\(format(date: startDate, format: "dd - MMM yy")) to \(format(date: endDate, format: "dd - MMM yy"))"
+                "\(format(date: startDate, format: "yyyy/MM/dd")) ~ \(format(date: endDate, format: "yyyy/MM/dd"))"
             )
             .font(.caption2)
             .foregroundStyle(.gray)
@@ -98,7 +99,7 @@ struct HomeView: View {
     func headerView(_ size: CGSize) -> some View {
         HStack(spacing: 10) {
             VStack(alignment: .leading, spacing: 5) {
-                Text("Welcome!")
+                Text("ホーム")
                     .font(.title.bold())
 
                 if !userName.isEmpty {
