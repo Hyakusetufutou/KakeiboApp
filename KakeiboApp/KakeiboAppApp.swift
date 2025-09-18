@@ -1,9 +1,9 @@
 //
 //  KakeiboAppApp.swift
 //  KakeiboApp
-//  
+//
 //  Created by Hyakusetufutou on 2025/09/07
-//  
+//
 //
 
 import SwiftUI

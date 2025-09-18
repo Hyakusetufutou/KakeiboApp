@@ -1,9 +1,9 @@
 //
 //  UIView+Extensions.swift
 //  KakeiboApp
-//  
+//
 //  Created by Hyakusetufutou on 2025/09/07
-//  
+//
 //
 
 import SwiftUI
@@ -16,10 +16,10 @@ extension UIView {
                 $0.next
             }
         )
-            .first(where: { $0 is UITabBarController }) as? UITabBarController {
+        .first(where: { $0 is UITabBarController }) as? UITabBarController {
             return controller
         }
-        
+
         return nil
     }
 }

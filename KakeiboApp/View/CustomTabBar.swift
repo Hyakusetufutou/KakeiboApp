@@ -1,9 +1,9 @@
 //
 //  CustomTabBar.swift
 //  KakeiboApp
-//  
+//
 //  Created by Hyakusetufutou on 2025/09/07
-//  
+//
 //
 
 import SwiftUI
@@ -23,7 +23,7 @@ struct CustomTabBar: View {
                             Image(systemName: tab.rawValue)
                                 .font(.title3.bold())
                                 .frame(width: 30, height: 30)
-                            
+
                             if activeTab == tab {
                                 Text(tab.title)
                                     .font(.caption)
@@ -32,8 +32,7 @@ struct CustomTabBar: View {
                             }
                         }
                         .foregroundStyle(
-                            activeTab == tab ?
-                                .white : .gray
+                            activeTab == tab ? .white : .gray
                         )
                         .padding(.vertical, 2)
                         .padding(.leading, 10)
@@ -62,7 +61,7 @@ struct CustomTabBar: View {
                 in: .capsule
             )
             .zIndex(10)
-            
+
             Button {
                 if activeTab != .graph {
                     isPresentInputView = true
@@ -70,7 +69,7 @@ struct CustomTabBar: View {
             } label: {
                 Image(
                     systemName: activeTab == .graph
-                    ? "folder.fill.badge.plus" : "plus"
+                        ? "folder.fill.badge.plus" : "plus"
                 )
                 .font(.title3)
                 .frame(width: 42, height: 42)
