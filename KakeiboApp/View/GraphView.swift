@@ -10,12 +10,15 @@ import SwiftUI
 
 struct GraphView: View {
     @Namespace private var animation
+    @State private var startDate: Date = .now.startOfMonth
+    @State private var endDate: Date = .now.endOfMonth
     @State private var selectedType: TransactionType = .expense
     @State private var categorySummaries: [CategorySummary] = []
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack {
+
                 navigationTitle()
 
                 HStack {
@@ -34,6 +37,24 @@ struct GraphView: View {
                     Text("取引なし")
                         .frame(height: 200)
                         .padding()
+                }
+
+                ScrollView {
+                    LazyVStack {
+                        FilterTransactionsView(startDate: startDate, endDate: endDate) {
+                            transactions in
+                            ForEach(
+                                transactions.filter({ transaction in
+                                    transaction.type.rawValue == selectedType.rawValue
+                                })
+                            ) { transaction in
+                                NavigationLink(value: transaction) {
+                                    TransactionCardView(transaction: transaction)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
                 }
             }
             .background(.gray.opacity(0.15))
