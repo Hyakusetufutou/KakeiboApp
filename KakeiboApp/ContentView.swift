@@ -38,7 +38,7 @@ struct ContentView: View {
                 Text("Calendar")
                     .tag(TabModel.calendar)
 
-                Text("Graph")
+                GraphView()
                     .tag(TabModel.graph)
 
                 Text("SettingView")
