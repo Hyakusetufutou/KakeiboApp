@@ -41,7 +41,7 @@ struct ContentView: View {
                 GraphView()
                     .tag(TabModel.graph)
 
-                Text("SettingView")
+                SettingView()
                     .tag(TabModel.setting)
             }
 
