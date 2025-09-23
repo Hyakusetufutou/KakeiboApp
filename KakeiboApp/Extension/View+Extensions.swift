@@ -43,6 +43,12 @@ extension View {
         return formatter.string(from: .init(value: value)) ?? ""
     }
 
+    var currencySymbol: String {
+        let locale = Locale.current
+
+        return locale.currencySymbol ?? ""
+    }
+
     nonisolated func total(_ transactions: [TransactionModel], type: TransactionType) -> Double {
         return transactions.filter({ $0.type == type })
             .reduce(Double.zero) { partialResult, transaction in
