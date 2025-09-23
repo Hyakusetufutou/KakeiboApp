@@ -48,7 +48,7 @@ struct ContentView: View {
             CustomTabBar(activeTab: $activeTab, isPresentInputView: $isPresentInputView)
         }
         .fullScreenCover(isPresented: $isPresentInputView) {
-            Text("InputView")
+            TransactionInputView(isPresented: $isPresentInputView)
         }
     }
 
