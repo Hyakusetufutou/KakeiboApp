@@ -13,6 +13,7 @@ struct TransactionInputView: View {
     @State private var memo = ""
     @State private var amount = ""
     @State private var date = Date()
+    @Binding var isPresented: Bool
 
     @Namespace private var animation
     @FocusState private var isNumberPadActive
@@ -57,6 +58,7 @@ struct TransactionInputView: View {
                             selection: $date,
                             displayedComponents: [.date]
                         )
+                        .environment(\.locale, Locale(identifier: "ja_JP"))
                         .datePickerStyle(.graphical)
                         .background(.clear)
                     }
@@ -75,7 +77,7 @@ struct TransactionInputView: View {
 
                 ToolbarItem(placement: .topBarLeading) {
                     Button {
-                        //@@@ 画面を閉じる処理を実装必要
+                        isPresented = false
                     } label: {
                         Text("キャンセル")
                             .font(.system(size: 16))
@@ -191,8 +193,4 @@ struct TransactionInputView: View {
             }
         }
     }
-}
-
-#Preview {
-    TransactionInputView()
 }
