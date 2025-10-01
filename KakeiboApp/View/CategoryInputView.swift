@@ -19,10 +19,6 @@ struct CategoryInputView: View {
                 .onDelete { indexSet in
                     //                    categories.remove(atOffsets: indexSet)
                 }
-
-                Button("+新しいカテゴリを追加") {
-
-                }
             }
         }
     }
