@@ -11,6 +11,7 @@ import SwiftUI
 struct CustomTabBar: View {
     @Binding var activeTab: TabModel
     @Binding var isPresentInputView: Bool
+    @Binding var isPresentCategoryInputView: Bool
     @Namespace private var animation
     var body: some View {
         HStack {
@@ -65,6 +66,8 @@ struct CustomTabBar: View {
             Button {
                 if activeTab != .graph {
                     isPresentInputView = true
+                } else {
+                    isPresentCategoryInputView = true
                 }
             } label: {
                 Image(

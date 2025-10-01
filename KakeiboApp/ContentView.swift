@@ -21,6 +21,7 @@ struct ContentView: View {
     @State private var activeTab: TabModel = .home
     @State private var isTabBarHidden = false
     @State private var isPresentInputView = false
+    @State private var isPresentCategoryInputView = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -38,14 +39,20 @@ struct ContentView: View {
                 Text("Calendar")
                     .tag(TabModel.calendar)
 
-                GraphView()
+                GraphView(isPresentCategoryInputView: $isPresentCategoryInputView)
                     .tag(TabModel.graph)
 
                 SettingView()
                     .tag(TabModel.setting)
             }
 
-            CustomTabBar(activeTab: $activeTab, isPresentInputView: $isPresentInputView)
+            if !isPresentCategoryInputView {
+                CustomTabBar(
+                    activeTab: $activeTab,
+                    isPresentInputView: $isPresentInputView,
+                    isPresentCategoryInputView: $isPresentCategoryInputView
+                )
+            }
         }
         .fullScreenCover(isPresented: $isPresentInputView) {
             TransactionInputView(isPresented: $isPresentInputView)

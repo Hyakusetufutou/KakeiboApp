@@ -8,10 +8,16 @@
 
 import Foundation
 
+extension CategoryModel {
+    static let mock1 = CategoryModel(name: "食費", type: .expense)
+    static let mock2 = CategoryModel(name: "日用品", type: .expense)
+    static let mock3 = CategoryModel(name: "給料", type: .income)
+}
+
 extension CategorySummary {
     static let mock1 = CategorySummary(
         categoryID: UUID(),
-        categoryName: "食費",
+        categoryName: CategoryModel.mock1.name,
         type: .expense,
         totalAmount: 1000,
         color: .blue,
@@ -20,7 +26,7 @@ extension CategorySummary {
 
     static let mock2 = CategorySummary(
         categoryID: UUID(),
-        categoryName: "給料",
+        categoryName: CategoryModel.mock3.name,
         type: .income,
         totalAmount: 200000,
         color: .yellow,
@@ -29,7 +35,7 @@ extension CategorySummary {
 
     static let mock3 = CategorySummary(
         categoryID: UUID(),
-        categoryName: "日用品",
+        categoryName: CategoryModel.mock2.name,
         type: .expense,
         totalAmount: 500,
         color: .orange,

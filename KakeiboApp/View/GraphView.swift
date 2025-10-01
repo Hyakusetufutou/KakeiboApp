@@ -14,6 +14,7 @@ struct GraphView: View {
     @State private var endDate: Date = .now.endOfMonth
     @State private var selectedType: TransactionType = .expense
     @State private var categorySummaries: [CategorySummary] = []
+    @Binding var isPresentCategoryInputView: Bool
 
     var body: some View {
         NavigationStack {
@@ -58,7 +59,31 @@ struct GraphView: View {
                 }
             }
             .background(.gray.opacity(0.15))
+            .disabled(isPresentCategoryInputView)
         }
+        .overlay {
+            ZStack {
+                if isPresentCategoryInputView {
+                    Color.black.opacity(0.5)
+                        .ignoresSafeArea()
+                }
+
+                VStack {
+                    Spacer()
+
+                    if isPresentCategoryInputView {
+                        AddCategoryView(
+                            onClose: { isPresentCategoryInputView = false },
+                            onCreate: {
+                                isPresentCategoryInputView = false
+                            }
+                        )
+                        .transition(.move(edge: .bottom))
+                    }
+                }
+            }
+        }
+        .animation(.snappy, value: isPresentCategoryInputView)
         .onAppear {
             updateSummaries(for: selectedType)
         }
@@ -111,5 +136,6 @@ struct GraphView: View {
     }
 }
 #Preview {
-    GraphView()
+    @State var hoge = true
+    GraphView(isPresentCategoryInputView: $hoge)
 }

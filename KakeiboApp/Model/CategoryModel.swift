@@ -8,6 +8,12 @@
 
 import SwiftUI
 
+struct CategoryModel: Identifiable, Hashable {
+    let id = UUID()
+    let name: String
+    let type: TransactionType
+}
+
 struct CategorySummary: Identifiable {
     var id: UUID { categoryID }
     let categoryID: UUID
