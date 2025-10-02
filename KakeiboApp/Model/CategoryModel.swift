@@ -11,7 +11,9 @@ import SwiftUI
 struct CategoryModel: Identifiable, Hashable {
     let id = UUID()
     let name: String
+    let color: Color
     let type: TransactionType
+    let isDefault: Bool
 }
 
 struct CategorySummary: Identifiable {

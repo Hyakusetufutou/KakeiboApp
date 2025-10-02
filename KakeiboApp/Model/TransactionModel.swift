@@ -14,7 +14,10 @@ struct TransactionModel: Identifiable, Hashable {
     let memo: String
     let amount: Double
     let date: Date
+    let createAt: Date
+    let updatedAt: Date
     let type: TransactionType
+    let categoryId: UUID
 }
 
 enum TransactionType: String, CaseIterable {

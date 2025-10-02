@@ -9,9 +9,9 @@
 import Foundation
 
 extension CategoryModel {
-    static let mock1 = CategoryModel(name: "食費", type: .expense)
-    static let mock2 = CategoryModel(name: "日用品", type: .expense)
-    static let mock3 = CategoryModel(name: "給料", type: .income)
+    static let mock1 = CategoryModel(name: "食費", color: .blue, type: .expense, isDefault: true)
+    static let mock2 = CategoryModel(name: "日用品", color: .purple, type: .expense, isDefault: true)
+    static let mock3 = CategoryModel(name: "給料", color: .yellow, type: .income, isDefault: true)
 }
 
 extension CategorySummary {

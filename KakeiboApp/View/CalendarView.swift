@@ -94,7 +94,6 @@ struct CalendarView: View {
                 .padding(.horizontal, 4)
                 .padding(.bottom, 20)
 
-
                 ScrollView {
                     LazyVStack {
                         FilterTransactionsView(startDate: startDate, endDate: endDate) {
