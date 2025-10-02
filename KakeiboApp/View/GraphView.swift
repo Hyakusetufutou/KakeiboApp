@@ -14,12 +14,14 @@ struct GraphView: View {
     @State private var endDate: Date = .now.endOfMonth
     @State private var selectedType: TransactionType = .expense
     @State private var categorySummaries: [CategorySummary] = []
+    @State private var isPresentCategoryList: Bool = false
+    @Binding var isPresentCategoryInputView: Bool
 
     var body: some View {
         NavigationStack {
             VStack {
 
-                navigationTitle()
+                //                navigationTitle()
 
                 HStack {
                     Spacer()
@@ -58,12 +60,64 @@ struct GraphView: View {
                 }
             }
             .background(.gray.opacity(0.15))
+            .disabled(isPresentCategoryInputView)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    HStack {
+                        Text("グラフ")
+                            .font(.title.bold())
+
+                        Spacer()
+                    }
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    HStack {
+                        Button {
+                            isPresentCategoryList = true
+                        } label: {
+                            Image(systemName: "list.bullet")
+                        }
+
+                        Button {
+
+                        } label: {
+                            Image(systemName: "calendar")
+                        }
+                    }
+                }
+            }
         }
+        .overlay {
+            ZStack {
+                if isPresentCategoryInputView {
+                    Color.black.opacity(0.5)
+                        .ignoresSafeArea()
+                }
+
+                VStack {
+                    Spacer()
+
+                    if isPresentCategoryInputView {
+                        AddCategoryView(
+                            onClose: { isPresentCategoryInputView = false },
+                            onCreate: {
+                                isPresentCategoryInputView = false
+                            }
+                        )
+                        .transition(.move(edge: .bottom))
+                    }
+                }
+            }
+        }
+        .animation(.snappy, value: isPresentCategoryInputView)
         .onAppear {
             updateSummaries(for: selectedType)
         }
         .onChange(of: selectedType) { newValue in
             updateSummaries(for: newValue)
+        }
+        .sheet(isPresented: $isPresentCategoryList) {
+            CategoryInputView()
         }
     }
 
@@ -110,6 +164,8 @@ struct GraphView: View {
         categorySummaries = [.mock1, .mock2, .mock3].filter { $0.type == type }
     }
 }
+
 #Preview {
-    GraphView()
+    @State var hoge = false
+    GraphView(isPresentCategoryInputView: $hoge)
 }

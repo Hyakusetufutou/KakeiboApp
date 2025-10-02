@@ -16,8 +16,10 @@ struct DateFilterView: View {
     var body: some View {
         VStack(spacing: 15) {
             DatePicker("開始日", selection: $start, displayedComponents: [.date])
+                .environment(\.locale, Locale(identifier: "ja_JP"))
 
             DatePicker("終了日", selection: $end, displayedComponents: [.date])
+                .environment(\.locale, Locale(identifier: "ja_JP"))
 
             HStack(spacing: 15) {
                 Button("中止") {
@@ -40,4 +42,8 @@ struct DateFilterView: View {
         .background(.bar, in: .rect(cornerRadius: 10))
         .padding(.horizontal, 30)
     }
+}
+
+#Preview {
+    DateFilterView(start: Date(), end: Date(), onSubmit: { _, _ in }, onClose: {})
 }

@@ -129,11 +129,11 @@ struct TransactionInputView: View {
         VStack(alignment: .leading, spacing: 6) {
             sectionHeader("カテゴリ")
             Menu {
-                //                ForEach(inputViewModel.availableCategories, id: \.id) { item in
-                //                    Button(item.name) {
-                //                        inputViewModel.selectedCategoryID = item.id
-                //                    }
-                //                }
+                ForEach([CategoryModel.mock1, CategoryModel.mock2, CategoryModel.mock3], id: \.id) {
+                    item in
+                    Button(item.name) {
+                    }
+                }
             } label: {
                 HStack {
                     Text("選択してください")
