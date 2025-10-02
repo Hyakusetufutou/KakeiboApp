@@ -25,78 +25,94 @@ struct CalendarView: View {
     }
 
     var body: some View {
-        VStack {
-            HStack {
-                ForEach(["日", "月", "火", "水", "木", "金", "土"], id: \.self) { day in
-                    HStack {
-                        Spacer()
-                        
-                        Text(day)
-                            .frame(maxWidth: .infinity)
-                            .font(.subheadline)
-                            .foregroundStyle(day == "日" ? .red : (day == "土") ? .blue : .primary)
-                        
-                        Spacer()
+        NavigationStack {
+            VStack {
+                HStack {
+                    ForEach(["日", "月", "火", "水", "木", "金", "土"], id: \.self) { day in
+                        HStack {
+                            Spacer()
+
+                            Text(day)
+                                .frame(maxWidth: .infinity)
+                                .font(.subheadline)
+                                .foregroundStyle(
+                                    day == "日" ? .red : (day == "土") ? .blue : .primary
+                                )
+
+                            Spacer()
+                        }
                     }
                 }
-            }
+                .padding(.top, 20)
 
-            let firstWeekday = Calendar.current.component(
-                .weekday,
-                from: daysInMonth.first ?? Date()
-            )
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 8) {
-                ForEach(0..<(firstWeekday - 1), id: \.self) { _ in
-                    Text("")
+                let firstWeekday = Calendar.current.component(
+                    .weekday,
+                    from: daysInMonth.first ?? Date()
+                )
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 8) {
+                    ForEach(0..<(firstWeekday - 1), id: \.self) { _ in
+                        Text("")
+                    }
+
+                    ForEach(daysInMonth, id: \.self) { date in
+                        Button {
+
+                        } label: {
+                            VStack {
+                                HStack {
+                                    Spacer()
+
+                                    Text("\(Calendar.current.component(.day, from: date))")
+                                        .frame(maxWidth: .infinity, minHeight: 40)
+
+                                        .background(
+                                            isToday(date) ? Color.blue.opacity(0.2) : Color.clear
+                                        )
+                                        .clipShape(Circle())
+                                        .foregroundStyle(isToday(date) ? .blue : .primary)
+
+                                    Spacer()
+                                }
+
+                                Spacer()
+
+                                HStack {
+                                    Spacer()
+                                    Text("10000")
+                                        .font(.caption2)
+
+                                    Spacer()
+                                }
+
+                            }
+                        }
+
+                    }
                 }
+                .padding(.horizontal, 4)
 
-                ForEach(daysInMonth, id: \.self) { date in
+                Spacer()
+
+            }
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Text("カレンダー")
+                        .font(.title.bold())
+                }
+                ToolbarItem(placement: .topBarTrailing) {
                     Button {
 
                     } label: {
-                        VStack {
-                            HStack {
-                                Spacer()
-                                
-                                Text("\(Calendar.current.component(.day, from: date))")
-                                    .frame(maxWidth: .infinity, minHeight: 40)
-                                    .background(isToday(date) ? Color.blue.opacity(0.2) : Color.clear)
-                                    .clipShape(Circle())
-                                    .foregroundStyle(isToday(date) ? .blue : .primary)
-                                
-                                Spacer()
-                            }
-                            
-                            Spacer()
-                            
-                            HStack {
-                                Spacer()
-                                Text("10000")
-                                    .font(.caption2)
-                                
-                                Spacer()
-                            }
-                            
-                        }
+                        Image(systemName: "calendar")
                     }
 
                 }
             }
-            .padding(.horizontal, 4)
-
-            Spacer()
-
         }
     }
 
     private func isToday(_ date: Date) -> Bool {
         Calendar.current.isDateInToday(date)
-    }
-
-    private var dateFormatter: DateFormatter {
-        let df = DateFormatter()
-        df.dateFormat = "yyyy/MM/dd"
-        return df
     }
 }
 
