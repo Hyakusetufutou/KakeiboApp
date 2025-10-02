@@ -10,6 +10,8 @@ import SwiftUI
 
 struct CalendarView: View {
     @State private var currrentDate: Date = Date()
+    @State private var startDate: Date = .now.startOfMonth
+    @State private var endDate: Date = .now.endOfMonth
     private var daysInMonth: [Date] {
         guard let range = Calendar.current.range(of: .day, in: .month, for: currrentDate),
             let monthStart = Calendar.current.date(
@@ -90,10 +92,26 @@ struct CalendarView: View {
                     }
                 }
                 .padding(.horizontal, 4)
+                .padding(.bottom, 20)
 
-                Spacer()
 
+                ScrollView {
+                    LazyVStack {
+                        FilterTransactionsView(startDate: startDate, endDate: endDate) {
+                            transactions in
+                            ForEach(
+                                transactions
+                            ) { transaction in
+                                NavigationLink(value: transaction) {
+                                    TransactionCardView(transaction: transaction)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
+                }
             }
+            .background(.gray.opacity(0.15))
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Text("カレンダー")
@@ -108,6 +126,7 @@ struct CalendarView: View {
 
                 }
             }
+
         }
     }
 
