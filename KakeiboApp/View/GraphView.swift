@@ -20,9 +20,6 @@ struct GraphView: View {
     var body: some View {
         NavigationStack {
             VStack {
-
-                //                navigationTitle()
-
                 HStack {
                     Spacer()
 
@@ -62,13 +59,9 @@ struct GraphView: View {
             .background(.gray.opacity(0.15))
             .disabled(isPresentCategoryInputView)
             .toolbar {
-                ToolbarItem(placement: .principal) {
-                    HStack {
-                        Text("グラフ")
-                            .font(.title.bold())
-
-                        Spacer()
-                    }
+                ToolbarItem(placement: .topBarLeading) {
+                    Text("グラフ")
+                        .font(.title.bold())
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     HStack {
