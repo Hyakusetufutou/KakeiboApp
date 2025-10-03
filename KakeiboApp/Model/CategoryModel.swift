@@ -9,11 +9,19 @@
 import SwiftUI
 
 struct CategoryModel: Identifiable, Hashable {
-    let id = UUID()
+    let id: UUID
     let name: String
     let color: Color
     let type: TransactionType
     let isDefault: Bool
+
+    init(id: UUID = UUID(), name: String, color: Color, type: TransactionType, isDefault: Bool) {
+        self.id = id
+        self.name = name
+        self.color = color
+        self.type = type
+        self.isDefault = isDefault
+    }
 }
 
 struct CategorySummary: Identifiable {
@@ -24,4 +32,16 @@ struct CategorySummary: Identifiable {
     let totalAmount: Double
     let color: Color
     let transactions: [TransactionModel]
+}
+
+extension CategoryEntity {
+    func toModel() -> CategoryModel {
+        return CategoryModel(
+            id: self.id ?? UUID(),
+            name: self.name ?? "",
+            color: AppTheme.stringToColor(self.color ?? "white"),
+            type: TransactionType(rawValue: self.type ?? "支出") ?? .expense,
+            isDefault: false
+        )
+    }
 }
