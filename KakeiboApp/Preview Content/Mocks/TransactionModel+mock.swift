@@ -14,20 +14,29 @@ extension TransactionModel {
         memo: "お肉代",
         amount: Double(1000),
         date: Date(),
-        type: .expense
+        createAt: Date(),
+        updatedAt: Date(),
+        type: .expense,
+        categoryId: CategoryModel.mock1.id
     )
     static let mock2 = TransactionModel(
         title: "給料",
         memo: "給料",
         amount: Double(200000),
         date: Date(),
-        type: .income
+        createAt: Date(),
+        updatedAt: Date(),
+        type: .income,
+        categoryId: CategoryModel.mock3.id
     )
     static let mock3 = TransactionModel(
         title: "ティッシュ",
         memo: "ティッシュ",
         amount: Double(500),
         date: Date(),
-        type: .expense
+        createAt: Date(),
+        updatedAt: Date(),
+        type: .expense,
+        categoryId: CategoryModel.mock2.id
     )
 }
