@@ -73,7 +73,7 @@ class CategoryRepository {
         }
     }
 
-    private func fetchEntity(by id: UUID) throws -> CategoryEntity {
+    func fetchEntity(by id: UUID) throws -> CategoryEntity {
         let fetchRequest: NSFetchRequest<CategoryEntity> = CategoryEntity.fetchRequest()
         fetchRequest.predicate = NSPredicate(format: "id == %@", id as NSUUID)
         fetchRequest.fetchLimit = 1

@@ -9,7 +9,7 @@
 import Foundation
 
 struct TransactionModel: Identifiable, Hashable {
-    let id = UUID()
+    let id: UUID
     let title: String
     let memo: String
     let amount: Double
@@ -18,9 +18,47 @@ struct TransactionModel: Identifiable, Hashable {
     let updatedAt: Date
     let type: TransactionType
     let categoryId: UUID
+
+    init(
+        id: UUID = UUID(),
+        title: String,
+        memo: String,
+        amount: Double,
+        date: Date,
+        createAt: Date,
+        updatedAt: Date,
+        type: TransactionType,
+        categoryId: UUID
+    ) {
+        self.id = id
+        self.title = title
+        self.memo = memo
+        self.amount = amount
+        self.date = date
+        self.createAt = createAt
+        self.updatedAt = updatedAt
+        self.type = type
+        self.categoryId = categoryId
+    }
 }
 
 enum TransactionType: String, CaseIterable {
     case income = "収入"
     case expense = "支出"
+}
+
+extension TransactionEntity {
+    func toModel() -> TransactionModel {
+        TransactionModel(
+            id: self.id ?? UUID(),
+            title: self.title ?? "",
+            memo: self.memo ?? "",
+            amount: self.amount,
+            date: self.date ?? Date(),
+            createAt: self.createdAt ?? Date(),
+            updatedAt: self.upadtedAt ?? Date(),
+            type: TransactionType(rawValue: self.type ?? "expense") ?? .expense,
+            categoryId: self.category?.id ?? UUID()
+        )
+    }
 }
