@@ -88,4 +88,6 @@ struct CustomTabBar: View {
 
 #Preview {
     ContentView()
+        .environmentObject(ViewModelFactory())
+        .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
 }

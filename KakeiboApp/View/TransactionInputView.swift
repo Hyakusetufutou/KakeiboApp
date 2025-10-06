@@ -9,10 +9,7 @@
 import SwiftUI
 
 struct TransactionInputView: View {
-    @State private var title = ""
-    @State private var memo = ""
-    @State private var amount = ""
-    @State private var date = Date()
+    @ObservedObject var viewModel: TransactionViewModel
     @Binding var isPresented: Bool
 
     @Namespace private var animation
@@ -26,12 +23,12 @@ struct TransactionInputView: View {
                     customTextField(
                         "タイトル",
                         hint: "タイトル",
-                        value: $title
+                        value: $viewModel.title
                     )
                     customTextField(
                         "メモ",
                         hint: "メモ",
-                        value: $memo
+                        value: $viewModel.memo
                     )
 
                     HStack(alignment: .top, spacing: 15) {
@@ -43,7 +40,7 @@ struct TransactionInputView: View {
                     customTextField(
                         "金額",
                         hint: "金額",
-                        value: $amount,
+                        value: $viewModel.amount,
                         keyboardType: .numberPad
                     )
 
@@ -55,7 +52,7 @@ struct TransactionInputView: View {
 
                         DatePicker(
                             "日付",
-                            selection: $date,
+                            selection: $viewModel.date,
                             displayedComponents: [.date]
                         )
                         .environment(\.locale, Locale(identifier: "ja_JP"))
@@ -87,7 +84,7 @@ struct TransactionInputView: View {
 
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
-                        //@@@ 保存処理実装時に対応
+                        viewModel.add()
                     } label: {
                         Text("保存")
                             .font(.system(size: 16))

@@ -11,6 +11,7 @@ import SwiftUI
 @main
 struct KakeiboAppApp: App {
     @StateObject private var themeManager = ThemeManager()
+    @StateObject private var appViewModel = ViewModelFactory()
     let persistenceController = PersistenceController.shared
 
     var body: some Scene {
@@ -18,6 +19,7 @@ struct KakeiboAppApp: App {
             ContentView()
                 .environment(\.managedObjectContext, persistenceController.container.viewContext)
                 .environmentObject(themeManager)
+                .environmentObject(appViewModel)
         }
     }
 }

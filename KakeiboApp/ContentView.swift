@@ -17,6 +17,8 @@ struct ContentView: View {
     @State private var isPresentInputView = false
     @State private var isPresentCategoryInputView = false
 
+    @EnvironmentObject var appViewModel: ViewModelFactory
+
     var body: some View {
         VStack(spacing: 0) {
             TabView(selection: $activeTab) {
@@ -52,7 +54,10 @@ struct ContentView: View {
             }
         }
         .fullScreenCover(isPresented: $isPresentInputView) {
-            TransactionInputView(isPresented: $isPresentInputView)
+            TransactionInputView(
+                viewModel: appViewModel.transactionViewModel,
+                isPresented: $isPresentInputView
+            )
         }
     }
 }
@@ -79,5 +84,6 @@ struct HideTabBar: UIViewRepresentable {
 
 #Preview {
     ContentView()
+        .environmentObject(ViewModelFactory())
         .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
 }

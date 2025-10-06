@@ -59,4 +59,6 @@ struct TransactionCardView: View {
 
 #Preview {
     ContentView()
+        .environmentObject(ViewModelFactory())
+        .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
 }
