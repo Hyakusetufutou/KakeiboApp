@@ -9,7 +9,7 @@
 import SwiftUI
 
 struct AddCategoryView: View {
-    @State var text = ""
+    @Binding var name: String
     var onClose: () -> Void
     var onCreate: () -> Void
     var body: some View {
@@ -17,7 +17,7 @@ struct AddCategoryView: View {
             Text("カテゴリ名")
                 .font(.caption)
 
-            TextField("食事", text: $text)
+            TextField("食事", text: $name)
                 .padding(.horizontal, 10)
 
                 .padding(.vertical, 12)
@@ -37,10 +37,10 @@ struct AddCategoryView: View {
                         .background {
                             RoundedRectangle(cornerRadius: 10)
                                 .fill(.purple)
-                                .opacity(text.isEmpty ? 0.4 : 1)
+                                .opacity(name.isEmpty ? 0.4 : 1)
                         }
                 }
-                .disabled(text.isEmpty)
+                .disabled(name.isEmpty)
 
                 Button {
                     onClose()
@@ -63,7 +63,9 @@ struct AddCategoryView: View {
 }
 
 #Preview {
+    @State var name = ""
     AddCategoryView(
+        name: $name,
         onClose: {},
         onCreate: {}
     )

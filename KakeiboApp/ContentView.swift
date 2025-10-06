@@ -30,11 +30,14 @@ struct ContentView: View {
                         }
                     }
 
-                Text("Calendar")
+                CalendarView()
                     .tag(TabModel.calendar)
 
-                GraphView(isPresentCategoryInputView: $isPresentCategoryInputView)
-                    .tag(TabModel.graph)
+                GraphView(
+                    categoryViewModel: CategoryViewModel(repository: CategoryRepository()),
+                    isPresentCategoryInputView: $isPresentCategoryInputView
+                )
+                .tag(TabModel.graph)
 
                 SettingView()
                     .tag(TabModel.setting)

@@ -17,6 +17,13 @@ struct GraphView: View {
     @State private var isPresentCategoryList: Bool = false
     @Binding var isPresentCategoryInputView: Bool
 
+    @ObservedObject private var categoryViewModel: CategoryViewModel
+
+    init(categoryViewModel: CategoryViewModel, isPresentCategoryInputView: Binding<Bool>) {
+        self.categoryViewModel = categoryViewModel
+        self._isPresentCategoryInputView = isPresentCategoryInputView
+    }
+
     var body: some View {
         NavigationStack {
             VStack {
@@ -92,6 +99,7 @@ struct GraphView: View {
 
                     if isPresentCategoryInputView {
                         AddCategoryView(
+                            name: $categoryViewModel.name,
                             onClose: { isPresentCategoryInputView = false },
                             onCreate: {
                                 isPresentCategoryInputView = false
@@ -160,5 +168,8 @@ struct GraphView: View {
 
 #Preview {
     @State var hoge = false
-    GraphView(isPresentCategoryInputView: $hoge)
+    GraphView(
+        categoryViewModel: CategoryViewModel(repository: CategoryRepository()),
+        isPresentCategoryInputView: $hoge
+    )
 }
