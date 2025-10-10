@@ -22,7 +22,7 @@ struct ContentView: View {
     var body: some View {
         VStack(spacing: 0) {
             TabView(selection: $activeTab) {
-                HomeView()
+                HomeView(homeViewModel: appViewModel.homeViewModel)
                     .tag(TabModel.home)
                     .background {
                         if !isTabBarHidden {
@@ -36,7 +36,7 @@ struct ContentView: View {
                     .tag(TabModel.calendar)
 
                 GraphView(
-                    categoryViewModel: CategoryViewModel(repository: CategoryRepository()),
+                    categoryViewModel: appViewModel.categoryViewModel,
                     isPresentCategoryInputView: $isPresentCategoryInputView
                 )
                 .tag(TabModel.graph)
@@ -55,7 +55,7 @@ struct ContentView: View {
         }
         .fullScreenCover(isPresented: $isPresentInputView) {
             TransactionInputView(
-                viewModel: appViewModel.transactionViewModel,
+                viewModel: appViewModel.inputViewModel,
                 isPresented: $isPresentInputView
             )
         }

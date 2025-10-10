@@ -11,10 +11,11 @@ import SwiftUI
 struct HomeView: View {
     @AppStorage("userName") private var userName: String = ""
 
-    @State private var startDate: Date = .now.startOfMonth
-    @State private var endDate: Date = .now.endOfMonth
-    @State private var showFilterView: Bool = false
-    @State private var selectedType: TransactionType = .expense
+    @ObservedObject var homeViewModel: HomeViewModel
+
+    init(homeViewModel: HomeViewModel) {
+        self.homeViewModel = homeViewModel
+    }
 
     var body: some View {
         GeometryReader { geoRoot in
@@ -36,44 +37,45 @@ struct HomeView: View {
                 }
                 .coordinateSpace(name: "SCROLL" as String)
                 .background(.gray.opacity(0.15))
-                .blur(radius: showFilterView ? 8 : 0)
-                .disabled(showFilterView)
+                .blur(radius: homeViewModel.showFilterView ? 8 : 0)
+                .disabled(homeViewModel.showFilterView)
             }
             .overlay {
-                if showFilterView {
+                if homeViewModel.showFilterView {
                     DateFilterView(
-                        start: startDate,
-                        end: endDate,
+                        start: homeViewModel.startDate,
+                        end: homeViewModel.endDate,
                         onSubmit: { start, end in
-                            startDate = start
-                            endDate = end
-                            showFilterView = false
+                            homeViewModel.startDate = start
+                            homeViewModel.endDate = end
+                            homeViewModel.showFilterView = false
                         },
                         onClose: {
-                            showFilterView = false
+                            homeViewModel.showFilterView = false
                         }
                     )
                     .transition(.move(edge: .leading))
                 }
             }
-            .animation(.snappy, value: showFilterView)
+            .animation(.snappy, value: homeViewModel.showFilterView)
         }
     }
 
     @ViewBuilder
     func sectionView() -> some View {
         Button {
-            showFilterView = true
+            homeViewModel.showFilterView = true
         } label: {
             Text(
-                "\(format(date: startDate, format: "yyyy/MM/dd")) ~ \(format(date: endDate, format: "yyyy/MM/dd"))"
+                "\(format(date: homeViewModel.startDate, format: "yyyy/MM/dd")) ~ \(format(date: homeViewModel.endDate, format: "yyyy/MM/dd"))"
             )
             .font(.caption2)
             .foregroundStyle(.gray)
         }
         .hSpacing(.leading)
 
-        FilterTransactionsView(startDate: startDate, endDate: endDate) { transactions in
+        FilterTransactionsView(startDate: homeViewModel.startDate, endDate: homeViewModel.endDate) {
+            transactions in
             VStack {
                 CardView(
                     income: total(transactions, type: .income),
@@ -84,7 +86,9 @@ struct HomeView: View {
                 customSegmentedControl()
                     .padding(.bottom, 10)
 
-                ForEach(transactions.filter({ $0.type.rawValue == selectedType.rawValue })) {
+                ForEach(
+                    transactions.filter({ $0.type.rawValue == homeViewModel.selectedType.rawValue })
+                ) {
                     transaction in
                     NavigationLink(value: transaction) {
                         TransactionCardView(transaction: transaction)
@@ -132,7 +136,7 @@ struct HomeView: View {
                     .hSpacing()
                     .padding(.vertical, 10)
                     .background {
-                        if type == selectedType {
+                        if type == homeViewModel.selectedType {
                             Capsule()
                                 .fill(.background)
                         }
@@ -140,7 +144,7 @@ struct HomeView: View {
                     .contentShape(.capsule)
                     .onTapGesture {
                         withAnimation(.snappy) {
-                            selectedType = type
+                            homeViewModel.selectedType = type
                         }
                     }
             }
@@ -165,5 +169,13 @@ struct HomeView: View {
 }
 
 #Preview {
-    HomeView()
+    let categoryRepository = CategoryRepository()
+    HomeView(
+        homeViewModel: HomeViewModel(
+            transactionViewModel: TransactionViewModel(
+                transactionRepostory: TransactionRepository(categoryRepository: categoryRepository),
+                categoryRepository: categoryRepository
+            )
+        )
+    )
 }

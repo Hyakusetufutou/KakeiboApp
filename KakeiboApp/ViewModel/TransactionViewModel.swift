@@ -9,12 +9,7 @@
 import Foundation
 
 class TransactionViewModel: ObservableObject {
-    @Published var title: String = ""
-    @Published var memo: String = ""
-    @Published var amount: String = ""
-    @Published var date: Date = Date()
-    @Published var type: TransactionType = .expense
-    @Published var categoryId: UUID = UUID()  //@@@
+    @Published var transactions: [TransactionModel] = []
 
     @Published var errorMessage: String = ""
 
@@ -26,32 +21,20 @@ class TransactionViewModel: ObservableObject {
         self.categoryRepository = categoryRepository
     }
 
-    func fetch(startDate: Date, endDate: Date) -> [TransactionModel] {
+    func fetch(startDate: Date, endDate: Date) {
         switch transactionRepostory.fetch(from: startDate, to: endDate) {
         case .success(let transactions):
-            return transactions
+            self.transactions = transactions
         case .failure(let error):
+            self.transactions = []
             errorMessage = error.description
-            return []
         }
     }
 
-    func add() {
-        guard isValidTransactionInput() else { return }
-        switch transactionRepostory.add(
-            TransactionModel(
-                title: title,
-                memo: memo,
-                amount: Double(amount) ?? Double(0),
-                date: date,
-                createAt: Date(),
-                updatedAt: Date(),
-                type: type,
-                categoryId: categoryId
-            )
-        ) {
+    func add(_ transaction: TransactionModel) {
+        switch transactionRepostory.add(transaction) {
         case .success(()):
-            return
+            fetch(startDate: .now.startOfMonth, endDate: .now.endOfMonth)
         case .failure(let error):
             errorMessage = error.description
         }
@@ -73,30 +56,5 @@ class TransactionViewModel: ObservableObject {
         case .failure(let error):
             errorMessage = error.description
         }
-    }
-
-    func resetInput() {
-        title = ""
-        memo = ""
-        amount = ""
-        date = Date()
-        type = .expense
-        categoryId = UUID()  //@@@
-    }
-    
-    func restoreInput(_ transaction: TransactionModel) {
-        title = transaction.title
-        memo = transaction.memo
-        amount = String(transaction.amount)
-        date = transaction.date
-        type = transaction.type
-        categoryId = transaction.categoryId
-    }
-
-    private func isValidTransactionInput() -> Bool {
-        guard !title.isEmpty && !amount.isEmpty && Double(amount) != nil else {
-            return false
-        }
-        return true
     }
 }

@@ -9,7 +9,7 @@
 import SwiftUI
 
 struct TransactionInputView: View {
-    @ObservedObject var viewModel: TransactionViewModel
+    @ObservedObject var viewModel: InputViewModel
     @Binding var isPresented: Bool
 
     @Namespace private var animation
@@ -84,7 +84,7 @@ struct TransactionInputView: View {
 
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
-                        viewModel.add()
+                        viewModel.save()
                     } label: {
                         Text("保存")
                             .font(.system(size: 16))
@@ -175,6 +175,11 @@ struct TransactionInputView: View {
                                 }
                             }
                             .contentShape(RoundedRectangle(cornerRadius: 10))
+                            .onTapGesture {
+                                withAnimation {
+                                    viewModel.type = type
+                                }
+                            }
                     }
                     .contentShape(RoundedRectangle(cornerRadius: 10))
                 }

@@ -28,6 +28,7 @@ class CategoryViewModel: ObservableObject {
         case .success(let categories):
             self.categories = categories
         case .failure(let error):
+            self.categories = []
             errorMessage = error.description
         }
     }
