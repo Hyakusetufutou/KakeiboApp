@@ -74,27 +74,26 @@ struct HomeView: View {
         }
         .hSpacing(.leading)
 
-        FilterTransactionsView(startDate: homeViewModel.startDate, endDate: homeViewModel.endDate) {
-            transactions in
-            VStack {
-                CardView(
-                    income: total(transactions, type: .income),
-                    expense: total(transactions, type: .expense)
-                )
+        VStack {
+            CardView(
+                income: total(homeViewModel.filterdTransactions, type: .income),
+                expense: total(homeViewModel.filterdTransactions, type: .expense)
+            )
 
-                /// Custom Segmented Control
-                customSegmentedControl()
-                    .padding(.bottom, 10)
+            /// Custom Segmented Control
+            customSegmentedControl()
+                .padding(.bottom, 10)
 
-                ForEach(
-                    transactions.filter({ $0.type.rawValue == homeViewModel.selectedType.rawValue })
-                ) {
-                    transaction in
-                    NavigationLink(value: transaction) {
-                        TransactionCardView(transaction: transaction)
-                    }
-                    .buttonStyle(.plain)
+            ForEach(
+                homeViewModel.filterdTransactions.filter({
+                    $0.type.rawValue == homeViewModel.selectedType.rawValue
+                })
+            ) {
+                transaction in
+                NavigationLink(value: transaction) {
+                    TransactionCardView(transaction: transaction)
                 }
+                .buttonStyle(.plain)
             }
         }
     }

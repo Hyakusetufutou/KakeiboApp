@@ -84,7 +84,7 @@ struct TransactionInputView: View {
 
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
-                        viewModel.save()
+                        viewModel.save(onSuccess: { isPresented = false })
                     } label: {
                         Text("保存")
                             .font(.system(size: 16))
@@ -168,7 +168,7 @@ struct TransactionInputView: View {
                             .padding(.vertical, 6)
                             .frame(maxWidth: .infinity)
                             .background {
-                                if type == type {
+                                if viewModel.type == type {
                                     RoundedRectangle(cornerRadius: 10)
                                         .fill(.gray.opacity(0.15))
                                         .matchedGeometryEffect(id: "TYPE", in: animation)

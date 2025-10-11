@@ -22,7 +22,7 @@ class InputViewModel: ObservableObject {
         self.transactionViewModel = transactionViewModel
     }
 
-    func save() {
+    func save(onSuccess: () -> Void) {
         guard isValid() else { return }
 
         let newTransaction = TransactionModel(
@@ -36,6 +36,8 @@ class InputViewModel: ObservableObject {
             categoryId: selectedCategory?.id ?? UUID()
         )
         transactionViewModel.add(newTransaction)
+        reset()
+        onSuccess()
     }
 
     func reset() {
