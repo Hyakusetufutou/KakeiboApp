@@ -33,11 +33,9 @@ class CategoryViewModel: ObservableObject {
         }
     }
 
-    func add() {
+    func add(_ category: CategoryModel) {
         guard isValidCategoryInput() else { return }
-        switch repository.add(
-            CategoryModel(name: name, color: color, type: .expense, isDefault: false)
-        ) {
+        switch repository.add(category) {
         case .success(()):
             fetch()
         case .failure(let error):

@@ -1,5 +1,5 @@
 //
-//  InputViewModel.swift
+//  TransactionInputViewModel.swift
 //  KakeiboApp
 //
 //  Created by Hyakusetufutou on 2025/10/09
@@ -8,7 +8,7 @@
 
 import Foundation
 
-class InputViewModel: ObservableObject {
+class TransactionInputViewModel: ObservableObject {
     @Published var title: String = ""
     @Published var memo: String = ""
     @Published var amount: String = ""

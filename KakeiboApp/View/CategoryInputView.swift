@@ -9,7 +9,13 @@
 import SwiftUI
 
 struct CategoryInputView: View {
+    @ObservedObject var categoryInputViewModel: CategoryInputViewModel
     private var categories: [CategoryModel] = [.mock1, .mock2, .mock3]
+
+    init(categoryInputViewModel: CategoryInputViewModel) {
+        self.categoryInputViewModel = categoryInputViewModel
+    }
+
     var body: some View {
         VStack {
             List {
@@ -25,5 +31,9 @@ struct CategoryInputView: View {
 }
 
 #Preview {
-    CategoryInputView()
+    CategoryInputView(
+        categoryInputViewModel: CategoryInputViewModel(
+            categoryViewModel: CategoryViewModel(repository: CategoryRepository())
+        )
+    )
 }

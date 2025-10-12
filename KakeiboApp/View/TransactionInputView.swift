@@ -9,7 +9,7 @@
 import SwiftUI
 
 struct TransactionInputView: View {
-    @ObservedObject var viewModel: InputViewModel
+    @ObservedObject var viewModel: TransactionInputViewModel
     @Binding var isPresented: Bool
 
     @Namespace private var animation
