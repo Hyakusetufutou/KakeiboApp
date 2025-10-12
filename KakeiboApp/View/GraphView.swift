@@ -18,9 +18,15 @@ struct GraphView: View {
     @Binding var isPresentCategoryInputView: Bool
 
     @ObservedObject private var categoryViewModel: CategoryViewModel
+    @ObservedObject private var categoryInputViewModel: CategoryInputViewModel
 
-    init(categoryViewModel: CategoryViewModel, isPresentCategoryInputView: Binding<Bool>) {
+    init(
+        categoryViewModel: CategoryViewModel,
+        categoryInputViewModel: CategoryInputViewModel,
+        isPresentCategoryInputView: Binding<Bool>
+    ) {
         self.categoryViewModel = categoryViewModel
+        self.categoryInputViewModel = categoryInputViewModel
         self._isPresentCategoryInputView = isPresentCategoryInputView
     }
 
@@ -118,7 +124,7 @@ struct GraphView: View {
             updateSummaries(for: newValue)
         }
         .sheet(isPresented: $isPresentCategoryList) {
-            CategoryInputView()
+            CategoryInputView(categoryInputViewModel: categoryInputViewModel)
         }
     }
 
@@ -170,6 +176,9 @@ struct GraphView: View {
     @State var hoge = false
     GraphView(
         categoryViewModel: CategoryViewModel(repository: CategoryRepository()),
+        categoryInputViewModel: CategoryInputViewModel(
+            categoryViewModel: CategoryViewModel(repository: CategoryRepository())
+        ),
         isPresentCategoryInputView: $hoge
     )
 }

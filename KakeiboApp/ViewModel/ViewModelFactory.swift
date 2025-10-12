@@ -13,6 +13,7 @@ final class ViewModelFactory: ObservableObject {
     @Published var categoryViewModel: CategoryViewModel
     @Published var homeViewModel: HomeViewModel
     @Published var inputViewModel: TransactionInputViewModel
+    @Published var categoryInputViewModel: CategoryInputViewModel
 
     init() {
         let categoryRepository = CategoryRepository()
@@ -21,10 +22,12 @@ final class ViewModelFactory: ObservableObject {
             transactionRepostory: transactionRepository,
             categoryRepository: categoryRepository
         )
+        let categoryViewModel = CategoryViewModel(repository: categoryRepository)
 
         self.transactionViewModel = transactionViewModel
-        self.categoryViewModel = CategoryViewModel(repository: categoryRepository)
+        self.categoryViewModel = categoryViewModel
         self.homeViewModel = HomeViewModel(transactionViewModel: transactionViewModel)
         self.inputViewModel = TransactionInputViewModel(transactionViewModel: transactionViewModel)
+        self.categoryInputViewModel = CategoryInputViewModel(categoryViewModel: categoryViewModel)
     }
 }

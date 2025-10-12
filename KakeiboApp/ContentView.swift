@@ -37,6 +37,7 @@ struct ContentView: View {
 
                 GraphView(
                     categoryViewModel: appViewModel.categoryViewModel,
+                    categoryInputViewModel: appViewModel.categoryInputViewModel,
                     isPresentCategoryInputView: $isPresentCategoryInputView
                 )
                 .tag(TabModel.graph)
