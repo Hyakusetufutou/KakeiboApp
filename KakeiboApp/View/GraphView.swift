@@ -105,7 +105,7 @@ struct GraphView: View {
 
                     if isPresentCategoryInputView {
                         AddCategoryView(
-                            name: $categoryViewModel.name,
+                            categoryInputViewModel: categoryInputViewModel,
                             onClose: { isPresentCategoryInputView = false },
                             onCreate: {
                                 isPresentCategoryInputView = false

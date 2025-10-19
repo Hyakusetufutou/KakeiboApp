@@ -32,7 +32,7 @@ struct TransactionInputView: View {
                     )
 
                     HStack(alignment: .top, spacing: 15) {
-                        transactionTypeSelector()
+                        TransactionTypeSelector(transactionType: $viewModel.type)
                         categorySelector()
                     }
                     .frame(maxWidth: .infinity)
@@ -148,50 +148,6 @@ struct TransactionInputView: View {
                 .foregroundStyle(colorScheme == .dark ? .white : .black)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(.background, in: .rect(cornerRadius: 10))
-            }
-        }
-    }
-
-    @ViewBuilder
-    func transactionTypeSelector() -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("種類")
-                .font(.caption)
-                .foregroundStyle(.gray)
-                .hSpacing(.leading)
-
-            HStack(spacing: 10) {
-                ForEach(TransactionType.allCases, id: \.self) { type in
-                    ZStack {
-                        Text(type.rawValue)
-                            .font(.callout)
-                            .padding(.vertical, 6)
-                            .frame(maxWidth: .infinity)
-                            .background {
-                                if viewModel.type == type {
-                                    RoundedRectangle(cornerRadius: 10)
-                                        .fill(.gray.opacity(0.15))
-                                        .matchedGeometryEffect(id: "TYPE", in: animation)
-                                }
-                            }
-                            .contentShape(RoundedRectangle(cornerRadius: 10))
-                            .onTapGesture {
-                                withAnimation {
-                                    viewModel.type = type
-                                }
-                            }
-                    }
-                    .contentShape(RoundedRectangle(cornerRadius: 10))
-                }
-            }
-            .padding(8)
-            .cornerRadius(40)
-            .background {
-                if colorScheme == .dark {
-                    Color.black.cornerRadius(10)
-                } else {
-                    Color.white.cornerRadius(10)
-                }
             }
         }
     }
