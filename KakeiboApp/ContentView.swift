@@ -57,6 +57,7 @@ struct ContentView: View {
         .fullScreenCover(isPresented: $isPresentInputView) {
             TransactionInputView(
                 viewModel: appViewModel.inputViewModel,
+                categoryViewModel: appViewModel.categoryViewModel,
                 isPresented: $isPresentInputView
             )
         }

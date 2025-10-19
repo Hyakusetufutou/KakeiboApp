@@ -62,6 +62,7 @@ struct AddCategoryView: View {
             HStack {
                 Button {
                     onCreate()
+                    categoryInputViewModel.add()
                 } label: {
                     Text("作成")
                         .font(.title3)

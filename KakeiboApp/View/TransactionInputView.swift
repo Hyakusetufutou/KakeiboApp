@@ -10,6 +10,7 @@ import SwiftUI
 
 struct TransactionInputView: View {
     @ObservedObject var viewModel: TransactionInputViewModel
+    @ObservedObject var categoryViewModel: CategoryViewModel
     @Binding var isPresented: Bool
 
     @Namespace private var animation
@@ -126,14 +127,19 @@ struct TransactionInputView: View {
         VStack(alignment: .leading, spacing: 6) {
             sectionHeader("カテゴリ")
             Menu {
-                ForEach([CategoryModel.mock1, CategoryModel.mock2, CategoryModel.mock3], id: \.id) {
+                ForEach(
+                    categoryViewModel.categories.filter({ category in
+                        category.type == viewModel.type
+                    })
+                ) {
                     item in
                     Button(item.name) {
+                        viewModel.selectedCategory = item
                     }
                 }
             } label: {
                 HStack {
-                    Text("選択してください")
+                    Text(viewModel.selectedCategory?.name ?? "選択してください")
                         .font(.callout)
                         .padding(.leading, 12)
                     Spacer()

@@ -9,21 +9,25 @@
 import SwiftUI
 
 struct CategoryInputView: View {
-    @ObservedObject var categoryInputViewModel: CategoryInputViewModel
-    private var categories: [CategoryModel] = [.mock1, .mock2, .mock3]
+    @ObservedObject var categoryViewModel: CategoryViewModel
 
-    init(categoryInputViewModel: CategoryInputViewModel) {
-        self.categoryInputViewModel = categoryInputViewModel
+    init(categoryViewModel: CategoryViewModel) {
+        self.categoryViewModel = categoryViewModel
     }
 
     var body: some View {
         VStack {
             List {
-                ForEach(categories) { category in
+                ForEach(categoryViewModel.categories) { category in
                     Text(category.name)
-                }
-                .onDelete { indexSet in
-                    //                    categories.remove(atOffsets: indexSet)
+                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                            Button {
+                                categoryViewModel.delete(category)
+                            } label: {
+                                Image(systemName: "trash")
+                            }
+                            .tint(.red)
+                        }
                 }
             }
         }
@@ -32,8 +36,6 @@ struct CategoryInputView: View {
 
 #Preview {
     CategoryInputView(
-        categoryInputViewModel: CategoryInputViewModel(
-            categoryViewModel: CategoryViewModel(repository: CategoryRepository())
-        )
+        categoryViewModel: CategoryViewModel(repository: CategoryRepository())
     )
 }

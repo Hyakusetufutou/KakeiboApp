@@ -52,9 +52,11 @@ class CategoryRepository {
         do {
             let category = try fetchEntity(by: categoryModel.id)
             context.delete(category)
-            return .success(())
+            return saveContext()
+        } catch let error as CustomError {
+            return .failure(error)
         } catch {
-            return .failure(.categoryNotFoundError)
+            return .failure(.saveError)
         }
     }
 

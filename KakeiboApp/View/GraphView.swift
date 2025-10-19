@@ -124,7 +124,7 @@ struct GraphView: View {
             updateSummaries(for: newValue)
         }
         .sheet(isPresented: $isPresentCategoryList) {
-            CategoryInputView(categoryInputViewModel: categoryInputViewModel)
+            CategoryInputView(categoryViewModel: categoryViewModel)
         }
     }
 

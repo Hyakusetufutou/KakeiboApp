@@ -22,6 +22,7 @@ class CategoryInputViewModel: ObservableObject {
     func add() {
         guard isValid() else { return }
         categoryViewModel.add(CategoryModel(name: name, color: color, type: type, isDefault: false))
+        reset()
     }
 
     func reset() {
