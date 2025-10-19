@@ -1,5 +1,5 @@
 //
-//  AddCategoryView.swift
+//  CategoryInputView.swift
 //  KakeiboApp
 //
 //  Created by Hyakusetufutou on 2025/09/29
@@ -8,7 +8,7 @@
 
 import SwiftUI
 
-struct AddCategoryView: View {
+struct CategoryInputView: View {
     @ObservedObject var categoryInputViewModel: CategoryInputViewModel
     @Namespace private var animation
     @Environment(\.colorScheme) var colorScheme
@@ -97,7 +97,7 @@ struct AddCategoryView: View {
 }
 
 #Preview {
-    AddCategoryView(
+    CategoryInputView(
         categoryInputViewModel: CategoryInputViewModel(
             categoryViewModel: CategoryViewModel(repository: CategoryRepository())
         ),

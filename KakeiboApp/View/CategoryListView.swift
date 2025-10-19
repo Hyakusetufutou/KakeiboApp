@@ -1,5 +1,5 @@
 //
-//  CategoryInputView.swift
+//  CategoryListView.swift
 //  KakeiboApp
 //
 //  Created by Hyakusetufutou on 2025/09/24
@@ -8,7 +8,7 @@
 
 import SwiftUI
 
-struct CategoryInputView: View {
+struct CategoryListView: View {
     @ObservedObject var categoryViewModel: CategoryViewModel
 
     init(categoryViewModel: CategoryViewModel) {
@@ -35,7 +35,7 @@ struct CategoryInputView: View {
 }
 
 #Preview {
-    CategoryInputView(
+    CategoryListView(
         categoryViewModel: CategoryViewModel(repository: CategoryRepository())
     )
 }
