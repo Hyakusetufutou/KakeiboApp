@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import Combine
 
 class HomeViewModel: ObservableObject {
     @Published var filterdTransactions: [TransactionModel] = []
@@ -16,16 +17,25 @@ class HomeViewModel: ObservableObject {
     @Published var selectedType: TransactionType = .expense
     @Published var showFilterView: Bool = false
 
-    private let transactionViewModel: TransactionViewModel
+    let transactionViewModel: TransactionViewModel
+    let categoryViewMdoel: CategoryViewModel
+    private var cancellables = Set<AnyCancellable>()
 
-    init(transactionViewModel: TransactionViewModel) {
+    init(transactionViewModel: TransactionViewModel, categoryViewModel: CategoryViewModel) {
         self.transactionViewModel = transactionViewModel
-        updatePeriod()
+        self.categoryViewMdoel = categoryViewModel
+        bindTransactions()
     }
 
-    func updatePeriod() {
-        filterdTransactions = transactionViewModel.transactions.filter({ transaction in
-            startDate <= transaction.date && transaction.date <= endDate
-        })
+    private func bindTransactions() {
+        transactionViewModel.$transactions
+            .combineLatest($startDate, $endDate, $selectedType)
+            .map { transactions, startDate, endDate, selectedType in
+                transactions.filter { transaction in
+                    startDate <= transaction.date
+                        && transaction.date <= endDate
+                }
+            }
+            .assign(to: &$filterdTransactions)
     }
 }

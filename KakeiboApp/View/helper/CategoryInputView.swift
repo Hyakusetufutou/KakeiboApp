@@ -16,10 +16,6 @@ struct CategoryInputView: View {
     var onClose: () -> Void
     var onCreate: () -> Void
 
-    private let categoryColors: [Color] = [
-        .red, .orange, .yellow, .green, .mint, .teal, .blue, .indigo, .purple, .pink, .brown, .gray,
-    ]
-
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("カテゴリ名")
@@ -42,7 +38,7 @@ struct CategoryInputView: View {
                 columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 6),
                 spacing: 10
             ) {
-                ForEach(categoryColors, id: \.self) { color in
+                ForEach(AppTheme.categoryColors, id: \.self) { color in
                     Circle()
                         .fill(color)
                         .frame(width: 32, height: 32)

@@ -10,16 +10,18 @@ import SwiftUI
 
 struct TransactionCardView: View {
     var transaction: TransactionModel
+    var category: CategoryModel?
+    var onDelete: (TransactionModel) -> Void
     var showsCategory: Bool = false
     var body: some View {
         SwipeAction(cornerRadius: 10) {
             HStack(spacing: 12) {
-                Text("\(String(transaction.title.prefix(1)))")
+                Text("\(category?.name.prefix(1) ?? "")")
                     .font(.title)
                     .fontWeight(.semibold)
                     .foregroundStyle(.white)
                     .frame(width: 45, height: 45)
-                //                    .background(transaction.color.gradient, in: .circle)
+                    .background((category?.color ?? .blue).gradient, in: .circle)
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(transaction.title)
@@ -52,6 +54,7 @@ struct TransactionCardView: View {
             .padding(.vertical, 10)
             .background(.background, in: .rect(cornerRadius: 10))
         } onDelete: {
+            onDelete(transaction)
         }
 
     }

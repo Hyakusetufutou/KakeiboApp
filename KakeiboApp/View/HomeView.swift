@@ -91,7 +91,13 @@ struct HomeView: View {
             ) {
                 transaction in
                 NavigationLink(value: transaction) {
-                    TransactionCardView(transaction: transaction)
+                    TransactionCardView(
+                        transaction: transaction,
+                        category: homeViewModel.categoryViewMdoel.find(id: transaction.categoryId),
+                        onDelete: { transaction in
+                            homeViewModel.transactionViewModel.delete(transaction)
+                        }
+                    )
                 }
                 .buttonStyle(.plain)
             }
@@ -174,7 +180,8 @@ struct HomeView: View {
             transactionViewModel: TransactionViewModel(
                 transactionRepostory: TransactionRepository(categoryRepository: categoryRepository),
                 categoryRepository: categoryRepository
-            )
+            ),
+            categoryViewModel: CategoryViewModel(repository: categoryRepository)
         )
     )
 }

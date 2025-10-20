@@ -96,17 +96,17 @@ struct CalendarView: View {
 
                 ScrollView {
                     LazyVStack {
-                        FilterTransactionsView(startDate: startDate, endDate: endDate) {
-                            transactions in
-                            ForEach(
-                                transactions
-                            ) { transaction in
-                                NavigationLink(value: transaction) {
-                                    TransactionCardView(transaction: transaction)
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
+                        //                        FilterTransactionsView(startDate: startDate, endDate: endDate) {
+                        //                            transactions in
+                        //                            ForEach(
+                        //                                transactions
+                        //                            ) { transaction in
+                        //                                NavigationLink(value: transaction) {
+                        //                                    TransactionCardView(transaction: transaction)
+                        //                                }
+                        //                                .buttonStyle(.plain)
+                        //                            }
+                        //                        }
                     }
                 }
             }

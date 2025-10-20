@@ -19,6 +19,7 @@ class TransactionViewModel: ObservableObject {
     init(transactionRepostory: TransactionRepository, categoryRepository: CategoryRepository) {
         self.transactionRepostory = transactionRepostory
         self.categoryRepository = categoryRepository
+        fetch(startDate: .now.startOfMonth, endDate: .now.endOfMonth)
     }
 
     func fetch(startDate: Date, endDate: Date) {
@@ -43,7 +44,7 @@ class TransactionViewModel: ObservableObject {
     func delete(_ transaction: TransactionModel) {
         switch transactionRepostory.delete(transaction) {
         case .success(()):
-            return
+            fetch(startDate: .now.startOfMonth, endDate: .now.endOfMonth)
         case .failure(let error):
             errorMessage = error.description
         }

@@ -55,4 +55,11 @@ class CategoryViewModel: ObservableObject {
             errorMessage = error.description
         }
     }
+
+    func find(id: UUID) -> CategoryModel? {
+        guard let category = categories.first(where: { $0.id == id }) else {
+            return nil
+        }
+        return category
+    }
 }

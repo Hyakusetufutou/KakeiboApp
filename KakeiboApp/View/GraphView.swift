@@ -53,19 +53,16 @@ struct GraphView: View {
 
                 ScrollView {
                     LazyVStack {
-                        FilterTransactionsView(startDate: startDate, endDate: endDate) {
-                            transactions in
-                            ForEach(
-                                transactions.filter({ transaction in
-                                    transaction.type.rawValue == selectedType.rawValue
-                                })
-                            ) { transaction in
-                                NavigationLink(value: transaction) {
-                                    TransactionCardView(transaction: transaction)
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
+                        //                            ForEach(
+                        //                                transactions.filter({ transaction in
+                        //                                    transaction.type.rawValue == selectedType.rawValue
+                        //                                })
+                        //                            ) { transaction in
+                        //                                NavigationLink(value: transaction) {
+                        //                                    TransactionCardView(transaction: transaction)
+                        //                                }
+                        //                                .buttonStyle(.plain)
+                        //                            }
                     }
                 }
             }
