@@ -134,7 +134,7 @@ struct TransactionInputView: View {
                 ) {
                     item in
                     Button(item.name) {
-                        viewModel.selectedCategory = item
+                        viewModel.selectedCategoryId = item.id
                     }
                 }
             } label: {

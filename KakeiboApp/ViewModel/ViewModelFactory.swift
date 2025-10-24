@@ -30,7 +30,10 @@ final class ViewModelFactory: ObservableObject {
             transactionViewModel: transactionViewModel,
             categoryViewModel: categoryViewModel
         )
-        self.inputViewModel = TransactionInputViewModel(transactionViewModel: transactionViewModel)
+        self.inputViewModel = TransactionInputViewModel(
+            transactionViewModel: transactionViewModel,
+            categoryViewModel: categoryViewModel
+        )
         self.categoryInputViewModel = CategoryInputViewModel(categoryViewModel: categoryViewModel)
     }
 }
