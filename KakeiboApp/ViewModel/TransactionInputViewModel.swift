@@ -24,12 +24,20 @@ class TransactionInputViewModel: ObservableObject {
         categoryViewModel.categories.first { $0.id == selectedCategoryId }
     }
 
+    var availableCategories: [CategoryModel] {
+        categoryViewModel.categories.filter { $0.type == type }
+    }
+
     private let transactionViewModel: TransactionViewModel
     private let categoryViewModel: CategoryViewModel
 
     init(transactionViewModel: TransactionViewModel, categoryViewModel: CategoryViewModel) {
         self.transactionViewModel = transactionViewModel
         self.categoryViewModel = categoryViewModel
+    }
+
+    func resetSelectedCategory() {
+        selectedCategoryId = nil
     }
 
     func presentInputView(_ transactionItem: TransactionModel? = nil) {

@@ -33,7 +33,10 @@ struct TransactionInputView: View {
                     )
 
                     HStack(alignment: .top, spacing: 15) {
-                        TransactionTypeSelector(transactionType: $viewModel.type)
+                        TransactionTypeSelector(
+                            transactionType: $viewModel.type,
+                            onChange: { viewModel.resetSelectedCategory() }
+                        )
                         categorySelector()
                     }
                     .frame(maxWidth: .infinity)
@@ -128,9 +131,7 @@ struct TransactionInputView: View {
             sectionHeader("カテゴリ")
             Menu {
                 ForEach(
-                    categoryViewModel.categories.filter({ category in
-                        category.type == viewModel.type
-                    })
+                    viewModel.availableCategories
                 ) {
                     item in
                     Button(item.name) {

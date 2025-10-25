@@ -9,7 +9,9 @@
 import SwiftUI
 
 struct TransactionTypeSelector: View {
+
     @Binding var transactionType: TransactionType
+    var onChange: () -> Void
     @Namespace private var animation
     @Environment(\.colorScheme) var colorScheme
 
@@ -41,6 +43,7 @@ struct TransactionTypeSelector: View {
                             .onTapGesture {
                                 withAnimation {
                                     transactionType = type
+                                    onChange()
                                 }
                             }
                     }

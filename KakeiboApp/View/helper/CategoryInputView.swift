@@ -29,7 +29,10 @@ struct CategoryInputView: View {
                         .fill(Color.gray.opacity(0.1))
                 }
 
-            TransactionTypeSelector(transactionType: $categoryInputViewModel.type)
+            TransactionTypeSelector(
+                transactionType: $categoryInputViewModel.type,
+                onChange: {}
+            )
 
             Text("色")
                 .font(.caption)
