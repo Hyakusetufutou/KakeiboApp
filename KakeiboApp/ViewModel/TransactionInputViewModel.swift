@@ -89,7 +89,7 @@ class TransactionInputViewModel: ObservableObject {
         id = transaction.id
         title = transaction.title
         memo = transaction.memo
-        amount = String(transaction.amount)
+        amount = String(Int(transaction.amount))
         date = transaction.date
         type = transaction.type
         selectedCategoryId = transaction.categoryId

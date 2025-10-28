@@ -18,12 +18,12 @@ class HomeViewModel: ObservableObject {
     @Published var showFilterView: Bool = false
 
     let transactionViewModel: TransactionViewModel
-    let categoryViewMdoel: CategoryViewModel
+    let categoryViewModel: CategoryViewModel
     private var cancellables = Set<AnyCancellable>()
 
     init(transactionViewModel: TransactionViewModel, categoryViewModel: CategoryViewModel) {
         self.transactionViewModel = transactionViewModel
-        self.categoryViewMdoel = categoryViewModel
+        self.categoryViewModel = categoryViewModel
         bindTransactions()
     }
 

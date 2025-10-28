@@ -95,7 +95,7 @@ struct HomeView: View {
                 NavigationLink(value: transaction) {
                     TransactionCardView(
                         transaction: transaction,
-                        category: homeViewModel.categoryViewMdoel.find(id: transaction.categoryId),
+                        category: homeViewModel.categoryViewModel.find(id: transaction.categoryId),
                         onDelete: { transaction in
                             homeViewModel.transactionViewModel.delete(transaction)
                         }

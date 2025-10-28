@@ -12,7 +12,6 @@ struct TransactionCardView: View {
     var transaction: TransactionModel
     var category: CategoryModel?
     var onDelete: (TransactionModel) -> Void
-    var showsCategory: Bool = false
     var body: some View {
         SwipeAction(cornerRadius: 10) {
             HStack(spacing: 12) {
@@ -31,17 +30,22 @@ struct TransactionCardView: View {
                         .font(.caption)
                         .foregroundStyle(Color.primary)
 
-                    Text(format(date: transaction.date, format: "dd MMM yyyy"))
-                        .font(.caption2)
-                        .foregroundStyle(.gray)
+                    HStack {
+                        Text(format(date: transaction.date, format: "yyyy/MM/dd"))
+                            .font(.caption2)
+                            .foregroundStyle(.gray)
 
-                    if showsCategory {
-                        //                        Text(transaction.category)
-                        //                            .font(.caption2)
-                        //                            .padding(.horizontal, 5)
-                        //                            .padding(.vertical, 2)
-                        //                            .foregroundStyle(.white)
-                        //                            .background(transaction.category == Category.income.rawValue ? Color.green.gradient : Color.red.gradient, in: .capsule)
+                        if let category = category {
+                            Text(category.name)
+                                .font(.caption2)
+                                .padding(.horizontal, 5)
+                                .padding(.vertical, 2)
+                                .foregroundStyle(.white)
+                                .background(
+                                    category.color.gradient,
+                                    in: .capsule
+                                )
+                        }
                     }
                 }
                 .lineLimit(1)

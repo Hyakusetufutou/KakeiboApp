@@ -10,20 +10,19 @@ import SwiftUI
 
 struct GraphView: View {
     @Namespace private var animation
-    @State private var startDate: Date = .now.startOfMonth
-    @State private var endDate: Date = .now.endOfMonth
-    @State private var selectedType: TransactionType = .expense
-    @State private var categorySummaries: [CategorySummary] = []
     @State private var isPresentCategoryList: Bool = false
 
-    @ObservedObject private var categoryViewModel: CategoryViewModel
+    @ObservedObject private var graphViewModel: GraphViewModel
+    @ObservedObject private var transactionInputViewModel: TransactionInputViewModel
     @ObservedObject private var categoryInputViewModel: CategoryInputViewModel
 
     init(
-        categoryViewModel: CategoryViewModel,
+        graphViewModel: GraphViewModel,
+        transactionInputViewModel: TransactionInputViewModel,
         categoryInputViewModel: CategoryInputViewModel
     ) {
-        self.categoryViewModel = categoryViewModel
+        self.graphViewModel = graphViewModel
+        self.transactionInputViewModel = transactionInputViewModel
         self.categoryInputViewModel = categoryInputViewModel
     }
 
@@ -38,8 +37,8 @@ struct GraphView: View {
                     Spacer()
                 }
 
-                if !categorySummaries.isEmpty {
-                    PieChartView(data: categorySummaries)
+                if !graphViewModel.categorySummaries.isEmpty {
+                    PieChartView(data: graphViewModel.categorySummaries)
                         .frame(height: 200)
                         .padding()
                 } else {
@@ -50,19 +49,29 @@ struct GraphView: View {
 
                 ScrollView {
                     LazyVStack {
-                        //                            ForEach(
-                        //                                transactions.filter({ transaction in
-                        //                                    transaction.type.rawValue == selectedType.rawValue
-                        //                                })
-                        //                            ) { transaction in
-                        //                                NavigationLink(value: transaction) {
-                        //                                    TransactionCardView(transaction: transaction)
-                        //                                }
-                        //                                .buttonStyle(.plain)
-                        //                            }
+                        ForEach(
+                            graphViewModel.filteredTransactions
+                        ) { transaction in
+                            NavigationLink(value: transaction) {
+                                TransactionCardView(
+                                    transaction: transaction,
+                                    category: graphViewModel.categoryViewModel.find(
+                                        id: transaction.categoryId
+                                    ),
+                                    onDelete: { transaction in
+                                        graphViewModel.transactionViewModel.delete(transaction)
+                                    }
+                                )
+                                .onTapGesture {
+                                    transactionInputViewModel.presentInputView(transaction)
+                                }
+                            }
+                            .buttonStyle(.plain)
+                        }
                     }
                 }
             }
+            .padding(15)
             .background(.gray.opacity(0.15))
             .disabled(categoryInputViewModel.isPresentInputView)
             .toolbar {
@@ -111,14 +120,8 @@ struct GraphView: View {
             }
         }
         .animation(.snappy, value: categoryInputViewModel.isPresentInputView)
-        .onAppear {
-            updateSummaries(for: selectedType)
-        }
-        .onChange(of: selectedType) { newValue in
-            updateSummaries(for: newValue)
-        }
         .sheet(isPresented: $isPresentCategoryList) {
-            CategoryListView(categoryViewModel: categoryViewModel)
+            CategoryListView(categoryViewModel: graphViewModel.categoryViewModel)
         }
     }
 
@@ -141,7 +144,7 @@ struct GraphView: View {
                     .hSpacing()
                     .padding(.vertical, 10)
                     .background {
-                        if type == selectedType {
+                        if type == graphViewModel.selectedType {
                             Capsule()
                                 .fill(.background)
                                 .matchedGeometryEffect(id: "GRAPHTYPE", in: animation)
@@ -150,8 +153,8 @@ struct GraphView: View {
                     .contentShape(.capsule)
                     .onTapGesture {
                         withAnimation(.snappy) {
-                            if selectedType != type {
-                                selectedType = type
+                            if graphViewModel.selectedType != type {
+                                graphViewModel.selectedType = type
                             }
                         }
                     }
@@ -160,17 +163,13 @@ struct GraphView: View {
         .background(.gray.opacity(0.15), in: .capsule)
         .padding(.top, 5)
     }
-
-    private func updateSummaries(for type: TransactionType) {
-        categorySummaries = [.mock1, .mock2, .mock3].filter { $0.type == type }
-    }
 }
 
 #Preview {
+    let viewModelFactory = ViewModelFactory()
     GraphView(
-        categoryViewModel: CategoryViewModel(repository: CategoryRepository()),
-        categoryInputViewModel: CategoryInputViewModel(
-            categoryViewModel: CategoryViewModel(repository: CategoryRepository())
-        )
+        graphViewModel: viewModelFactory.graphViewModel,
+        transactionInputViewModel: viewModelFactory.transactionInputViewModel,
+        categoryInputViewModel: viewModelFactory.categoryInputViewModel
     )
 }

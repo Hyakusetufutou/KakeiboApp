@@ -23,7 +23,7 @@ class CategoryInputViewModel: ObservableObject {
         self.categoryViewModel = categoryViewModel
     }
 
-    func presentInputView(_ categoryItem: CategoryModel?) {
+    func presentInputView(_ categoryItem: CategoryModel? = nil) {
         if let category = categoryItem {
             restore(category)
             isEdit = true

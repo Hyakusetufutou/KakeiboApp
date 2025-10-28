@@ -18,6 +18,7 @@ struct ContentView: View {
     @ObservedObject var transactionViewModel: TransactionViewModel
     @ObservedObject var categoryViewModel: CategoryViewModel
     @ObservedObject var homeViewModel: HomeViewModel
+    @ObservedObject var graphViewModel: GraphViewModel
     @ObservedObject var transactionInputViewModel: TransactionInputViewModel
     @ObservedObject var categoryInputViewModel: CategoryInputViewModel
 
@@ -26,6 +27,7 @@ struct ContentView: View {
         self.transactionViewModel = viewModelFactory.transactionViewModel
         self.categoryViewModel = viewModelFactory.categoryViewModel
         self.homeViewModel = viewModelFactory.homeViewModel
+        self.graphViewModel = viewModelFactory.graphViewModel
         self.transactionInputViewModel = viewModelFactory.transactionInputViewModel
         self.categoryInputViewModel = viewModelFactory.categoryInputViewModel
     }
@@ -50,7 +52,8 @@ struct ContentView: View {
                     .tag(TabModel.calendar)
 
                 GraphView(
-                    categoryViewModel: categoryViewModel,
+                    graphViewModel: graphViewModel,
+                    transactionInputViewModel: transactionInputViewModel,
                     categoryInputViewModel: categoryInputViewModel
                 )
                 .tag(TabModel.graph)
@@ -62,8 +65,8 @@ struct ContentView: View {
             if !categoryInputViewModel.isPresentInputView {
                 CustomTabBar(
                     activeTab: $activeTab,
-                    isPresentInputView: $transactionInputViewModel.isPresentInputView,
-                    isPresentCategoryInputView: $categoryInputViewModel.isPresentInputView
+                    transactionInputViewModel: transactionInputViewModel,
+                    categoryInputViewModel: categoryInputViewModel
                 )
             }
         }
