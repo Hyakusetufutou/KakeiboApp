@@ -12,9 +12,11 @@ struct HomeView: View {
     @AppStorage("userName") private var userName: String = ""
 
     @ObservedObject var homeViewModel: HomeViewModel
+    @ObservedObject var transactionInputViewModel: TransactionInputViewModel
 
-    init(homeViewModel: HomeViewModel) {
+    init(homeViewModel: HomeViewModel, transactionInputViewModel: TransactionInputViewModel) {
         self.homeViewModel = homeViewModel
+        self.transactionInputViewModel = transactionInputViewModel
     }
 
     var body: some View {
@@ -98,6 +100,9 @@ struct HomeView: View {
                             homeViewModel.transactionViewModel.delete(transaction)
                         }
                     )
+                    .onTapGesture {
+                        transactionInputViewModel.presentInputView(transaction)
+                    }
                 }
                 .buttonStyle(.plain)
             }
@@ -175,12 +180,17 @@ struct HomeView: View {
 
 #Preview {
     let categoryRepository = CategoryRepository()
+    let transactionViewModel = TransactionViewModel(
+        transactionRepostory: TransactionRepository(categoryRepository: categoryRepository),
+        categoryRepository: categoryRepository
+    )
     HomeView(
         homeViewModel: HomeViewModel(
-            transactionViewModel: TransactionViewModel(
-                transactionRepostory: TransactionRepository(categoryRepository: categoryRepository),
-                categoryRepository: categoryRepository
-            ),
+            transactionViewModel: transactionViewModel,
+            categoryViewModel: CategoryViewModel(repository: categoryRepository)
+        ),
+        transactionInputViewModel: TransactionInputViewModel(
+            transactionViewModel: transactionViewModel,
             categoryViewModel: CategoryViewModel(repository: categoryRepository)
         )
     )

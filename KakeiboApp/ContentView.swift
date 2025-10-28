@@ -17,27 +17,43 @@ struct ContentView: View {
     @State private var isPresentInputView = false
     @State private var isPresentCategoryInputView = false
 
-    @EnvironmentObject var appViewModel: ViewModelFactory
+    @ObservedObject var transactionViewModel: TransactionViewModel
+    @ObservedObject var categoryViewModel: CategoryViewModel
+    @ObservedObject var homeViewModel: HomeViewModel
+    @ObservedObject var transactionInputViewModel: TransactionInputViewModel
+    @ObservedObject var categoryInputViewModel: CategoryInputViewModel
+
+    init() {
+        let viewModelFactory = ViewModelFactory()
+        self.transactionViewModel = viewModelFactory.transactionViewModel
+        self.categoryViewModel = viewModelFactory.categoryViewModel
+        self.homeViewModel = viewModelFactory.homeViewModel
+        self.transactionInputViewModel = viewModelFactory.transactionInputViewModel
+        self.categoryInputViewModel = viewModelFactory.categoryInputViewModel
+    }
 
     var body: some View {
         VStack(spacing: 0) {
             TabView(selection: $activeTab) {
-                HomeView(homeViewModel: appViewModel.homeViewModel)
-                    .tag(TabModel.home)
-                    .background {
-                        if !isTabBarHidden {
-                            HideTabBar {
-                                isTabBarHidden = true
-                            }
+                HomeView(
+                    homeViewModel: homeViewModel,
+                    transactionInputViewModel: transactionInputViewModel
+                )
+                .tag(TabModel.home)
+                .background {
+                    if !isTabBarHidden {
+                        HideTabBar {
+                            isTabBarHidden = true
                         }
                     }
+                }
 
                 CalendarView()
                     .tag(TabModel.calendar)
 
                 GraphView(
-                    categoryViewModel: appViewModel.categoryViewModel,
-                    categoryInputViewModel: appViewModel.categoryInputViewModel,
+                    categoryViewModel: categoryViewModel,
+                    categoryInputViewModel: categoryInputViewModel,
                     isPresentCategoryInputView: $isPresentCategoryInputView
                 )
                 .tag(TabModel.graph)
@@ -49,16 +65,15 @@ struct ContentView: View {
             if !isPresentCategoryInputView {
                 CustomTabBar(
                     activeTab: $activeTab,
-                    isPresentInputView: $isPresentInputView,
+                    isPresentInputView: $transactionInputViewModel.isPresentInputView,
                     isPresentCategoryInputView: $isPresentCategoryInputView
                 )
             }
         }
-        .fullScreenCover(isPresented: $isPresentInputView) {
+        .fullScreenCover(isPresented: $transactionInputViewModel.isPresentInputView) {
             TransactionInputView(
-                viewModel: appViewModel.inputViewModel,
-                categoryViewModel: appViewModel.categoryViewModel,
-                isPresented: $isPresentInputView
+                viewModel: transactionInputViewModel,
+                categoryViewModel: categoryViewModel
             )
         }
     }

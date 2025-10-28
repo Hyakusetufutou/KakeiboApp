@@ -43,15 +43,19 @@ class TransactionInputViewModel: ObservableObject {
     func presentInputView(_ transactionItem: TransactionModel? = nil) {
         if let transaction = transactionItem {
             restore(from: transaction)
+            isEdit = true
         } else {
             reset()
+            isEdit = false
         }
+        isPresentInputView = true
     }
 
     func save(onSuccess: () -> Void) {
         guard isValid() else { return }
 
-        let newTransaction = TransactionModel(
+        let transaction = TransactionModel(
+            id: id,
             title: title,
             memo: memo,
             amount: Double(amount) ?? 0,
@@ -61,7 +65,13 @@ class TransactionInputViewModel: ObservableObject {
             type: type,
             categoryId: selectedCategoryId ?? UUID()
         )
-        transactionViewModel.add(newTransaction)
+
+        if isEdit {
+            transactionViewModel.edit(transaction)
+        } else {
+            transactionViewModel.add(transaction)
+        }
+
         reset()
         onSuccess()
     }

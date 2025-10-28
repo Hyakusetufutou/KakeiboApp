@@ -53,7 +53,7 @@ class TransactionViewModel: ObservableObject {
     func edit(_ transaction: TransactionModel) {
         switch transactionRepostory.update(transaction) {
         case .success(()):
-            return
+            fetch(startDate: .now.startOfMonth, endDate: .now.endOfMonth)
         case .failure(let error):
             errorMessage = error.description
         }

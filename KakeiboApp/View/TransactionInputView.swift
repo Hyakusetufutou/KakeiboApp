@@ -11,7 +11,6 @@ import SwiftUI
 struct TransactionInputView: View {
     @ObservedObject var viewModel: TransactionInputViewModel
     @ObservedObject var categoryViewModel: CategoryViewModel
-    @Binding var isPresented: Bool
 
     @Namespace private var animation
     @FocusState private var isNumberPadActive
@@ -78,7 +77,7 @@ struct TransactionInputView: View {
 
                 ToolbarItem(placement: .topBarLeading) {
                     Button {
-                        isPresented = false
+                        viewModel.isPresentInputView = false
                     } label: {
                         Text("キャンセル")
                             .font(.system(size: 16))
@@ -88,7 +87,9 @@ struct TransactionInputView: View {
 
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
-                        viewModel.save(onSuccess: { isPresented = false })
+                        viewModel.save(onSuccess: {
+                            viewModel.isPresentInputView = false
+                        })
                     } label: {
                         Text("保存")
                             .font(.system(size: 16))
