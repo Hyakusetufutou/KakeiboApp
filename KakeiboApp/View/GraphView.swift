@@ -15,19 +15,16 @@ struct GraphView: View {
     @State private var selectedType: TransactionType = .expense
     @State private var categorySummaries: [CategorySummary] = []
     @State private var isPresentCategoryList: Bool = false
-    @Binding var isPresentCategoryInputView: Bool
 
     @ObservedObject private var categoryViewModel: CategoryViewModel
     @ObservedObject private var categoryInputViewModel: CategoryInputViewModel
 
     init(
         categoryViewModel: CategoryViewModel,
-        categoryInputViewModel: CategoryInputViewModel,
-        isPresentCategoryInputView: Binding<Bool>
+        categoryInputViewModel: CategoryInputViewModel
     ) {
         self.categoryViewModel = categoryViewModel
         self.categoryInputViewModel = categoryInputViewModel
-        self._isPresentCategoryInputView = isPresentCategoryInputView
     }
 
     var body: some View {
@@ -67,7 +64,7 @@ struct GraphView: View {
                 }
             }
             .background(.gray.opacity(0.15))
-            .disabled(isPresentCategoryInputView)
+            .disabled(categoryInputViewModel.isPresentInputView)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Text("グラフ")
@@ -92,7 +89,7 @@ struct GraphView: View {
         }
         .overlay {
             ZStack {
-                if isPresentCategoryInputView {
+                if categoryInputViewModel.isPresentInputView {
                     Color.black.opacity(0.5)
                         .ignoresSafeArea()
                 }
@@ -100,12 +97,12 @@ struct GraphView: View {
                 VStack {
                     Spacer()
 
-                    if isPresentCategoryInputView {
+                    if categoryInputViewModel.isPresentInputView {
                         CategoryInputView(
                             categoryInputViewModel: categoryInputViewModel,
-                            onClose: { isPresentCategoryInputView = false },
+                            onClose: { categoryInputViewModel.isPresentInputView = false },
                             onCreate: {
-                                isPresentCategoryInputView = false
+                                categoryInputViewModel.isPresentInputView = false
                             }
                         )
                         .transition(.move(edge: .bottom))
@@ -113,7 +110,7 @@ struct GraphView: View {
                 }
             }
         }
-        .animation(.snappy, value: isPresentCategoryInputView)
+        .animation(.snappy, value: categoryInputViewModel.isPresentInputView)
         .onAppear {
             updateSummaries(for: selectedType)
         }
@@ -170,12 +167,10 @@ struct GraphView: View {
 }
 
 #Preview {
-    @State var hoge = false
     GraphView(
         categoryViewModel: CategoryViewModel(repository: CategoryRepository()),
         categoryInputViewModel: CategoryInputViewModel(
             categoryViewModel: CategoryViewModel(repository: CategoryRepository())
-        ),
-        isPresentCategoryInputView: $hoge
+        )
     )
 }

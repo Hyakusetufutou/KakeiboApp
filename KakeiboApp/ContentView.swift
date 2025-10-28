@@ -14,8 +14,6 @@ struct ContentView: View {
 
     @State private var activeTab: TabModel = .home
     @State private var isTabBarHidden = false
-    @State private var isPresentInputView = false
-    @State private var isPresentCategoryInputView = false
 
     @ObservedObject var transactionViewModel: TransactionViewModel
     @ObservedObject var categoryViewModel: CategoryViewModel
@@ -53,8 +51,7 @@ struct ContentView: View {
 
                 GraphView(
                     categoryViewModel: categoryViewModel,
-                    categoryInputViewModel: categoryInputViewModel,
-                    isPresentCategoryInputView: $isPresentCategoryInputView
+                    categoryInputViewModel: categoryInputViewModel
                 )
                 .tag(TabModel.graph)
 
@@ -62,11 +59,11 @@ struct ContentView: View {
                     .tag(TabModel.setting)
             }
 
-            if !isPresentCategoryInputView {
+            if !categoryInputViewModel.isPresentInputView {
                 CustomTabBar(
                     activeTab: $activeTab,
                     isPresentInputView: $transactionInputViewModel.isPresentInputView,
-                    isPresentCategoryInputView: $isPresentCategoryInputView
+                    isPresentCategoryInputView: $categoryInputViewModel.isPresentInputView
                 )
             }
         }
