@@ -32,7 +32,7 @@ struct GraphView: View {
                 HStack {
                     Spacer()
 
-                    customSegmentedControl()
+                    CustomSegmentedControl(selectedType: $graphViewModel.selectedType)
 
                     Spacer()
                 }
@@ -134,34 +134,6 @@ struct GraphView: View {
                 .padding(.top, 16)
             Spacer()
         }
-    }
-
-    @ViewBuilder
-    func customSegmentedControl() -> some View {
-        HStack(spacing: 0) {
-            ForEach(TransactionType.allCases, id: \.self) { type in
-                Text(type.rawValue)
-                    .hSpacing()
-                    .padding(.vertical, 10)
-                    .background {
-                        if type == graphViewModel.selectedType {
-                            Capsule()
-                                .fill(.background)
-                                .matchedGeometryEffect(id: "GRAPHTYPE", in: animation)
-                        }
-                    }
-                    .contentShape(.capsule)
-                    .onTapGesture {
-                        withAnimation(.snappy) {
-                            if graphViewModel.selectedType != type {
-                                graphViewModel.selectedType = type
-                            }
-                        }
-                    }
-            }
-        }
-        .background(.gray.opacity(0.15), in: .capsule)
-        .padding(.top, 5)
     }
 }
 

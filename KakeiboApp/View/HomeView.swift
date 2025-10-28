@@ -84,7 +84,7 @@ struct HomeView: View {
             )
 
             /// Custom Segmented Control
-            customSegmentedControl()
+            CustomSegmentedControl(selectedType: $homeViewModel.selectedType)
                 .padding(.bottom, 10)
 
             ForEach(
@@ -137,34 +137,6 @@ struct HomeView: View {
             .padding(.horizontal, -15)
             .padding(.top, -(safeArea.top + 15))
         }
-    }
-
-    @ViewBuilder
-    func customSegmentedControl() -> some View {
-        HStack(spacing: 0) {
-            ForEach(TransactionType.allCases, id: \.rawValue) { type in
-                Text(type.rawValue)
-                    .hSpacing()
-                    .padding(.vertical, 10)
-                    .background {
-                        if type == homeViewModel.selectedType {
-                            Capsule()
-                                .fill(.background)
-                                .matchedGeometryEffect(id: "GRAPHTYPE", in: animation)
-                        }
-                    }
-                    .contentShape(.capsule)
-                    .onTapGesture {
-                        withAnimation(.snappy) {
-                            if homeViewModel.selectedType != type {
-                                homeViewModel.selectedType = type
-                            }
-                        }
-                    }
-            }
-        }
-        .background(.gray.opacity(0.15), in: .capsule)
-        .padding(.top, 5)
     }
 
     nonisolated func headerBGOpacity(_ proxy: GeometryProxy, safeAreaTop: CGFloat) -> CGFloat {
