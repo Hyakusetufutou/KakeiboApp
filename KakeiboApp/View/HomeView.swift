@@ -10,6 +10,7 @@ import SwiftUI
 
 struct HomeView: View {
     @AppStorage("userName") private var userName: String = ""
+    @Namespace private var animation
 
     @ObservedObject var homeViewModel: HomeViewModel
     @ObservedObject var transactionInputViewModel: TransactionInputViewModel
@@ -149,12 +150,15 @@ struct HomeView: View {
                         if type == homeViewModel.selectedType {
                             Capsule()
                                 .fill(.background)
+                                .matchedGeometryEffect(id: "GRAPHTYPE", in: animation)
                         }
                     }
                     .contentShape(.capsule)
                     .onTapGesture {
                         withAnimation(.snappy) {
-                            homeViewModel.selectedType = type
+                            if homeViewModel.selectedType != type {
+                                homeViewModel.selectedType = type
+                            }
                         }
                     }
             }
