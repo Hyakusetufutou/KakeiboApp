@@ -42,27 +42,39 @@ struct TransactionListByCategory: View {
                     .font(.title2)
                     .fontWeight(.bold)
             }
-            .padding(.horizontal, 16)
             .padding(.vertical, 12)
 
-            ScrollView {
-                ForEach(
-                    categorySummary.transactions
-                ) {
-                    transaction in
-                    NavigationLink(value: transaction) {
-                        TransactionCardView(
-                            transaction: transaction,
-                            category: categoryViewModel.find(id: transaction.categoryId),
-                            onDelete: { transaction in
-                                transactionViewModel.delete(transaction)
+            VStack {
+                if !categorySummary.transactions.isEmpty {
+                    ScrollView {
+                        ForEach(
+                            categorySummary.transactions
+                        ) {
+                            transaction in
+                            NavigationLink(value: transaction) {
+                                TransactionCardView(
+                                    transaction: transaction,
+                                    category: categoryViewModel.find(id: transaction.categoryId),
+                                    onDelete: { transaction in
+                                        transactionViewModel.delete(transaction)
+                                    }
+                                )
+                                .onTapGesture {
+                                    transactionInputViewModel.presentInputView(transaction)
+                                }
                             }
-                        )
-                        .onTapGesture {
-                            transactionInputViewModel.presentInputView(transaction)
+                            .buttonStyle(.plain)
                         }
                     }
-                    .buttonStyle(.plain)
+                } else {
+                    VStack(alignment: .center) {
+                        Spacer()
+
+                        Text("取引なし")
+                            .font(.title2)
+
+                        Spacer()
+                    }
                 }
             }
             .toolbar {
@@ -75,5 +87,7 @@ struct TransactionListByCategory: View {
             //            .toolbarBackground(categorySummary.color, for: .navigationBar)
             //            .toolbarBackground(.visible, for: .navigationBar)
         }
+        .padding(.horizontal, 16)
+        .background(.gray.opacity(0.15))
     }
 }
