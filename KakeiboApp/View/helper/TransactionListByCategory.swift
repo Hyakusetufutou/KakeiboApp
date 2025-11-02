@@ -33,11 +33,18 @@ struct TransactionListByCategory: View {
         NavigationStack {
             HStack {
                 Text("合計金額")
+                    .font(.title2)
+                    .fontWeight(.bold)
 
                 Spacer()
 
-                Text(String(Int(categorySummary.totalAmount)))
+                Text(currencyString(categorySummary.totalAmount))
+                    .font(.title2)
+                    .fontWeight(.bold)
             }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+
             ScrollView {
                 ForEach(
                     categorySummary.transactions
