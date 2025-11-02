@@ -47,29 +47,33 @@ struct GraphView: View {
                         .padding()
                 }
 
-                ScrollView {
-                    LazyVStack {
-                        ForEach(
-                            graphViewModel.filteredTransactions
-                        ) { transaction in
-                            NavigationLink(value: transaction) {
-                                TransactionCardView(
-                                    transaction: transaction,
-                                    category: graphViewModel.categoryViewModel.find(
-                                        id: transaction.categoryId
-                                    ),
-                                    onDelete: { transaction in
-                                        graphViewModel.transactionViewModel.delete(transaction)
-                                    }
-                                )
-                                .onTapGesture {
-                                    transactionInputViewModel.presentInputView(transaction)
-                                }
+                List {
+                    ForEach(
+                        graphViewModel.categorySummaries
+                    ) { summary in
+                        NavigationLink(
+                            destination: TransactionListByCategory(
+                                categorySummary: summary,
+                                categoryViewModel: graphViewModel.categoryViewModel,
+                                transactionViewModel: graphViewModel.transactionViewModel,
+                                transactionInputViewModel: transactionInputViewModel
+                            )
+                        ) {
+                            HStack {
+                                Circle()
+                                    .frame(width: 12)
+                                    .foregroundStyle(summary.color)
+                                Text(summary.categoryName)
+
+                                Spacer()
+
+                                Text(currencyString(summary.totalAmount, allowedDigits: 2))
                             }
-                            .buttonStyle(.plain)
                         }
+                        .buttonStyle(.plain)
                     }
                 }
+                .scrollContentBackground(.hidden)
             }
             .padding(15)
             .background(.gray.opacity(0.15))

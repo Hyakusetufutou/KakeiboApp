@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import Combine
 
 class GraphViewModel: ObservableObject {
     @Published var filteredTransactions: [TransactionModel] = []
@@ -19,10 +20,13 @@ class GraphViewModel: ObservableObject {
     let transactionViewModel: TransactionViewModel
     let categoryViewModel: CategoryViewModel
 
+    private var cancellables = Set<AnyCancellable>()
+
     init(transactionViewModel: TransactionViewModel, categoryViewModel: CategoryViewModel) {
         self.transactionViewModel = transactionViewModel
         self.categoryViewModel = categoryViewModel
         bindTransactions()
+        bindCategorySummaries()
     }
 
     private func bindTransactions() {
@@ -32,33 +36,47 @@ class GraphViewModel: ObservableObject {
                 transactions.filter { transaction in
                     startDate <= transaction.date && transaction.date <= endDate
                         && selectedType == transaction.type
-
                 }
             }
-            .handleEvents(receiveOutput: { [weak self] filtered in
-                self?.updateCategorySummaries(from: filtered)
-            })
             .assign(to: &$filteredTransactions)
     }
 
-    private func updateCategorySummaries(from transactions: [TransactionModel]) {
-        let categories = categoryViewModel.categories
-        let summaries: [CategorySummary] = categories.compactMap { category in
-            let relatedTransactions = transactions.filter {
-                $0.categoryId == category.id
+    private func bindCategorySummaries() {
+        $filteredTransactions
+            .combineLatest($selectedType)
+            .sink { [weak self] transactions, selectedType in
+                guard let self = self else { return }
+                self.updateCategorySummaries(from: transactions, type: selectedType)
             }
-            guard !relatedTransactions.isEmpty else { return nil }
-            let totalAmount = relatedTransactions.reduce(0) { $0 + $1.amount }
+            .store(in: &cancellables)
+    }
 
-            return CategorySummary(
-                categoryID: category.id,
-                categoryName: category.name,
-                type: category.type,
-                totalAmount: totalAmount,
-                color: category.color,
-                transactions: relatedTransactions
-            )
-        }
+    private func updateCategorySummaries(
+        from transactions: [TransactionModel],
+        type: TransactionType
+    ) {
+        let categories = categoryViewModel.categories
+
+        let summaries =
+            categories
+            .filter { $0.type == type }
+            .compactMap { category -> CategorySummary? in
+                let related = transactions.filter { $0.categoryId == category.id }
+                let total = related.map(\.amount)
+                    .filter { $0.isFinite && !$0.isNaN }
+                    .reduce(0, +)
+
+                guard total.isFinite else { return nil }
+
+                return CategorySummary(
+                    categoryID: category.id,
+                    categoryName: category.name,
+                    type: category.type,
+                    totalAmount: total,
+                    color: category.color,
+                    transactions: related
+                )
+            }
 
         DispatchQueue.main.async {
             self.categorySummaries = summaries
