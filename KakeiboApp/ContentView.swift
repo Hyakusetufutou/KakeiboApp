@@ -19,6 +19,7 @@ struct ContentView: View {
     @ObservedObject var categoryViewModel: CategoryViewModel
     @ObservedObject var homeViewModel: HomeViewModel
     @ObservedObject var graphViewModel: GraphViewModel
+    @ObservedObject var calendarViewModel: CalendarViewModel
     @ObservedObject var transactionInputViewModel: TransactionInputViewModel
     @ObservedObject var categoryInputViewModel: CategoryInputViewModel
 
@@ -28,6 +29,7 @@ struct ContentView: View {
         self.categoryViewModel = viewModelFactory.categoryViewModel
         self.homeViewModel = viewModelFactory.homeViewModel
         self.graphViewModel = viewModelFactory.graphViewModel
+        self.calendarViewModel = viewModelFactory.calendarViewModel
         self.transactionInputViewModel = viewModelFactory.transactionInputViewModel
         self.categoryInputViewModel = viewModelFactory.categoryInputViewModel
     }
@@ -48,7 +50,7 @@ struct ContentView: View {
                     }
                 }
 
-                CalendarView()
+                CalendarView(calendarViewModel: calendarViewModel)
                     .tag(TabModel.calendar)
 
                 GraphView(

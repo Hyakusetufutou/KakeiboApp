@@ -13,6 +13,7 @@ final class ViewModelFactory: ObservableObject {
     @Published var categoryViewModel: CategoryViewModel
     @Published var homeViewModel: HomeViewModel
     @Published var graphViewModel: GraphViewModel
+    @Published var calendarViewModel: CalendarViewModel
     @Published var transactionInputViewModel: TransactionInputViewModel
     @Published var categoryInputViewModel: CategoryInputViewModel
 
@@ -32,6 +33,10 @@ final class ViewModelFactory: ObservableObject {
             categoryViewModel: categoryViewModel
         )
         self.graphViewModel = GraphViewModel(
+            transactionViewModel: transactionViewModel,
+            categoryViewModel: categoryViewModel
+        )
+        self.calendarViewModel = CalendarViewModel(
             transactionViewModel: transactionViewModel,
             categoryViewModel: categoryViewModel
         )

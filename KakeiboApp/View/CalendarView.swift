@@ -10,8 +10,7 @@ import SwiftUI
 
 struct CalendarView: View {
     @State private var currrentDate: Date = Date()
-    @State private var startDate: Date = .now.startOfMonth
-    @State private var endDate: Date = .now.endOfMonth
+    @ObservedObject var calendarViewModel: CalendarViewModel
     private var daysInMonth: [Date] {
         guard let range = Calendar.current.range(of: .day, in: .month, for: currrentDate),
             let monthStart = Calendar.current.date(
@@ -26,9 +25,13 @@ struct CalendarView: View {
         }
     }
 
+    init(calendarViewModel: CalendarViewModel) {
+        self.calendarViewModel = calendarViewModel
+    }
+
     var body: some View {
         NavigationStack {
-            VStack {
+            VStack(spacing: 0) {
                 HStack {
                     ForEach(["日", "月", "火", "水", "木", "金", "土"], id: \.self) { day in
                         HStack {
@@ -51,7 +54,7 @@ struct CalendarView: View {
                     .weekday,
                     from: daysInMonth.first ?? Date()
                 )
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 8) {
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 4) {
                     ForEach(0..<(firstWeekday - 1), id: \.self) { _ in
                         Text("")
                     }
@@ -80,37 +83,67 @@ struct CalendarView: View {
 
                                 HStack {
                                     Spacer()
-                                    Text("10000")
-                                        .font(.caption2)
 
-                                    Spacer()
+                                    VStack(alignment: .leading) {
+                                        if let income = calendarViewModel.dailySummaries[date]?
+                                            .income
+                                        {
+                                            Text(
+                                                currencyString(income, allowedDigits: 2)
+                                            )
+                                            .font(.caption2)
+                                            .fontWeight(.semibold)
+                                            .foregroundStyle(.green)
+                                        } else {
+                                            Text("")
+                                        }
+
+                                        if let expense = calendarViewModel.dailySummaries[date]?
+                                            .expense
+                                        {
+                                            Text(
+                                                currencyString(expense, allowedDigits: 2)
+                                            )
+                                            .font(.caption2)
+                                            .fontWeight(.semibold)
+                                            .foregroundStyle(.red)
+                                        } else {
+                                            Text("")
+                                        }
+                                    }
                                 }
-
                             }
                         }
-
                     }
                 }
                 .padding(.horizontal, 4)
                 .padding(.bottom, 20)
 
-                ScrollView {
+                ScrollView(.vertical, showsIndicators: true) {
                     LazyVStack {
-                        //                        FilterTransactionsView(startDate: startDate, endDate: endDate) {
-                        //                            transactions in
-                        //                            ForEach(
-                        //                                transactions
-                        //                            ) { transaction in
-                        //                                NavigationLink(value: transaction) {
-                        //                                    TransactionCardView(transaction: transaction)
-                        //                                }
-                        //                                .buttonStyle(.plain)
-                        //                            }
-                        //                        }
+                        ForEach(
+                            calendarViewModel.filteredTransactions
+                        ) { transaction in
+                            NavigationLink(value: transaction) {
+                                TransactionCardView(
+                                    transaction: transaction,
+                                    category: calendarViewModel.categoryViewModel.find(
+                                        id: transaction.categoryId
+                                    ),
+                                    onDelete: { transaction in
+                                        calendarViewModel.transactionViewModel.delete(transaction)
+                                    }
+                                )
+                            }
+                            .buttonStyle(.plain)
+                        }
                     }
+                    .padding(15)
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
             .background(.gray.opacity(0.15))
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Text("カレンダー")
@@ -122,7 +155,6 @@ struct CalendarView: View {
                     } label: {
                         Image(systemName: "calendar")
                     }
-
                 }
             }
 
@@ -135,5 +167,5 @@ struct CalendarView: View {
 }
 
 #Preview {
-    CalendarView()
+    CalendarView(calendarViewModel: ViewModelFactory().calendarViewModel)
 }
