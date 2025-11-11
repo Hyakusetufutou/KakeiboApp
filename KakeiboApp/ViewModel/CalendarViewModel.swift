@@ -11,10 +11,10 @@ import Combine
 
 class CalendarViewModel: ObservableObject {
     @Published var dailySummaries: [Date: DailySummary] = [:]
-    @Published var dailyTransactions: [TransactionModel] = []
     @Published var filteredTransactions: [TransactionModel] = []
 
     @Published var selectedDate: Date?
+    @Published var currentDate: Date = Date()
     @Published var startDate: Date = .now.startOfMonth
     @Published var endDate: Date = .now.endOfMonth
 
@@ -28,7 +28,6 @@ class CalendarViewModel: ObservableObject {
         self.categoryViewModel = categoryViewModel
         bindDailySummaries()
         bindTransactions()
-        bindSelectedDate()
     }
 
     private func bindDailySummaries() {
@@ -81,17 +80,6 @@ class CalendarViewModel: ObservableObject {
                 }
             }
             .assign(to: &$filteredTransactions)
-    }
-
-    private func bindSelectedDate() {
-        $selectedDate
-            .combineLatest($dailySummaries)
-            .map { date, grouped in
-                guard let date else { return [] }
-                return grouped[Calendar.current.startOfDay(for: date)]?.transactions ?? []
-            }
-            .receive(on: DispatchQueue.main)
-            .assign(to: &$dailyTransactions)
     }
 
     private func updateSelectedDateTransactions() {
