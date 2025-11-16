@@ -152,7 +152,7 @@ struct CalendarView: View {
                                 }
                                 .frame(height: 22)
                             }
-                            .frame(maxWidth: .infinity, minHeight: 60)
+                            .frame(maxWidth: .infinity, minHeight: 40)
                             .background(isSelected ? Color.blue.opacity(0.1) : Color.clear)
                             .clipShape(RoundedRectangle(cornerRadius: 6))
                         }
@@ -160,7 +160,7 @@ struct CalendarView: View {
                     }
                 }
                 .padding(.horizontal)
-                .padding(.bottom, 8)
+                .padding(.vertical, 8)
 
                 Divider()
 
@@ -207,6 +207,17 @@ struct CalendarView: View {
             .background(.gray.opacity(0.1))
             .navigationTitle("カレンダー")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    HStack {
+                        Button {
+
+                        } label: {
+                            Image(systemName: "calendar")
+                        }
+                    }
+                }
+            }
         }
     }
 }
