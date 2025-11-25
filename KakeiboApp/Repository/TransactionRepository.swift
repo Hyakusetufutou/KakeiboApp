@@ -21,6 +21,25 @@ class TransactionRepository {
         self.categoryRepository = categoryRepository
     }
 
+    func search(text: String?) -> Result<[TransactionModel], CustomError> {
+        let fetchRequest: NSFetchRequest<TransactionEntity> = TransactionEntity.fetchRequest()
+
+        if let text = text, !text.isEmpty {
+            fetchRequest.predicate = NSPredicate(
+                format: "title CONTANIS[cd] %@ OR memo CONTAINS[cd] $@",
+                text,
+                text
+            )
+        }
+
+        do {
+            let transactions = try context.fetch(fetchRequest)
+            return .success(transactions.map { $0.toModel() })
+        } catch {
+            return .failure(.transactionNotFoundError)
+        }
+    }
+
     func fetch(from startDate: Date?, to endDate: Date?) -> Result<[TransactionModel], CustomError>
     {
         let fetchRequest: NSFetchRequest<TransactionEntity> = TransactionEntity.fetchRequest()

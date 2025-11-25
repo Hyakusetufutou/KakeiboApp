@@ -14,6 +14,7 @@ final class ViewModelFactory: ObservableObject {
     @Published var homeViewModel: HomeViewModel
     @Published var graphViewModel: GraphViewModel
     @Published var calendarViewModel: CalendarViewModel
+    @Published var searchViewModel: SearchViewModel
     @Published var transactionInputViewModel: TransactionInputViewModel
     @Published var categoryInputViewModel: CategoryInputViewModel
 
@@ -40,6 +41,7 @@ final class ViewModelFactory: ObservableObject {
             transactionViewModel: transactionViewModel,
             categoryViewModel: categoryViewModel
         )
+        self.searchViewModel = SearchViewModel(transactionRepository: transactionRepository)
         self.transactionInputViewModel = TransactionInputViewModel(
             transactionViewModel: transactionViewModel,
             categoryViewModel: categoryViewModel
