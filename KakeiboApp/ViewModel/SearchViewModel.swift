@@ -19,6 +19,7 @@ class SearchViewModel: ObservableObject {
 
     init(transactionRepository: TransactionRepository) {
         self.transactionRepository = transactionRepository
+        setupSearchPipeline()
     }
 
     private func setupSearchPipeline() {

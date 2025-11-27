@@ -14,6 +14,7 @@ struct ContentView: View {
 
     @State private var activeTab: TabModel = .home
     @State private var isTabBarHidden = false
+    @State private var showTabView = true
 
     @ObservedObject var transactionViewModel: TransactionViewModel
     @ObservedObject var categoryViewModel: CategoryViewModel
@@ -22,6 +23,7 @@ struct ContentView: View {
     @ObservedObject var calendarViewModel: CalendarViewModel
     @ObservedObject var transactionInputViewModel: TransactionInputViewModel
     @ObservedObject var categoryInputViewModel: CategoryInputViewModel
+    @ObservedObject var searchViewModel: SearchViewModel
 
     init() {
         let viewModelFactory = ViewModelFactory()
@@ -32,43 +34,53 @@ struct ContentView: View {
         self.calendarViewModel = viewModelFactory.calendarViewModel
         self.transactionInputViewModel = viewModelFactory.transactionInputViewModel
         self.categoryInputViewModel = viewModelFactory.categoryInputViewModel
+        self.searchViewModel = viewModelFactory.searchViewModel
     }
 
     var body: some View {
         VStack(spacing: 0) {
-            TabView(selection: $activeTab) {
-                HomeView(
-                    homeViewModel: homeViewModel,
-                    transactionInputViewModel: transactionInputViewModel
-                )
-                .tag(TabModel.home)
-                .background {
-                    if !isTabBarHidden {
-                        HideTabBar {
-                            isTabBarHidden = true
+            if showTabView {
+                TabView(selection: $activeTab) {
+                    HomeView(
+                        homeViewModel: homeViewModel,
+                        transactionInputViewModel: transactionInputViewModel
+                    )
+                    .tag(TabModel.home)
+                    .background {
+                        if !isTabBarHidden {
+                            HideTabBar {
+                                isTabBarHidden = true
+                            }
                         }
                     }
+
+                    CalendarView(calendarViewModel: calendarViewModel)
+                        .tag(TabModel.calendar)
+
+                    GraphView(
+                        graphViewModel: graphViewModel,
+                        transactionInputViewModel: transactionInputViewModel,
+                        categoryInputViewModel: categoryInputViewModel
+                    )
+                    .tag(TabModel.graph)
+
+                    SettingView()
+                        .tag(TabModel.setting)
                 }
-
-                CalendarView(calendarViewModel: calendarViewModel)
-                    .tag(TabModel.calendar)
-
-                GraphView(
-                    graphViewModel: graphViewModel,
-                    transactionInputViewModel: transactionInputViewModel,
-                    categoryInputViewModel: categoryInputViewModel
+            } else {
+                SearchView(
+                    searchViewModel: searchViewModel,
+                    categoryViewModel: categoryViewModel,
+                    transactionViewModel: transactionViewModel,
+                    transactionInputViewModel: transactionInputViewModel
                 )
-                .tag(TabModel.graph)
-
-                SettingView()
-                    .tag(TabModel.setting)
             }
 
             if !categoryInputViewModel.isPresentInputView {
                 CustomTabBar(showSearchBar: true, activeTab: $activeTab) { isExpanded in
-
+                    showTabView = !isExpanded
                 } onSearchTextChanged: { searchText in
-
+                    searchViewModel.searchText = searchText
                 }
 
             }

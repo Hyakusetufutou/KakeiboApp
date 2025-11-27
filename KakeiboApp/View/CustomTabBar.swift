@@ -113,7 +113,7 @@ struct CustomTabBar: View {
         .animation(.bouncy, value: isActive)
         .animation(.smooth, value: activeTab)
         .animation(.easeInOut(duration: 0.25), value: isKeyboardActive)
-        .customOnChange(value: isKeyboardActive) {
+        .customOnChange(value: isSearchExpanded) {
             onSearchBarExpanded($0)
         }
         .customOnChange(value: searchText) {

@@ -17,7 +17,8 @@ struct SearchView: View {
     var body: some View {
         NavigationStack {
             VStack {
-                if searchViewModel.resultTransactions.isEmpty && searchViewModel.searchText.isEmpty
+                if searchViewModel.resultTransactions
+                    .isEmpty /*|| searchViewModel.searchText.isEmpty*/
                 {
                     Text("該当する取引がありません")
                 } else {

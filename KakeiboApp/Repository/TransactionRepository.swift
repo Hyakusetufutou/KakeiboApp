@@ -26,7 +26,7 @@ class TransactionRepository {
 
         if let text = text, !text.isEmpty {
             fetchRequest.predicate = NSPredicate(
-                format: "title CONTANIS[cd] %@ OR memo CONTAINS[cd] $@",
+                format: "title CONTAINS[c] %@ OR memo CONTAINS[c] %@",
                 text,
                 text
             )
