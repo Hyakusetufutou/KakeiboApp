@@ -65,11 +65,12 @@ struct ContentView: View {
             }
 
             if !categoryInputViewModel.isPresentInputView {
-                CustomTabBar(
-                    activeTab: $activeTab,
-                    transactionInputViewModel: transactionInputViewModel,
-                    categoryInputViewModel: categoryInputViewModel
-                )
+                CustomTabBar(showSearchBar: true, activeTab: $activeTab) { isExpanded in
+
+                } onSearchTextChanged: { searchText in
+
+                }
+
             }
         }
         .fullScreenCover(isPresented: $transactionInputViewModel.isPresentInputView) {
@@ -77,6 +78,10 @@ struct ContentView: View {
                 viewModel: transactionInputViewModel,
                 categoryViewModel: categoryViewModel
             )
+        }
+        .background {
+            Color.gray.opacity(0.15)
+                .edgesIgnoringSafeArea(.all)
         }
     }
 }

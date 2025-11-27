@@ -55,4 +55,29 @@ extension View {
                 return partialResult + transaction.amount
             }
     }
+
+    @ViewBuilder
+    func optionalGeometryGroup() -> some View {
+        if #available(iOS 17, *) {
+            self
+                .geometryGroup()
+        } else {
+            self
+        }
+    }
+
+    @ViewBuilder
+    func customOnChange<T: Equatable>(value: T, result: @escaping (T) -> Void) -> some View {
+        if #available(iOS 17, *) {
+            self
+                .onChange(of: value) { oldValue, newValue in
+                    result(newValue)
+                }
+        } else {
+            self
+                .onChange(of: value) { newValue in
+                    result(newValue)
+                }
+        }
+    }
 }

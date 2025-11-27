@@ -22,4 +22,8 @@ enum TabModel: String, CaseIterable {
         case .setting: "設定"
         }
     }
+
+    var index: Int {
+        Self.allCases.firstIndex(of: self) ?? 0
+    }
 }
