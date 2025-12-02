@@ -10,6 +10,7 @@ import SwiftUI
 
 struct CalendarView: View {
     @ObservedObject var calendarViewModel: CalendarViewModel
+    @ObservedObject var transactionInputViewModel: TransactionInputViewModel
 
     private var daysInMonth: [Date] {
         guard
@@ -31,8 +32,10 @@ struct CalendarView: View {
         }
     }
 
-    init(calendarViewModel: CalendarViewModel) {
+    init(calendarViewModel: CalendarViewModel, transactionInputViewModel: TransactionInputViewModel)
+    {
         self.calendarViewModel = calendarViewModel
+        self.transactionInputViewModel = transactionInputViewModel
     }
 
     var body: some View {
@@ -108,9 +111,7 @@ struct CalendarView: View {
                         )
 
                         Button {
-                            withAnimation(.easeInOut) {
-                                calendarViewModel.selectedDate = date
-                            }
+                            calendarViewModel.selectedDate = date
                         } label: {
                             VStack(spacing: 2) {
                                 // 日付
@@ -129,25 +130,25 @@ struct CalendarView: View {
                                 // 収支（高さ固定）
                                 VStack(spacing: 1) {
                                     if let income = summary?.income, income > 0 {
-                                        Text("+\(currencyString(income, allowedDigits: 0))")
-                                            .font(.caption2)
+                                        Text("\(currencyString(income, allowedDigits: 0))")
+                                            .font(.caption)
                                             .foregroundStyle(.green)
                                             .lineLimit(1)
-                                            .minimumScaleFactor(0.6)
+                                            .minimumScaleFactor(0.8)
                                     } else {
                                         Text(" ")
-                                            .font(.caption2)
+                                            .font(.caption)
                                     }
 
                                     if let expense = summary?.expense, expense > 0 {
-                                        Text("-\(currencyString(expense, allowedDigits: 0))")
-                                            .font(.caption2)
+                                        Text("\(currencyString(expense, allowedDigits: 0))")
+                                            .font(.caption)
                                             .foregroundStyle(.red)
                                             .lineLimit(1)
-                                            .minimumScaleFactor(0.6)
+                                            .minimumScaleFactor(0.8)
                                     } else {
                                         Text(" ")
-                                            .font(.caption2)
+                                            .font(.caption)
                                     }
                                 }
                                 .frame(height: 22)
@@ -190,6 +191,9 @@ struct CalendarView: View {
                                             )
                                         }
                                     )
+                                    .onTapGesture {
+                                        transactionInputViewModel.presentInputView(transaction)
+                                    }
                                 }
                             }
                             .padding(.horizontal)

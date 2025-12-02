@@ -66,7 +66,7 @@ class GraphViewModel: ObservableObject {
                     .filter { $0.isFinite && !$0.isNaN }
                     .reduce(0, +)
 
-                guard total.isFinite else { return nil }
+                guard total > 0 else { return nil }
 
                 return CategorySummary(
                     categoryID: category.id,

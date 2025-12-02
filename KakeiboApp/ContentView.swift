@@ -54,8 +54,11 @@ struct ContentView: View {
                         }
                     }
 
-                    CalendarView(calendarViewModel: calendarViewModel)
-                        .tag(TabModel.calendar)
+                    CalendarView(
+                        calendarViewModel: calendarViewModel,
+                        transactionInputViewModel: transactionInputViewModel
+                    )
+                    .tag(TabModel.calendar)
 
                     GraphView(
                         graphViewModel: graphViewModel,

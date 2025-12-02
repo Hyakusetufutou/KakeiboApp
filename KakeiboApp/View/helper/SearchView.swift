@@ -18,30 +18,39 @@ struct SearchView: View {
         NavigationStack {
             VStack {
                 if searchViewModel.resultTransactions
-                    .isEmpty /*|| searchViewModel.searchText.isEmpty*/
+                    .isEmpty || searchViewModel.searchText.isEmpty
                 {
+                    Spacer()
                     Text("該当する取引がありません")
+                    Spacer()
                 } else {
-                    ForEach(
-                        searchViewModel.resultTransactions
-                    ) {
-                        transaction in
-                        NavigationLink(value: transaction) {
-                            TransactionCardView(
-                                transaction: transaction,
-                                category: categoryViewModel.find(id: transaction.categoryId),
-                                onDelete: { transaction in
-                                    transactionViewModel.delete(transaction)
+                    ScrollView {
+                        ForEach(
+                            searchViewModel.resultTransactions
+                        ) {
+                            transaction in
+                            NavigationLink(value: transaction) {
+                                TransactionCardView(
+                                    transaction: transaction,
+                                    category: categoryViewModel.find(id: transaction.categoryId),
+                                    onDelete: { transaction in
+                                        transactionViewModel.delete(transaction)
+                                    }
+                                )
+                                .onTapGesture {
+                                    transactionInputViewModel.presentInputView(transaction)
                                 }
-                            )
-                            .onTapGesture {
-                                transactionInputViewModel.presentInputView(transaction)
                             }
+                            .buttonStyle(.plain)
                         }
-                        .buttonStyle(.plain)
+                        .padding()
                     }
                 }
             }
+            .frame(maxWidth: .infinity)
+            .background(.gray.opacity(0.1))
+            .navigationTitle("検索")
+            .navigationBarTitleDisplayMode(.inline)
         }
     }
 }
