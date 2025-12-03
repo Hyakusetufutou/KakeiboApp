@@ -78,9 +78,15 @@ struct GraphView: View {
             .padding(.horizontal, 15)
             .background(.gray.opacity(0.15))
             .disabled(categoryInputViewModel.isPresentInputView)
-            .navigationTitle("グラフ")
-            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    VStack {
+                        Text("グラフ")
+                            .font(.title)
+                            .fontWeight(.bold)
+                    }
+                }
+
                 ToolbarItem(placement: .topBarTrailing) {
                     HStack {
                         Button {

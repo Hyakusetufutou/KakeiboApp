@@ -76,7 +76,7 @@ struct CalendarView: View {
                             .foregroundStyle(.primary)
                     }
                 }
-                .padding(.horizontal)
+                .padding(.horizontal, 20)
                 .padding(.vertical, 8)
 
                 Divider()
@@ -209,9 +209,15 @@ struct CalendarView: View {
                 .background(Color(.systemGroupedBackground))
             }
             .background(.gray.opacity(0.1))
-            .navigationTitle("カレンダー")
-            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    VStack {
+                        Text("カレンダー")
+                            .font(.title)
+                            .fontWeight(.bold)
+                    }
+                }
+
                 ToolbarItem(placement: .topBarTrailing) {
                     HStack {
                         Button {
