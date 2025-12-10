@@ -34,10 +34,21 @@ class CategoryInputViewModel: ObservableObject {
         isPresentInputView = true
     }
 
-    func add() {
+    func save() {
         guard isValid() else { return }
-        categoryViewModel.add(CategoryModel(name: name, color: color, type: type, isDefault: false))
+        let category = CategoryModel(id: id, name: name, color: color, type: type, isDefault: false)
+
+        if isEdit {
+            categoryViewModel.edit(category)
+        } else {
+            categoryViewModel.add(category)
+        }
         reset()
+        isPresentInputView = false
+    }
+
+    func cancel() {
+        isPresentInputView = false
     }
 
     func reset() {

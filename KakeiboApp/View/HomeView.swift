@@ -129,8 +129,11 @@ struct HomeView: View {
                     .foregroundStyle(.gray)
                     .padding(8)
                     .background {
-                        RoundedRectangle(cornerRadius: 10)
-                            .fill(.gray.opacity(0.2))
+                        RoundedRectangle(cornerRadius: 20)
+                            .frame(width: 50, height: 42)
+                            .foregroundStyle(.white)
+                            .shadow(radius: 1)
+                            .blur(radius: 2)
                     }
             }
 

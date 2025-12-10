@@ -13,9 +13,6 @@ struct CategoryInputView: View {
     @Namespace private var animation
     @Environment(\.colorScheme) var colorScheme
 
-    var onClose: () -> Void
-    var onCreate: () -> Void
-
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("カテゴリ名")
@@ -60,8 +57,7 @@ struct CategoryInputView: View {
 
             HStack {
                 Button {
-                    onCreate()
-                    categoryInputViewModel.add()
+                    categoryInputViewModel.save()
                 } label: {
                     Text("作成")
                         .font(.title3)
@@ -76,7 +72,7 @@ struct CategoryInputView: View {
                 .disabled(categoryInputViewModel.name.isEmpty)
 
                 Button {
-                    onClose()
+                    categoryInputViewModel.cancel()
                 } label: {
                     Text("中止")
                         .font(.title3)
@@ -99,8 +95,6 @@ struct CategoryInputView: View {
     CategoryInputView(
         categoryInputViewModel: CategoryInputViewModel(
             categoryViewModel: CategoryViewModel(repository: CategoryRepository())
-        ),
-        onClose: {},
-        onCreate: {}
+        )
     )
 }

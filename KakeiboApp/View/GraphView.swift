@@ -29,6 +29,16 @@ struct GraphView: View {
     var body: some View {
         NavigationStack {
             VStack {
+                ChangeMonthView(
+                    date: $graphViewModel.startDate,
+                    onPreviousMonth: {
+                        graphViewModel.changeMonth(by: -1)
+                    },
+                    onNextMonth: {
+                        graphViewModel.changeMonth(by: 1)
+                    }
+                )
+
                 HStack {
                     Spacer()
 
@@ -88,48 +98,40 @@ struct GraphView: View {
                 }
 
                 ToolbarItem(placement: .topBarTrailing) {
-                    HStack {
-                        Button {
-                            isPresentCategoryList = true
-                        } label: {
-                            Image(systemName: "list.bullet")
-                        }
-
-                        Button {
-
-                        } label: {
-                            Image(systemName: "calendar")
-                        }
+                    Button {
+                        isPresentCategoryList = true
+                    } label: {
+                        Image(systemName: "list.bullet")
                     }
                 }
             }
         }
-        .overlay {
-            ZStack {
-                if categoryInputViewModel.isPresentInputView {
-                    Color.black.opacity(0.5)
-                        .ignoresSafeArea()
-                }
-
-                VStack {
-                    Spacer()
-
-                    if categoryInputViewModel.isPresentInputView {
-                        CategoryInputView(
-                            categoryInputViewModel: categoryInputViewModel,
-                            onClose: { categoryInputViewModel.isPresentInputView = false },
-                            onCreate: {
-                                categoryInputViewModel.isPresentInputView = false
-                            }
-                        )
-                        .transition(.move(edge: .bottom))
-                    }
-                }
-            }
-        }
-        .animation(.snappy, value: categoryInputViewModel.isPresentInputView)
         .sheet(isPresented: $isPresentCategoryList) {
-            CategoryListView(categoryViewModel: graphViewModel.categoryViewModel)
+            CategoryListView(
+                categoryViewModel: graphViewModel.categoryViewModel,
+                categoryInputViewModel: categoryInputViewModel,
+                isPresentCategoryList: $isPresentCategoryList
+            )
+            .overlay {
+                ZStack {
+                    if categoryInputViewModel.isPresentInputView {
+                        Color.black.opacity(0.5)
+                            .ignoresSafeArea()
+                    }
+
+                    VStack {
+                        Spacer()
+
+                        if categoryInputViewModel.isPresentInputView {
+                            CategoryInputView(
+                                categoryInputViewModel: categoryInputViewModel
+                            )
+                            .transition(.move(edge: .bottom))
+                        }
+                    }
+                }
+            }
+            .animation(.snappy, value: categoryInputViewModel.isPresentInputView)
         }
     }
 

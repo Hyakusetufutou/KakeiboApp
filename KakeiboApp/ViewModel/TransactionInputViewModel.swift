@@ -51,7 +51,7 @@ class TransactionInputViewModel: ObservableObject {
         isPresentInputView = true
     }
 
-    func save(onSuccess: () -> Void) {
+    func save() {
         guard isValid() else { return }
 
         let transaction = TransactionModel(
@@ -73,10 +73,15 @@ class TransactionInputViewModel: ObservableObject {
         }
 
         reset()
-        onSuccess()
+        cancel()
+    }
+
+    func cancel() {
+        isPresentInputView = false
     }
 
     func reset() {
+        id = UUID()
         title = ""
         memo = ""
         amount = ""

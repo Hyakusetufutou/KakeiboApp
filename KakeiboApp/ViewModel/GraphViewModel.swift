@@ -82,4 +82,11 @@ class GraphViewModel: ObservableObject {
             self.categorySummaries = summaries
         }
     }
+
+    func changeMonth(by value: Int) {
+        guard let newDate = Calendar.current.date(byAdding: .month, value: value, to: startDate)
+        else { return }
+        startDate = newDate.startOfMonth
+        endDate = newDate.endOfMonth
+    }
 }

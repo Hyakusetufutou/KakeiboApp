@@ -42,42 +42,25 @@ struct CalendarView: View {
         NavigationStack {
             VStack(spacing: 0) {
                 // MARK: - 月切り替え
-                HStack {
-                    Button {
+                ChangeMonthView(
+                    date: $calendarViewModel.currentDate,
+                    onPreviousMonth: {
                         calendarViewModel.changeMonth(by: -1)
                         calendarViewModel.currentDate = Calendar.current.date(
                             byAdding: .month,
                             value: -1,
                             to: calendarViewModel.currentDate
                         )!
-                    } label: {
-                        Image(systemName: "chevron.left")
-                            .font(.title3)
-                            .foregroundStyle(.primary)
-                    }
-
-                    Spacer()
-
-                    Text(format(date: calendarViewModel.currentDate, format: "yyyy年 M月"))
-                        .font(.title3.bold())
-
-                    Spacer()
-
-                    Button {
+                    },
+                    onNextMonth: {
                         calendarViewModel.changeMonth(by: 1)
                         calendarViewModel.currentDate = Calendar.current.date(
                             byAdding: .month,
                             value: 1,
                             to: calendarViewModel.currentDate
                         )!
-                    } label: {
-                        Image(systemName: "chevron.right")
-                            .font(.title3)
-                            .foregroundStyle(.primary)
                     }
-                }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 8)
+                )
 
                 Divider()
 

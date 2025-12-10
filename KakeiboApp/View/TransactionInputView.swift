@@ -87,9 +87,7 @@ struct TransactionInputView: View {
 
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
-                        viewModel.save(onSuccess: {
-                            viewModel.isPresentInputView = false
-                        })
+                        viewModel.save()
                     } label: {
                         Text("保存")
                             .font(.system(size: 16))
