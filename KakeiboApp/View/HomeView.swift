@@ -122,6 +122,22 @@ struct HomeView: View {
             Spacer(minLength: 0)
 
             Button {
+                homeViewModel.showFilterView = true
+            } label: {
+                Image(systemName: "calendar")
+                    .font(.title2)
+                    .foregroundStyle(.gray)
+                    .padding(8)
+                    .background {
+                        RoundedRectangle(cornerRadius: 20)
+                            .frame(width: 50, height: 42)
+                            .foregroundStyle(.white)
+                            .shadow(radius: 1)
+                            .blur(radius: 2)
+                    }
+            }
+
+            Button {
                 transactionInputViewModel.isPresentInputView = true
             } label: {
                 Image(systemName: "plus")
@@ -136,7 +152,6 @@ struct HomeView: View {
                             .blur(radius: 2)
                     }
             }
-
         }
         .padding(.bottom, userName.isEmpty ? 10 : 5)
         .background {
@@ -145,8 +160,6 @@ struct HomeView: View {
                     .fill(.ultraThinMaterial)
                 Divider()
             }
-            .padding(.horizontal, -15)
-            .padding(.top, -(safeArea.top + 15))
         }
     }
 }

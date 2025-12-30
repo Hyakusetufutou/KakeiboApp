@@ -49,15 +49,15 @@ struct SearchView: View {
             }
             .frame(maxWidth: .infinity)
             .background(.gray.opacity(0.1))
-        }
-        .overlay(alignment: .topLeading) {
-            VStack {
-                Text("検索")
-                    .font(.title2)
-                    .fontWeight(.bold)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    VStack {
+                        Text("検索")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                    }
+                }
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 4)
         }
     }
 }
