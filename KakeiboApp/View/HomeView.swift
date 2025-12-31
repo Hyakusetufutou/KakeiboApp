@@ -138,7 +138,7 @@ struct HomeView: View {
             }
 
             Button {
-                transactionInputViewModel.isPresentInputView = true
+                transactionInputViewModel.presentInputView()
             } label: {
                 Image(systemName: "plus")
                     .font(.title2)
