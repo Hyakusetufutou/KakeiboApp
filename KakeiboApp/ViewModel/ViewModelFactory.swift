@@ -38,8 +38,8 @@ final class ViewModelFactory: ObservableObject {
             categoryViewModel: categoryViewModel
         )
         self.calendarViewModel = CalendarViewModel(
-            transactionViewModel: transactionViewModel,
-            categoryViewModel: categoryViewModel
+            transactionRepository: transactionRepository,
+            categoryRepository: categoryRepository
         )
         self.searchViewModel = SearchViewModel(transactionRepository: transactionRepository)
         self.transactionInputViewModel = TransactionInputViewModel(

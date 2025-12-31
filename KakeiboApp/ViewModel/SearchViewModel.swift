@@ -42,7 +42,7 @@ class SearchViewModel: ObservableObject {
             DispatchQueue.main.async {
                 self.resultTransactions = items
             }
-        case .failure(let error):
+        case .failure(_):
             DispatchQueue.main.async {
                 self.resultTransactions = []
             }

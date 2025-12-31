@@ -165,11 +165,11 @@ struct CalendarView: View {
                                 ForEach(transactions) { transaction in
                                     TransactionCardView(
                                         transaction: transaction,
-                                        category: calendarViewModel.categoryViewModel.find(
-                                            id: transaction.categoryId
+                                        category: calendarViewModel.category(
+                                            for: transaction.categoryId
                                         ),
                                         onDelete: { transaction in
-                                            calendarViewModel.transactionViewModel.delete(
+                                            calendarViewModel.delete(
                                                 transaction
                                             )
                                         }

@@ -8,10 +8,13 @@
 
 import Foundation
 import CoreData
+import Combine
 
 class TransactionRepository {
     private let context: NSManagedObjectContext
     private let categoryRepository: CategoryRepository
+
+    let didChange = PassthroughSubject<Void, Never>()
 
     init(
         context: NSManagedObjectContext = PersistenceController.shared.container.viewContext,
@@ -133,6 +136,7 @@ class TransactionRepository {
         do {
             if context.hasChanges {
                 try context.save()
+                didChange.send()
             }
             return .success(())
         } catch {
