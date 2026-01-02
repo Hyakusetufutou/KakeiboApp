@@ -9,6 +9,7 @@
 import Foundation
 import Combine
 
+@MainActor
 protocol CategoryStoreProtocol {
     var categories: AnyPublisher<[CategoryModel], Never> { get }
     var errorMessage: AnyPublisher<String, Never> { get }
@@ -18,7 +19,8 @@ protocol CategoryStoreProtocol {
     func find(id: UUID) -> CategoryModel?
 }
 
-class CategoryStore: CategoryStoreProtocol {
+@MainActor
+final class CategoryStore: CategoryStoreProtocol {
     @Published private var _categories: [CategoryModel] = []
     @Published private var _errorMessage: String = ""
 

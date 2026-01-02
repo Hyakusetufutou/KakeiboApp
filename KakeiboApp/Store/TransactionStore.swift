@@ -9,6 +9,7 @@
 import Foundation
 import Combine
 
+@MainActor
 protocol TransactionStoreProtocol {
     var transactions: AnyPublisher<[TransactionModel], Never> { get }
     var errorMessage: AnyPublisher<String, Never> { get }
@@ -18,6 +19,7 @@ protocol TransactionStoreProtocol {
     func search(text: String?) -> [TransactionModel]
 }
 
+@MainActor
 class TransactionStore: TransactionStoreProtocol {
     @Published private var _transactions: [TransactionModel] = []
     @Published private var _errorMessage: String = ""

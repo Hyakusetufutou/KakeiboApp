@@ -8,6 +8,7 @@
 
 import Foundation
 
+@MainActor
 final class ViewModelFactory: ObservableObject {
     @Published var homeViewModel: HomeViewModel
     @Published var graphViewModel: GraphViewModel

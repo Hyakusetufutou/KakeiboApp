@@ -9,7 +9,8 @@
 import Foundation
 import Combine
 
-class CalendarViewModel: ObservableObject {
+@MainActor
+final class CalendarViewModel: ObservableObject {
     @Published private(set) var dailySummaries: [Date: DailySummary] = [:]
 
     @Published var selectedDate: Date?

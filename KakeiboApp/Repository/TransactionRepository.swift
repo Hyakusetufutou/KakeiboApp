@@ -22,8 +22,6 @@ class TransactionRepository: TransactionRepositoryProtocol {
     private let context: NSManagedObjectContext
     private let categoryRepository: CategoryRepository
 
-    let didChange = PassthroughSubject<Void, Never>()
-
     init(
         context: NSManagedObjectContext = PersistenceController.shared.container.viewContext,
         categoryRepository: CategoryRepository
@@ -144,10 +142,10 @@ class TransactionRepository: TransactionRepositoryProtocol {
         do {
             if context.hasChanges {
                 try context.save()
-                didChange.send()
             }
             return .success(())
         } catch {
+            context.rollback()
             return .failure(.saveError)
         }
     }

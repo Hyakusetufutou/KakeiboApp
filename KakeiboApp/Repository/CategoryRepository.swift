@@ -103,6 +103,7 @@ class CategoryRepository: CategoryRepositoryProtocol {
             }
             return .success(())
         } catch {
+            context.rollback()
             return .failure(.saveError)
         }
     }

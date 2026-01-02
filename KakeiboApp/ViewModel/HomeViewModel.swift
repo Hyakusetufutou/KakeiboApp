@@ -9,7 +9,8 @@
 import Foundation
 import Combine
 
-class HomeViewModel: ObservableObject {
+@MainActor
+final class HomeViewModel: ObservableObject {
     @Published var filterdTransactions: [TransactionModel] = []
 
     @Published var startDate: Date = .now.startOfMonth

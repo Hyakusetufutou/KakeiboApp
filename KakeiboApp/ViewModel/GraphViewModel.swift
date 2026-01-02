@@ -9,7 +9,8 @@
 import Foundation
 import Combine
 
-class GraphViewModel: ObservableObject {
+@MainActor
+final class GraphViewModel: ObservableObject {
     @Published var categorySummaries: [CategorySummary] = []
     @Published var categories: [CategoryModel] = []
 

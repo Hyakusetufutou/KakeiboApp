@@ -8,7 +8,8 @@
 
 import SwiftUI
 
-class CategoryInputViewModel: ObservableObject {
+@MainActor
+final class CategoryInputViewModel: ObservableObject {
     @Published var isPresentInputView: Bool = false
     @Published var isEdit: Bool = false
 

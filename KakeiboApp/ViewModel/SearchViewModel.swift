@@ -9,7 +9,8 @@
 import Foundation
 import Combine
 
-class SearchViewModel: ObservableObject {
+@MainActor
+final class SearchViewModel: ObservableObject {
     @Published var searchText: String = ""
     @Published var filterText: String = ""
     @Published var resultTransactions: [TransactionModel] = []

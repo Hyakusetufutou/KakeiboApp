@@ -9,7 +9,8 @@
 import Foundation
 import Combine
 
-class TransactionInputViewModel: ObservableObject {
+@MainActor
+final class TransactionInputViewModel: ObservableObject {
     @Published var categories: [CategoryModel] = []
 
     @Published var isPresentInputView: Bool = false
@@ -39,6 +40,7 @@ class TransactionInputViewModel: ObservableObject {
     init(categoryStore: CategoryStoreProtocol, transactionStore: TransactionStoreProtocol) {
         self.categoryStore = categoryStore
         self.transactionStore = transactionStore
+        bindCategories()
     }
 
     func resetSelectedCategory() {
