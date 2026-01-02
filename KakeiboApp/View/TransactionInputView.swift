@@ -10,7 +10,6 @@ import SwiftUI
 
 struct TransactionInputView: View {
     @ObservedObject var viewModel: TransactionInputViewModel
-    @ObservedObject var categoryViewModel: CategoryViewModel
 
     @Namespace private var animation
     @FocusState private var isNumberPadActive

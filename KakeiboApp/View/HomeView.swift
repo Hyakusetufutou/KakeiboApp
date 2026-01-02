@@ -90,9 +90,9 @@ struct HomeView: View {
                 NavigationLink(value: transaction) {
                     TransactionCardView(
                         transaction: transaction,
-                        category: homeViewModel.categoryViewModel.find(id: transaction.categoryId),
+                        category: homeViewModel.categoryFind(id: transaction.categoryId),
                         onDelete: { transaction in
-                            homeViewModel.transactionViewModel.delete(transaction)
+                            homeViewModel.deleteTransaction(transaction)
                         }
                     )
                     .onTapGesture {
@@ -165,19 +165,9 @@ struct HomeView: View {
 }
 
 #Preview {
-    let categoryRepository = CategoryRepository()
-    let transactionViewModel = TransactionViewModel(
-        transactionRepostory: TransactionRepository(categoryRepository: categoryRepository),
-        categoryRepository: categoryRepository
-    )
+    let viewModelFactory = ViewModelFactory()
     HomeView(
-        homeViewModel: HomeViewModel(
-            transactionViewModel: transactionViewModel,
-            categoryViewModel: CategoryViewModel(repository: categoryRepository)
-        ),
-        transactionInputViewModel: TransactionInputViewModel(
-            transactionViewModel: transactionViewModel,
-            categoryViewModel: CategoryViewModel(repository: categoryRepository)
-        )
+        homeViewModel: viewModelFactory.homeViewModel,
+        transactionInputViewModel: viewModelFactory.transactionInputViewModel
     )
 }

@@ -16,8 +16,6 @@ struct ContentView: View {
     @State private var isTabBarHidden = false
     @State private var showTabView = true
 
-    @ObservedObject var transactionViewModel: TransactionViewModel
-    @ObservedObject var categoryViewModel: CategoryViewModel
     @ObservedObject var homeViewModel: HomeViewModel
     @ObservedObject var graphViewModel: GraphViewModel
     @ObservedObject var calendarViewModel: CalendarViewModel
@@ -27,8 +25,6 @@ struct ContentView: View {
 
     init() {
         let viewModelFactory = ViewModelFactory()
-        self.transactionViewModel = viewModelFactory.transactionViewModel
-        self.categoryViewModel = viewModelFactory.categoryViewModel
         self.homeViewModel = viewModelFactory.homeViewModel
         self.graphViewModel = viewModelFactory.graphViewModel
         self.calendarViewModel = viewModelFactory.calendarViewModel
@@ -73,8 +69,6 @@ struct ContentView: View {
             } else {
                 SearchView(
                     searchViewModel: searchViewModel,
-                    categoryViewModel: categoryViewModel,
-                    transactionViewModel: transactionViewModel,
                     transactionInputViewModel: transactionInputViewModel
                 )
             }
@@ -90,8 +84,7 @@ struct ContentView: View {
         }
         .fullScreenCover(isPresented: $transactionInputViewModel.isPresentInputView) {
             TransactionInputView(
-                viewModel: transactionInputViewModel,
-                categoryViewModel: categoryViewModel
+                viewModel: transactionInputViewModel
             )
         }
         .background {

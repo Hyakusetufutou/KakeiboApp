@@ -9,8 +9,6 @@
 import Foundation
 
 final class ViewModelFactory: ObservableObject {
-    @Published var transactionViewModel: TransactionViewModel
-    @Published var categoryViewModel: CategoryViewModel
     @Published var homeViewModel: HomeViewModel
     @Published var graphViewModel: GraphViewModel
     @Published var calendarViewModel: CalendarViewModel
@@ -21,31 +19,33 @@ final class ViewModelFactory: ObservableObject {
     init() {
         let categoryRepository = CategoryRepository()
         let transactionRepository = TransactionRepository(categoryRepository: categoryRepository)
-        let transactionViewModel = TransactionViewModel(
-            transactionRepostory: transactionRepository,
-            categoryRepository: categoryRepository
-        )
-        let categoryViewModel = CategoryViewModel(repository: categoryRepository)
 
-        self.transactionViewModel = transactionViewModel
-        self.categoryViewModel = categoryViewModel
+        let categoryStore = CategoryStore(categoryRepository: categoryRepository)
+        let transactionStore = TransactionStore(
+            categoryRepository: categoryRepository,
+            transactionRepository: transactionRepository
+        )
+
         self.homeViewModel = HomeViewModel(
-            transactionViewModel: transactionViewModel,
-            categoryViewModel: categoryViewModel
+            categoryStore: categoryStore,
+            transactionStore: transactionStore
         )
         self.graphViewModel = GraphViewModel(
-            transactionViewModel: transactionViewModel,
-            categoryViewModel: categoryViewModel
+            categoryStore: categoryStore,
+            transactionStore: transactionStore
         )
         self.calendarViewModel = CalendarViewModel(
-            transactionRepository: transactionRepository,
-            categoryRepository: categoryRepository
+            categoryStore: categoryStore,
+            transactionStore: transactionStore
         )
-        self.searchViewModel = SearchViewModel(transactionRepository: transactionRepository)
+        self.searchViewModel = SearchViewModel(
+            categoryStore: categoryStore,
+            transactionStore: transactionStore
+        )
         self.transactionInputViewModel = TransactionInputViewModel(
-            transactionViewModel: transactionViewModel,
-            categoryViewModel: categoryViewModel
+            categoryStore: categoryStore,
+            transactionStore: transactionStore
         )
-        self.categoryInputViewModel = CategoryInputViewModel(categoryViewModel: categoryViewModel)
+        self.categoryInputViewModel = CategoryInputViewModel(categoryStore: categoryStore)
     }
 }

@@ -17,10 +17,10 @@ class CategoryInputViewModel: ObservableObject {
     @Published var color: Color = .blue
     @Published var type: TransactionType = .expense
 
-    private let categoryViewModel: CategoryViewModel
+    private let categoryStore: CategoryStoreProtocol
 
-    init(categoryViewModel: CategoryViewModel) {
-        self.categoryViewModel = categoryViewModel
+    init(categoryStore: CategoryStoreProtocol) {
+        self.categoryStore = categoryStore
     }
 
     func presentInputView(_ categoryItem: CategoryModel? = nil) {
@@ -39,9 +39,9 @@ class CategoryInputViewModel: ObservableObject {
         let category = CategoryModel(id: id, name: name, color: color, type: type, isDefault: false)
 
         if isEdit {
-            categoryViewModel.edit(category)
+            categoryStore.update(category)
         } else {
-            categoryViewModel.add(category)
+            categoryStore.add(category)
         }
         reset()
         isPresentInputView = false

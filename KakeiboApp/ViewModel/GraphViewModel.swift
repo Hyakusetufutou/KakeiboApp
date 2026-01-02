@@ -10,58 +10,82 @@ import Foundation
 import Combine
 
 class GraphViewModel: ObservableObject {
-    @Published var filteredTransactions: [TransactionModel] = []
     @Published var categorySummaries: [CategorySummary] = []
+    @Published var categories: [CategoryModel] = []
 
     @Published var startDate: Date = .now.startOfMonth
     @Published var endDate: Date = .now.endOfMonth
     @Published var selectedType: TransactionType = .expense
 
-    let transactionViewModel: TransactionViewModel
-    let categoryViewModel: CategoryViewModel
+    let categoryStore: CategoryStoreProtocol
+    let transactionStore: TransactionStoreProtocol
 
     private var cancellables = Set<AnyCancellable>()
 
-    init(transactionViewModel: TransactionViewModel, categoryViewModel: CategoryViewModel) {
-        self.transactionViewModel = transactionViewModel
-        self.categoryViewModel = categoryViewModel
-        bindTransactions()
+    init(categoryStore: CategoryStoreProtocol, transactionStore: TransactionStoreProtocol) {
+        self.categoryStore = categoryStore
+        self.transactionStore = transactionStore
+        bindCategories()
         bindCategorySummaries()
     }
 
-    private func bindTransactions() {
-        transactionViewModel.$transactions
-            .combineLatest($startDate, $endDate, $selectedType)
-            .map { transactions, startDate, endDate, selectedType in
-                transactions.filter { transaction in
-                    startDate <= transaction.date && transaction.date <= endDate
-                        && selectedType == transaction.type
-                }
-            }
-            .assign(to: &$filteredTransactions)
+    func findCategory(id: UUID) -> CategoryModel? {
+        categoryStore.find(id: id)
     }
 
-    private func bindCategorySummaries() {
-        $filteredTransactions
-            .combineLatest($selectedType)
-            .sink { [weak self] transactions, selectedType in
-                guard let self = self else { return }
-                self.updateCategorySummaries(from: transactions, type: selectedType)
+    func deleteTransaction(_ transaction: TransactionModel) {
+        transactionStore.delete(transaction)
+    }
+
+    func deleteCategory(_ category: CategoryModel) {
+        categoryStore.delete(category)
+    }
+
+    private func bindCategories() {
+        categoryStore.categories
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] categories in
+                self?.categories = categories
             }
             .store(in: &cancellables)
     }
 
-    private func updateCategorySummaries(
-        from transactions: [TransactionModel],
-        type: TransactionType
-    ) {
-        let categories = categoryViewModel.categories
+    private func bindCategorySummaries() {
+        Publishers.CombineLatest4(
+            transactionStore.transactions,
+            categoryStore.categories,
+            $selectedType,
+            Publishers.CombineLatest($startDate, $endDate)
+        )
+        .map { [weak self] transactions, categories, selectedType, period in
+            self?
+                .makeCategorySummaries(
+                    transactions: transactions,
+                    categories: categories,
+                    type: selectedType,
+                    startDate: period.0,
+                    endDate: period.1
+                ) ?? []
+        }
+        .receive(on: DispatchQueue.main)
+        .assign(to: &$categorySummaries)
+    }
 
+    private func makeCategorySummaries(
+        transactions: [TransactionModel],
+        categories: [CategoryModel],
+        type: TransactionType,
+        startDate: Date,
+        endDate: Date
+    ) -> [CategorySummary] {
+        let filteredTransactions = transactions.filter {
+            startDate <= $0.date && $0.date <= endDate && $0.type == type
+        }
         let summaries =
             categories
             .filter { $0.type == type }
             .compactMap { category -> CategorySummary? in
-                let related = transactions.filter { $0.categoryId == category.id }
+                let related = filteredTransactions.filter { $0.categoryId == category.id }
                 let total = related.map(\.amount)
                     .filter { $0.isFinite && !$0.isNaN }
                     .reduce(0, +)
@@ -78,9 +102,7 @@ class GraphViewModel: ObservableObject {
                 )
             }
 
-        DispatchQueue.main.async {
-            self.categorySummaries = summaries
-        }
+        return summaries
     }
 
     func changeMonth(by value: Int) {

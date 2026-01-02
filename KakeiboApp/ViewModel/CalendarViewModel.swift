@@ -19,13 +19,13 @@ class CalendarViewModel: ObservableObject {
 
     private var cancellables = Set<AnyCancellable>()
 
-    private let transactionRepository: TransactionRepository
-    private let categoryRepository: CategoryRepository
+    private let categoryStore: CategoryStoreProtocol
+    private let transactionStore: TransactionStoreProtocol
 
-    init(transactionRepository: TransactionRepository, categoryRepository: CategoryRepository) {
-        self.transactionRepository = transactionRepository
-        self.categoryRepository = categoryRepository
-        fetch()
+    init(categoryStore: CategoryStoreProtocol, transactionStore: TransactionStoreProtocol) {
+        self.categoryStore = categoryStore
+        self.transactionStore = transactionStore
+        bindDailySummaries()
     }
 
     func changeMonth(by value: Int) {
@@ -33,47 +33,48 @@ class CalendarViewModel: ObservableObject {
         else { return }
         startDate = newDate.startOfMonth
         endDate = newDate.endOfMonth
-        fetch()
     }
 
     func delete(_ transaction: TransactionModel) {
-        switch transactionRepository.delete(transaction) {
-        case .success(()):
-            return
-        case .failure(_):
-            return
-        }
+        transactionStore.delete(transaction)
     }
 
     func category(for id: UUID) -> CategoryModel? {
-        switch categoryRepository.fetch(by: id) {
-        case .success(let category):
-            return category
-        case .failure(_):
-            return nil
+        categoryStore.find(id: id)
+    }
+
+    private func bindDailySummaries() {
+        Publishers.CombineLatest3(
+            transactionStore.transactions,
+            categoryStore.categories,
+            Publishers.CombineLatest($startDate, $endDate)
+        )
+        .map { [weak self] transactions, categories, period in
+            self?
+                .makeDailySummaries(
+                    transactions: transactions,
+                    categories: categories,
+                    startDate: period.0,
+                    endDate: period.1
+                ) ?? [:]
         }
+        .receive(on: DispatchQueue.main)
+        .assign(to: &$dailySummaries)
+
     }
 
-    private func bindRepository() {
-        transactionRepository.didChange
-            .sink { [weak self] in
-                self?.fetch()
-            }
-            .store(in: &cancellables)
-    }
+    private func makeDailySummaries(
+        transactions: [TransactionModel],
+        categories: [CategoryModel],
+        startDate: Date,
+        endDate: Date
+    ) -> [Date: DailySummary] {
 
-    private func fetch() {
-        let result = transactionRepository.fetch(from: startDate, to: endDate)
-        switch result {
-        case .success(let transactions):
-            dailySummaries = makeDailySummaries(from: transactions)
-        case .failure:
-            dailySummaries = [:]
+        let filteredTransactions = transactions.filter {
+            startDate <= $0.date && $0.date <= endDate
         }
-    }
 
-    private func makeDailySummaries(from transactions: [TransactionModel]) -> [Date: DailySummary] {
-        Dictionary(grouping: transactions) {
+        return Dictionary(grouping: filteredTransactions) {
             Calendar.current.startOfDay(for: $0.date)
         }
         .mapValues { dailyTransactions -> DailySummary in
@@ -86,7 +87,7 @@ class CalendarViewModel: ObservableObject {
                 .reduce(0) { $0 + $1.amount }
 
             let date = Calendar.current.startOfDay(
-                for: dailyTransactions.first?.date ?? Date()
+                for: dailyTransactions[0].date
             )
             return DailySummary(
                 date: date,

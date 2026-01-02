@@ -92,9 +92,8 @@ struct CategoryInputView: View {
 }
 
 #Preview {
+    let categoryInputViewModel = ViewModelFactory().categoryInputViewModel
     CategoryInputView(
-        categoryInputViewModel: CategoryInputViewModel(
-            categoryViewModel: CategoryViewModel(repository: CategoryRepository())
-        )
+        categoryInputViewModel: categoryInputViewModel
     )
 }

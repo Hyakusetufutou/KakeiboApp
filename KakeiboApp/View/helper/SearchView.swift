@@ -10,8 +10,6 @@ import SwiftUI
 
 struct SearchView: View {
     @ObservedObject var searchViewModel: SearchViewModel
-    @ObservedObject var categoryViewModel: CategoryViewModel
-    @ObservedObject var transactionViewModel: TransactionViewModel
     @ObservedObject var transactionInputViewModel: TransactionInputViewModel
 
     var body: some View {
@@ -32,9 +30,11 @@ struct SearchView: View {
                             NavigationLink(value: transaction) {
                                 TransactionCardView(
                                     transaction: transaction,
-                                    category: categoryViewModel.find(id: transaction.categoryId),
+                                    category: searchViewModel.findCategory(
+                                        id: transaction.categoryId
+                                    ),
                                     onDelete: { transaction in
-                                        transactionViewModel.delete(transaction)
+                                        searchViewModel.deleteTransaction(transaction)
                                     }
                                 )
                                 .onTapGesture {
@@ -60,13 +60,4 @@ struct SearchView: View {
             }
         }
     }
-}
-
-#Preview {
-    SearchView(
-        searchViewModel: ViewModelFactory().searchViewModel,
-        categoryViewModel: ViewModelFactory().categoryViewModel,
-        transactionViewModel: ViewModelFactory().transactionViewModel,
-        transactionInputViewModel: ViewModelFactory().transactionInputViewModel
-    )
 }

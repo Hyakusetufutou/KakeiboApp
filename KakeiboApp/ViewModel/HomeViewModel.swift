@@ -17,18 +17,27 @@ class HomeViewModel: ObservableObject {
     @Published var selectedType: TransactionType = .expense
     @Published var showFilterView: Bool = false
 
-    let transactionViewModel: TransactionViewModel
-    let categoryViewModel: CategoryViewModel
+    let categoryStore: CategoryStoreProtocol
+    let transactionStore: TransactionStoreProtocol
+
     private var cancellables = Set<AnyCancellable>()
 
-    init(transactionViewModel: TransactionViewModel, categoryViewModel: CategoryViewModel) {
-        self.transactionViewModel = transactionViewModel
-        self.categoryViewModel = categoryViewModel
+    init(categoryStore: CategoryStoreProtocol, transactionStore: TransactionStoreProtocol) {
+        self.categoryStore = categoryStore
+        self.transactionStore = transactionStore
         bindTransactions()
     }
 
+    func categoryFind(id: UUID) -> CategoryModel? {
+        categoryStore.find(id: id)
+    }
+
+    func deleteTransaction(_ transaction: TransactionModel) {
+        transactionStore.delete(transaction)
+    }
+
     private func bindTransactions() {
-        transactionViewModel.$transactions
+        transactionStore.transactions
             .combineLatest($startDate, $endDate, $selectedType)
             .map { transactions, startDate, endDate, selectedType in
                 transactions.filter { transaction in

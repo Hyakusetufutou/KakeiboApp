@@ -9,24 +9,24 @@
 import SwiftUI
 
 struct TransactionListByCategory: View {
-    let categorySummary: CategorySummary
 
-    @ObservedObject var categoryViewModel: CategoryViewModel
-    @ObservedObject var transactionViewModel: TransactionViewModel
     @ObservedObject var transactionInputViewModel: TransactionInputViewModel
+    let categorySummary: CategorySummary
+    let onDeleteTransaction: (TransactionModel) -> Void
+    let onFindCategory: (UUID) -> CategoryModel?
 
     @Environment(\.dismiss) var dismiss
 
     init(
+        transactionInputViewModel: TransactionInputViewModel,
         categorySummary: CategorySummary,
-        categoryViewModel: CategoryViewModel,
-        transactionViewModel: TransactionViewModel,
-        transactionInputViewModel: TransactionInputViewModel
+        onDeleteTransaction: @escaping (TransactionModel) -> Void,
+        onFindCategory: @escaping (UUID) -> CategoryModel?
     ) {
-        self.categorySummary = categorySummary
-        self.categoryViewModel = categoryViewModel
-        self.transactionViewModel = transactionViewModel
         self.transactionInputViewModel = transactionInputViewModel
+        self.categorySummary = categorySummary
+        self.onDeleteTransaction = onDeleteTransaction
+        self.onFindCategory = onFindCategory
     }
 
     var body: some View {
@@ -54,10 +54,8 @@ struct TransactionListByCategory: View {
                             NavigationLink(value: transaction) {
                                 TransactionCardView(
                                     transaction: transaction,
-                                    category: categoryViewModel.find(id: transaction.categoryId),
-                                    onDelete: { transaction in
-                                        transactionViewModel.delete(transaction)
-                                    }
+                                    category: onFindCategory(transaction.categoryId),
+                                    onDelete: onDeleteTransaction
                                 )
                                 .onTapGesture {
                                     transactionInputViewModel.presentInputView(transaction)

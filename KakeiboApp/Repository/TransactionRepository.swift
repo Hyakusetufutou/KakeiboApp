@@ -10,7 +10,15 @@ import Foundation
 import CoreData
 import Combine
 
-class TransactionRepository {
+protocol TransactionRepositoryProtocol {
+    func search(text: String?) -> Result<[TransactionModel], CustomError>
+    func fetch(from startDate: Date?, to endDate: Date?) -> Result<[TransactionModel], CustomError>
+    func add(_ transactionModel: TransactionModel) -> Result<Void, CustomError>
+    func delete(_ transactionModel: TransactionModel) -> Result<Void, CustomError>
+    func update(_ transactionModel: TransactionModel) -> Result<Void, CustomError>
+}
+
+class TransactionRepository: TransactionRepositoryProtocol {
     private let context: NSManagedObjectContext
     private let categoryRepository: CategoryRepository
 

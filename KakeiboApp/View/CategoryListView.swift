@@ -9,18 +9,22 @@
 import SwiftUI
 
 struct CategoryListView: View {
-    @ObservedObject var categoryViewModel: CategoryViewModel
     @ObservedObject var categoryInputViewModel: CategoryInputViewModel
     @Binding var isPresentCategoryList: Bool
+    @Binding var categories: [CategoryModel]
+
+    let onDeleteCategory: (CategoryModel) -> Void
 
     init(
-        categoryViewModel: CategoryViewModel,
         categoryInputViewModel: CategoryInputViewModel,
-        isPresentCategoryList: Binding<Bool>
+        isPresentCategoryList: Binding<Bool>,
+        categories: Binding<[CategoryModel]>,
+        onDeleteCategory: @escaping (CategoryModel) -> Void
     ) {
-        self.categoryViewModel = categoryViewModel
         self.categoryInputViewModel = categoryInputViewModel
         self._isPresentCategoryList = isPresentCategoryList
+        self._categories = categories
+        self.onDeleteCategory = onDeleteCategory
     }
 
     var body: some View {
@@ -64,7 +68,7 @@ struct CategoryListView: View {
             .padding(.vertical, 16)
 
             List {
-                ForEach(categoryViewModel.categories) { category in
+                ForEach(categories) { category in
                     HStack {
                         Text(category.name)
                         Spacer()
@@ -75,7 +79,7 @@ struct CategoryListView: View {
                     }
                     .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                         Button {
-                            categoryViewModel.delete(category)
+                            onDeleteCategory(category)
                         } label: {
                             Image(systemName: "trash")
                         }

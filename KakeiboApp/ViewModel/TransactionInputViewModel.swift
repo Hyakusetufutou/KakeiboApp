@@ -7,8 +7,11 @@
 //
 
 import Foundation
+import Combine
 
 class TransactionInputViewModel: ObservableObject {
+    @Published var categories: [CategoryModel] = []
+
     @Published var isPresentInputView: Bool = false
     @Published var isEdit: Bool = false
 
@@ -21,19 +24,21 @@ class TransactionInputViewModel: ObservableObject {
     @Published var selectedCategoryId: UUID?
 
     var selectedCategory: CategoryModel? {
-        categoryViewModel.categories.first { $0.id == selectedCategoryId }
+        categories.first { $0.id == selectedCategoryId }
     }
 
     var availableCategories: [CategoryModel] {
-        categoryViewModel.categories.filter { $0.type == type }
+        categories.filter { $0.type == type }
     }
 
-    private let transactionViewModel: TransactionViewModel
-    private let categoryViewModel: CategoryViewModel
+    private let categoryStore: CategoryStoreProtocol
+    private let transactionStore: TransactionStoreProtocol
 
-    init(transactionViewModel: TransactionViewModel, categoryViewModel: CategoryViewModel) {
-        self.transactionViewModel = transactionViewModel
-        self.categoryViewModel = categoryViewModel
+    private var cancellables = Set<AnyCancellable>()
+
+    init(categoryStore: CategoryStoreProtocol, transactionStore: TransactionStoreProtocol) {
+        self.categoryStore = categoryStore
+        self.transactionStore = transactionStore
     }
 
     func resetSelectedCategory() {
@@ -67,9 +72,9 @@ class TransactionInputViewModel: ObservableObject {
         )
 
         if isEdit {
-            transactionViewModel.edit(transaction)
+            transactionStore.update(transaction)
         } else {
-            transactionViewModel.add(transaction)
+            transactionStore.add(transaction)
         }
 
         reset()
@@ -105,5 +110,14 @@ class TransactionInputViewModel: ObservableObject {
             return false
         }
         return true
+    }
+
+    private func bindCategories() {
+        categoryStore.categories
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] categories in
+                self?.categories = categories
+            }
+            .store(in: &cancellables)
     }
 }

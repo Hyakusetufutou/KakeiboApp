@@ -9,7 +9,16 @@
 import Foundation
 import CoreData
 
-class CategoryRepository {
+protocol CategoryRepositoryProtocol {
+    func fetchAll() -> Result<[CategoryModel], CustomError>
+    func fetch(by id: UUID) -> Result<CategoryModel, CustomError>
+    func add(_ categoryModel: CategoryModel) -> Result<Void, CustomError>
+    func delete(_ categoryModel: CategoryModel) -> Result<Void, CustomError>
+    func update(_ categoryModel: CategoryModel) -> Result<Void, CustomError>
+    func fetchEntity(by id: UUID) throws -> CategoryEntity
+}
+
+class CategoryRepository: CategoryRepositoryProtocol {
     private let context: NSManagedObjectContext
 
     init(context: NSManagedObjectContext = PersistenceController.shared.container.viewContext) {

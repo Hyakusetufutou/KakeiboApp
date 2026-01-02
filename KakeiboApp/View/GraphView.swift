@@ -63,10 +63,14 @@ struct GraphView: View {
                     ) { summary in
                         NavigationLink(
                             destination: TransactionListByCategory(
+                                transactionInputViewModel: transactionInputViewModel,
                                 categorySummary: summary,
-                                categoryViewModel: graphViewModel.categoryViewModel,
-                                transactionViewModel: graphViewModel.transactionViewModel,
-                                transactionInputViewModel: transactionInputViewModel
+                                onDeleteTransaction: { transaction in
+                                    graphViewModel.deleteTransaction(transaction)
+                                },
+                                onFindCategory: { id in
+                                    graphViewModel.findCategory(id: id)
+                                }
                             )
                         ) {
                             HStack {
@@ -108,9 +112,12 @@ struct GraphView: View {
         }
         .sheet(isPresented: $isPresentCategoryList) {
             CategoryListView(
-                categoryViewModel: graphViewModel.categoryViewModel,
                 categoryInputViewModel: categoryInputViewModel,
-                isPresentCategoryList: $isPresentCategoryList
+                isPresentCategoryList: $isPresentCategoryList,
+                categories: $graphViewModel.categories,
+                onDeleteCategory: { category in
+                    graphViewModel.deleteCategory(category)
+                }
             )
             .overlay {
                 ZStack {

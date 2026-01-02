@@ -14,12 +14,22 @@ class SearchViewModel: ObservableObject {
     @Published var filterText: String = ""
     @Published var resultTransactions: [TransactionModel] = []
 
-    let transactionRepository: TransactionRepository
+    private let categoryStore: CategoryStoreProtocol
+    private let transactionStore: TransactionStoreProtocol
     private var cancellables = Set<AnyCancellable>()
 
-    init(transactionRepository: TransactionRepository) {
-        self.transactionRepository = transactionRepository
+    init(categoryStore: CategoryStoreProtocol, transactionStore: TransactionStoreProtocol) {
+        self.categoryStore = categoryStore
+        self.transactionStore = transactionStore
         setupSearchPipeline()
+    }
+
+    func deleteTransaction(_ transaction: TransactionModel) {
+        transactionStore.delete(transaction)
+    }
+
+    func findCategory(id: UUID) -> CategoryModel? {
+        categoryStore.find(id: id)
     }
 
     private func setupSearchPipeline() {
@@ -37,15 +47,9 @@ class SearchViewModel: ObservableObject {
             resultTransactions = []
             return
         }
-        switch transactionRepository.search(text: text) {
-        case .success(let items):
-            DispatchQueue.main.async {
-                self.resultTransactions = items
-            }
-        case .failure(_):
-            DispatchQueue.main.async {
-                self.resultTransactions = []
-            }
+
+        DispatchQueue.main.async {
+            self.resultTransactions = self.transactionStore.search(text: text)
         }
     }
 }
