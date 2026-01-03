@@ -16,6 +16,8 @@ struct GraphView: View {
     @ObservedObject private var transactionInputViewModel: TransactionInputViewModel
     @ObservedObject private var categoryInputViewModel: CategoryInputViewModel
 
+    @State private var pressed = false
+
     init(
         graphViewModel: GraphViewModel,
         transactionInputViewModel: TransactionInputViewModel,
@@ -51,56 +53,49 @@ struct GraphView: View {
                     PieChartView(data: graphViewModel.categorySummaries)
                         .frame(height: 200)
                         .padding()
+
+                    List {
+                        ForEach(
+                            graphViewModel.categorySummaries
+                        ) { summary in
+                            NavigationLink(
+                                destination: TransactionListByCategory(
+                                    transactionInputViewModel: transactionInputViewModel,
+                                    categorySummary: summary,
+                                    onDeleteTransaction: { transaction in
+                                        graphViewModel.deleteTransaction(transaction)
+                                    },
+                                    onFindCategory: { id in
+                                        graphViewModel.findCategory(id: id)
+                                    }
+                                )
+                            ) {
+                                HStack {
+                                    Circle()
+                                        .frame(width: 12)
+                                        .foregroundStyle(summary.color)
+                                    Text(summary.categoryName)
+
+                                    Spacer()
+
+                                    Text(currencyString(summary.totalAmount, allowedDigits: 2))
+                                }
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .scrollContentBackground(.hidden)
                 } else {
                     Text("取引なし")
-                        .frame(height: 200)
+                        .frame(maxHeight: .infinity)
                         .padding()
                 }
 
-                List {
-                    ForEach(
-                        graphViewModel.categorySummaries
-                    ) { summary in
-                        NavigationLink(
-                            destination: TransactionListByCategory(
-                                transactionInputViewModel: transactionInputViewModel,
-                                categorySummary: summary,
-                                onDeleteTransaction: { transaction in
-                                    graphViewModel.deleteTransaction(transaction)
-                                },
-                                onFindCategory: { id in
-                                    graphViewModel.findCategory(id: id)
-                                }
-                            )
-                        ) {
-                            HStack {
-                                Circle()
-                                    .frame(width: 12)
-                                    .foregroundStyle(summary.color)
-                                Text(summary.categoryName)
-
-                                Spacer()
-
-                                Text(currencyString(summary.totalAmount, allowedDigits: 2))
-                            }
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-                .scrollContentBackground(.hidden)
             }
             .padding(.horizontal, 15)
-            .background(.gray.opacity(0.15))
+            .background(Color(.systemGroupedBackground))
             .disabled(categoryInputViewModel.isPresentInputView)
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    VStack {
-                        Text("グラフ")
-                            .font(.title)
-                            .fontWeight(.bold)
-                    }
-                }
-
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         isPresentCategoryList = true
@@ -109,6 +104,8 @@ struct GraphView: View {
                     }
                 }
             }
+            .navigationTitle("グラフ")
+            .navigationBarTitleDisplayMode(.inline)
         }
         .sheet(isPresented: $isPresentCategoryList) {
             CategoryListView(

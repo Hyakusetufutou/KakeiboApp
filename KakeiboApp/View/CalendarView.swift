@@ -191,26 +191,9 @@ struct CalendarView: View {
                 }
                 .background(Color(.systemGroupedBackground))
             }
-            .background(.gray.opacity(0.1))
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    VStack {
-                        Text("カレンダー")
-                            .font(.title)
-                            .fontWeight(.bold)
-                    }
-                }
-
-                ToolbarItem(placement: .topBarTrailing) {
-                    HStack {
-                        Button {
-
-                        } label: {
-                            Image(systemName: "calendar")
-                        }
-                    }
-                }
-            }
+            .background(Color(.systemGroupedBackground))
+            .navigationTitle("カレンダー")
+            .navigationBarTitleDisplayMode(.inline)
         }
     }
 }

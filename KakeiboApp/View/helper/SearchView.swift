@@ -49,15 +49,8 @@ struct SearchView: View {
             }
             .frame(maxWidth: .infinity)
             .background(.gray.opacity(0.1))
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    VStack {
-                        Text("検索")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                    }
-                }
-            }
+            .navigationTitle("検索")
+            .navigationBarTitleDisplayMode(.large)
         }
     }
 }

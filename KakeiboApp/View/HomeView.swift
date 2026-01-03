@@ -34,7 +34,7 @@ struct HomeView: View {
                 }
                 .padding(15)
             }
-            .background(.gray.opacity(0.15))
+            .background(Color(.systemGroupedBackground))
             .blur(radius: homeViewModel.showFilterView ? 8 : 0)
             .disabled(homeViewModel.showFilterView)
         }
@@ -60,15 +60,11 @@ struct HomeView: View {
 
     @ViewBuilder
     func sectionView() -> some View {
-        Button {
-            homeViewModel.showFilterView = true
-        } label: {
-            Text(
-                "\(format(date: homeViewModel.startDate, format: "yyyy/MM/dd")) ~ \(format(date: homeViewModel.endDate, format: "yyyy/MM/dd"))"
-            )
-            .font(.caption2)
-            .foregroundStyle(.gray)
-        }
+        Text(
+            "\(format(date: homeViewModel.startDate, format: "yyyy/MM/dd")) ~ \(format(date: homeViewModel.endDate, format: "yyyy/MM/dd"))"
+        )
+        .font(.caption2)
+        .foregroundStyle(.gray)
         .hSpacing(.leading)
 
         VStack {
@@ -126,15 +122,7 @@ struct HomeView: View {
             } label: {
                 Image(systemName: "calendar")
                     .font(.title2)
-                    .foregroundStyle(.gray)
                     .padding(8)
-                    .background {
-                        RoundedRectangle(cornerRadius: 20)
-                            .frame(width: 50, height: 42)
-                            .foregroundStyle(.white)
-                            .shadow(radius: 1)
-                            .blur(radius: 2)
-                    }
             }
 
             Button {
@@ -142,15 +130,7 @@ struct HomeView: View {
             } label: {
                 Image(systemName: "plus")
                     .font(.title2)
-                    .foregroundStyle(.gray)
                     .padding(8)
-                    .background {
-                        RoundedRectangle(cornerRadius: 20)
-                            .frame(width: 50, height: 42)
-                            .foregroundStyle(.white)
-                            .shadow(radius: 1)
-                            .blur(radius: 2)
-                    }
             }
         }
         .padding(.bottom, userName.isEmpty ? 10 : 5)

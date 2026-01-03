@@ -108,6 +108,7 @@ struct CustomTabBar: View {
         }
         .frame(height: 56)
         .padding(.horizontal, 25)
+        .padding(.bottom)
         /// Animations (Customize it as per your needs!)
         .animation(.bouncy, value: dragOffset)
         .animation(.bouncy, value: isActive)
@@ -119,6 +120,7 @@ struct CustomTabBar: View {
         .customOnChange(value: searchText) {
             onSearchTextChanged($0)
         }
+        .background(Color(.systemGroupedBackground))
     }
 
     /// Tab Item View

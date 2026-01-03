@@ -31,6 +31,7 @@ struct SettingView: View {
             }
             .navigationTitle("設定")
         }
+        .background(Color(.systemGroupedBackground))
     }
 }
 

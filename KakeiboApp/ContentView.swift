@@ -16,6 +16,8 @@ struct ContentView: View {
     @State private var isTabBarHidden = false
     @State private var showTabView = true
 
+    @StateObject private var keyboardObserver = KeyboardObserver()
+
     @ObservedObject var homeViewModel: HomeViewModel
     @ObservedObject var graphViewModel: GraphViewModel
     @ObservedObject var calendarViewModel: CalendarViewModel
@@ -35,61 +37,67 @@ struct ContentView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            if showTabView {
-                TabView(selection: $activeTab) {
-                    HomeView(
-                        homeViewModel: homeViewModel,
-                        transactionInputViewModel: transactionInputViewModel
-                    )
-                    .tag(TabModel.home)
-                    .background {
-                        if !isTabBarHidden {
-                            HideTabBar {
-                                isTabBarHidden = true
+            ZStack {
+
+                Color(.blue)
+                    .ignoresSafeArea()
+
+                if showTabView {
+                    TabView(selection: $activeTab) {
+                        HomeView(
+                            homeViewModel: homeViewModel,
+                            transactionInputViewModel: transactionInputViewModel
+                        )
+                        .tag(TabModel.home)
+                        .background {
+                            if !isTabBarHidden {
+                                HideTabBar {
+                                    isTabBarHidden = true
+                                }
                             }
                         }
-                    }
 
-                    CalendarView(
-                        calendarViewModel: calendarViewModel,
+                        CalendarView(
+                            calendarViewModel: calendarViewModel,
+                            transactionInputViewModel: transactionInputViewModel
+                        )
+                        .tag(TabModel.calendar)
+
+                        GraphView(
+                            graphViewModel: graphViewModel,
+                            transactionInputViewModel: transactionInputViewModel,
+                            categoryInputViewModel: categoryInputViewModel
+                        )
+                        .tag(TabModel.graph)
+
+                        SettingView()
+                            .tag(TabModel.setting)
+                    }
+                } else {
+                    SearchView(
+                        searchViewModel: searchViewModel,
                         transactionInputViewModel: transactionInputViewModel
                     )
-                    .tag(TabModel.calendar)
-
-                    GraphView(
-                        graphViewModel: graphViewModel,
-                        transactionInputViewModel: transactionInputViewModel,
-                        categoryInputViewModel: categoryInputViewModel
-                    )
-                    .tag(TabModel.graph)
-
-                    SettingView()
-                        .tag(TabModel.setting)
-                }
-            } else {
-                SearchView(
-                    searchViewModel: searchViewModel,
-                    transactionInputViewModel: transactionInputViewModel
-                )
-            }
-
-            if !categoryInputViewModel.isPresentInputView {
-                CustomTabBar(showSearchBar: true, activeTab: $activeTab) { isExpanded in
-                    showTabView = !isExpanded
-                } onSearchTextChanged: { searchText in
-                    searchViewModel.searchText = searchText
                 }
 
+                if !categoryInputViewModel.isPresentInputView && !keyboardObserver.isVisible {
+                    VStack {
+                        Spacer()
+
+                        CustomTabBar(showSearchBar: true, activeTab: $activeTab) { isExpanded in
+                            showTabView = !isExpanded
+                        } onSearchTextChanged: { searchText in
+                            searchViewModel.searchText = searchText
+                        }
+                    }
+                }
             }
         }
         .fullScreenCover(isPresented: $transactionInputViewModel.isPresentInputView) {
             TransactionInputView(
                 viewModel: transactionInputViewModel
             )
-        }
-        .background {
-            Color.gray.opacity(0.15)
-                .edgesIgnoringSafeArea(.all)
+            .background(Color(.systemGroupedBackground))
         }
     }
 }
