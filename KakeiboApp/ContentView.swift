@@ -80,7 +80,9 @@ struct ContentView: View {
                     )
                 }
 
-                if !categoryInputViewModel.isPresentInputView && !keyboardObserver.isVisible {
+                if !categoryInputViewModel.isPresentInputView
+                    && (!showTabView || !keyboardObserver.isVisible)
+                {
                     VStack {
                         Spacer()
 
