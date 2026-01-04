@@ -46,6 +46,7 @@ struct SwipeAction<Content: View>: View {
     }
 
     private func onChanged(value: DragGesture.Value) {
+        guard abs(value.translation.width) > abs(value.translation.height) else { return }
         if value.translation.width < 0 {
             startSwiping = true
             if isSwiped {
@@ -61,6 +62,17 @@ struct SwipeAction<Content: View>: View {
     }
 
     private func onEnd(value: DragGesture.Value) {
+        guard abs(value.translation.width) > abs(value.translation.height) else {
+            if isSwiped {
+                isSwiped = true
+                offset = -60
+            } else {
+                startSwiping = false
+                isSwiped = false
+                offset = 0
+            }
+            return
+        }
         withAnimation(.easeOut) {
             if value.translation.width < 0 {
                 if -value.translation.width > UIScreen.main.bounds.width / 2 {

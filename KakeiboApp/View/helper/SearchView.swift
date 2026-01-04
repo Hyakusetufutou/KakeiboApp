@@ -48,7 +48,7 @@ struct SearchView: View {
                 }
             }
             .frame(maxWidth: .infinity)
-            .background(.gray.opacity(0.1))
+            .background(Color(.systemGroupedBackground))
             .navigationTitle("検索")
             .navigationBarTitleDisplayMode(.large)
         }
