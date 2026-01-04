@@ -19,6 +19,7 @@ struct SettingView: View {
             List {
                 Section("ユーザー名") {
                     TextField("山田太郎", text: $userName)
+                        .submitLabel(.done)
                 }
 
                 Section("ロック") {
