@@ -18,6 +18,7 @@ struct TransactionInputView: View {
     var body: some View {
         NavigationStack {
             ScrollView(.vertical) {
+
                 VStack(alignment: .leading, spacing: 12) {
                     customTextField(
                         "タイトル",
@@ -52,14 +53,22 @@ struct TransactionInputView: View {
                             .foregroundStyle(.gray)
                             .hSpacing(.leading)
 
-                        DatePicker(
-                            "日付",
-                            selection: $viewModel.date,
-                            displayedComponents: [.date]
-                        )
-                        .environment(\.locale, Locale(identifier: "ja_JP"))
-                        .datePickerStyle(.graphical)
-                        .background(.clear)
+                        HStack {
+                            Spacer()
+
+                            DatePicker(
+                                "日付",
+                                selection: $viewModel.date,
+                                displayedComponents: [.date]
+                            )
+                            .environment(\.locale, Locale(identifier: "ja_JP"))
+                            .datePickerStyle(.graphical)
+                            .clipped()
+                            .frame(maxWidth: .infinity)
+
+                            Spacer()
+                        }
+                        .background(.background, in: .rect(cornerRadius: 10))
                     }
                 }
             }
@@ -92,6 +101,8 @@ struct TransactionInputView: View {
                             .font(.system(size: 16))
                             .foregroundColor(.blue)
                     }
+                    .disabled(!viewModel.isValid())
+                    .opacity(viewModel.isValid() ? 1.0 : 0.2)
                 }
             }
         }

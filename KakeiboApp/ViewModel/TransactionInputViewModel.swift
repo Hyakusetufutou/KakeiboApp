@@ -107,7 +107,7 @@ final class TransactionInputViewModel: ObservableObject {
         selectedCategoryId = transaction.categoryId
     }
 
-    private func isValid() -> Bool {
+    func isValid() -> Bool {
         guard !title.isEmpty, Double(amount) != nil, selectedCategoryId != nil else {
             return false
         }
