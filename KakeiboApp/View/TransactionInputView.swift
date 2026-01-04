@@ -85,7 +85,7 @@ struct TransactionInputView: View {
 
                 ToolbarItem(placement: .topBarLeading) {
                     Button {
-                        viewModel.isPresentInputView = false
+                        viewModel.cancel()
                     } label: {
                         Text("キャンセル")
                             .font(.system(size: 16))

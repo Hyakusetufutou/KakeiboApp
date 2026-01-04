@@ -114,8 +114,10 @@ struct GraphView: View {
                 categories: $graphViewModel.categories,
                 onDeleteCategory: { category in
                     graphViewModel.deleteCategory(category)
-                }
+                },
+                type: graphViewModel.selectedType.rawValue
             )
+            .interactiveDismissDisabled(true)
             .overlay {
                 ZStack {
                     if categoryInputViewModel.isPresentInputView {
@@ -130,6 +132,7 @@ struct GraphView: View {
                             CategoryInputView(
                                 categoryInputViewModel: categoryInputViewModel
                             )
+                            .padding(.bottom, 8)
                             .transition(.move(edge: .bottom))
                         }
                     }

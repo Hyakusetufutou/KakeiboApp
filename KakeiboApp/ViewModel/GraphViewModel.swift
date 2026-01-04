@@ -13,6 +13,7 @@ import Combine
 final class GraphViewModel: ObservableObject {
     @Published var categorySummaries: [CategorySummary] = []
     @Published var categories: [CategoryModel] = []
+    @Published var filteredCategories: [CategoryModel] = []
 
     @Published var startDate: Date = .now.startOfMonth
     @Published var endDate: Date = .now.endOfMonth
@@ -43,12 +44,16 @@ final class GraphViewModel: ObservableObject {
     }
 
     private func bindCategories() {
-        categoryStore.categories
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] categories in
-                self?.categories = categories
-            }
-            .store(in: &cancellables)
+        Publishers.CombineLatest(
+            categoryStore.categories,
+            $selectedType
+        )
+        .map { categories, selectedType in
+            categories
+                .filter { $0.type == selectedType }
+        }
+        .receive(on: DispatchQueue.main)
+        .assign(to: &$categories)
     }
 
     private func bindCategorySummaries() {

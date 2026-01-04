@@ -93,6 +93,7 @@ struct ContentView: View {
                 }
             }
         }
+        .background(Color(.systemGroupedBackground))
         .fullScreenCover(isPresented: $transactionInputViewModel.isPresentInputView) {
             TransactionInputView(
                 viewModel: transactionInputViewModel

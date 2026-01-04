@@ -12,9 +12,10 @@ struct CategoryInputView: View {
     @ObservedObject var categoryInputViewModel: CategoryInputViewModel
     @Namespace private var animation
     @Environment(\.colorScheme) var colorScheme
+    @FocusState private var isFocused: Bool
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 8) {
             Text("カテゴリ名")
                 .font(.caption)
 
@@ -25,6 +26,7 @@ struct CategoryInputView: View {
                     RoundedRectangle(cornerRadius: 10)
                         .fill(Color.gray.opacity(0.1))
                 }
+                .focused($isFocused)
 
             TransactionTypeSelector(
                 transactionType: $categoryInputViewModel.type,
@@ -53,13 +55,19 @@ struct CategoryInputView: View {
                         }
                 }
             }
-            .padding(.vertical, 5)
+            .padding(.bottom, 8)
 
             HStack {
                 Button {
-                    categoryInputViewModel.save()
+                    Task { @MainActor in
+                        isFocused = false
+
+                        try? await Task.sleep(nanoseconds: 050_000_000)
+
+                        categoryInputViewModel.save()
+                    }
                 } label: {
-                    Text("作成")
+                    Text(categoryInputViewModel.isEdit ? "更新" : "作成")
                         .font(.title3)
                         .foregroundStyle(.backgroundLight)
                         .frame(maxWidth: .infinity, minHeight: 50)
@@ -72,7 +80,13 @@ struct CategoryInputView: View {
                 .disabled(categoryInputViewModel.name.isEmpty)
 
                 Button {
-                    categoryInputViewModel.cancel()
+                    Task { @MainActor in
+                        isFocused = false
+
+                        try? await Task.sleep(nanoseconds: 300_000_000)  // 0.3秒
+
+                        categoryInputViewModel.save()
+                    }
                 } label: {
                     Text("中止")
                         .font(.title3)

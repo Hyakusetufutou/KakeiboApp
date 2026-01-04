@@ -14,17 +14,20 @@ struct CategoryListView: View {
     @Binding var categories: [CategoryModel]
 
     let onDeleteCategory: (CategoryModel) -> Void
+    let type: String
 
     init(
         categoryInputViewModel: CategoryInputViewModel,
         isPresentCategoryList: Binding<Bool>,
         categories: Binding<[CategoryModel]>,
-        onDeleteCategory: @escaping (CategoryModel) -> Void
+        onDeleteCategory: @escaping (CategoryModel) -> Void,
+        type: String
     ) {
         self.categoryInputViewModel = categoryInputViewModel
         self._isPresentCategoryList = isPresentCategoryList
         self._categories = categories
         self.onDeleteCategory = onDeleteCategory
+        self.type = type
     }
 
     var body: some View {
@@ -32,7 +35,7 @@ struct CategoryListView: View {
             HStack {
                 Button {
                     withAnimation(.snappy) {
-                        categoryInputViewModel.isPresentInputView = true
+                        categoryInputViewModel.presentInputView()
                     }
                 } label: {
                     Image(systemName: "plus")
@@ -46,7 +49,7 @@ struct CategoryListView: View {
 
                 Spacer()
 
-                Text("カテゴリリスト")
+                Text("\(type)カテゴリ")
                     .font(.title3)
                     .fontWeight(.bold)
 
@@ -70,7 +73,12 @@ struct CategoryListView: View {
             List {
                 ForEach(categories) { category in
                     HStack {
+                        Circle()
+                            .frame(width: 12)
+                            .foregroundStyle(category.color)
+
                         Text(category.name)
+
                         Spacer()
                     }
                     .contentShape(Rectangle())
@@ -88,5 +96,6 @@ struct CategoryListView: View {
                 }
             }
         }
+        .background(Color(.systemGroupedBackground))
     }
 }
