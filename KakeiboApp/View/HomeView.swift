@@ -10,7 +10,6 @@ import SwiftUI
 
 struct HomeView: View {
     @AppStorage("userName") private var userName: String = ""
-    @Namespace private var animation
 
     @ObservedObject var homeViewModel: HomeViewModel
     @ObservedObject var transactionInputViewModel: TransactionInputViewModel

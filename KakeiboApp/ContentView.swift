@@ -38,60 +38,52 @@ struct ContentView: View {
     var body: some View {
         VStack(spacing: 0) {
             ZStack {
-
-                Color(.blue)
-                    .ignoresSafeArea()
-
-                if showTabView {
-                    TabView(selection: $activeTab) {
-                        HomeView(
-                            homeViewModel: homeViewModel,
-                            transactionInputViewModel: transactionInputViewModel
-                        )
-                        .tag(TabModel.home)
-                        .background {
-                            if !isTabBarHidden {
-                                HideTabBar {
-                                    isTabBarHidden = true
-                                }
+                TabView(selection: $activeTab) {
+                    HomeView(
+                        homeViewModel: homeViewModel,
+                        transactionInputViewModel: transactionInputViewModel
+                    )
+                    .tag(TabModel.home)
+                    .background {
+                        if !isTabBarHidden {
+                            HideTabBar {
+                                isTabBarHidden = true
                             }
                         }
-
-                        CalendarView(
-                            calendarViewModel: calendarViewModel,
-                            transactionInputViewModel: transactionInputViewModel
-                        )
-                        .tag(TabModel.calendar)
-
-                        GraphView(
-                            graphViewModel: graphViewModel,
-                            transactionInputViewModel: transactionInputViewModel,
-                            categoryInputViewModel: categoryInputViewModel
-                        )
-                        .tag(TabModel.graph)
-
-                        SettingView()
-                            .tag(TabModel.setting)
                     }
-                } else {
+
+                    CalendarView(
+                        calendarViewModel: calendarViewModel,
+                        transactionInputViewModel: transactionInputViewModel
+                    )
+                    .tag(TabModel.calendar)
+
+                    GraphView(
+                        graphViewModel: graphViewModel,
+                        transactionInputViewModel: transactionInputViewModel,
+                        categoryInputViewModel: categoryInputViewModel
+                    )
+                    .tag(TabModel.graph)
+
+                    SettingView()
+                        .tag(TabModel.setting)
+                }
+
+                if !showTabView {
                     SearchView(
                         searchViewModel: searchViewModel,
                         transactionInputViewModel: transactionInputViewModel
                     )
                 }
+            }
 
-                if !categoryInputViewModel.isPresentInputView
-                    && (!showTabView || !keyboardObserver.isVisible)
-                {
-                    VStack {
-                        Spacer()
-
-                        CustomTabBar(showSearchBar: true, activeTab: $activeTab) { isExpanded in
-                            showTabView = !isExpanded
-                        } onSearchTextChanged: { searchText in
-                            searchViewModel.searchText = searchText
-                        }
-                    }
+            if !categoryInputViewModel.isPresentInputView
+                && (!showTabView || !keyboardObserver.isVisible)
+            {
+                CustomTabBar(showSearchBar: true, activeTab: $activeTab) { isExpanded in
+                    showTabView = !isExpanded
+                } onSearchTextChanged: { searchText in
+                    searchViewModel.searchText = searchText
                 }
             }
         }

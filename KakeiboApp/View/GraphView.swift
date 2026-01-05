@@ -9,7 +9,6 @@
 import SwiftUI
 
 struct GraphView: View {
-    @Namespace private var animation
     @State private var isPresentCategoryList: Bool = false
 
     @ObservedObject private var graphViewModel: GraphViewModel
@@ -50,9 +49,14 @@ struct GraphView: View {
                 }
 
                 if !graphViewModel.categorySummaries.isEmpty {
+                    Text(
+                        "\(graphViewModel.totalTitle)  \(currencyString(graphViewModel.totalAmount, allowedDigits: 0))"
+                    )
+                    .font(.title3.bold())
+                    .padding(.vertical, 8)
+
                     PieChartView(data: graphViewModel.categorySummaries)
                         .frame(height: 200)
-                        .padding()
 
                     List {
                         ForEach(
@@ -107,6 +111,7 @@ struct GraphView: View {
             .navigationTitle("グラフ")
             .navigationBarTitleDisplayMode(.inline)
         }
+        .animation(.snappy, value: graphViewModel.selectedType)
         .sheet(isPresented: $isPresentCategoryList) {
             CategoryListView(
                 categoryInputViewModel: categoryInputViewModel,
@@ -133,7 +138,6 @@ struct GraphView: View {
                                 categoryInputViewModel: categoryInputViewModel
                             )
                             .padding(.bottom, 8)
-                            .transition(.move(edge: .bottom))
                         }
                     }
                 }

@@ -70,7 +70,7 @@ struct CalendarView: View {
                     from: daysInMonth.first ?? Date()
                 )
 
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 4) {
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 2) {
                     ForEach(["日", "月", "火", "水", "木", "金", "土"], id: \.self) { day in
                         Text(day)
                             .frame(maxWidth: .infinity)
@@ -136,8 +136,8 @@ struct CalendarView: View {
                                 }
                                 .frame(height: 22)
                             }
-                            .frame(maxWidth: .infinity, minHeight: 40)
-                            .background(isSelected ? Color.blue.opacity(0.1) : Color.clear)
+                            .frame(maxWidth: .infinity, minHeight: 32)
+                            //                            .background(isSelected ? Color.blue.opacity(0.1) : Color.clear)
                             .clipShape(RoundedRectangle(cornerRadius: 6))
                         }
                         .buttonStyle(.plain)
@@ -152,8 +152,15 @@ struct CalendarView: View {
                 ScrollView(.vertical, showsIndicators: true) {
                     if let selectedDate = calendarViewModel.selectedDate {
                         let selected = Calendar.current.startOfDay(for: selectedDate)
+                        let summary = calendarViewModel.dailySummaries[selected]
                         let transactions =
                             calendarViewModel.dailySummaries[selected]?.transactions ?? []
+
+                        if let summary {
+                            DaySummaryView(income: summary.income, expense: summary.expense)
+                                .padding(.horizontal)
+                                .padding(.top, 8)
+                        }
 
                         if transactions.isEmpty {
                             Text("この日の取引はありません")
@@ -161,7 +168,7 @@ struct CalendarView: View {
                                 .foregroundStyle(.secondary)
                                 .padding(.top, 30)
                         } else {
-                            LazyVStack(spacing: 10) {
+                            LazyVStack(spacing: 8) {
                                 ForEach(transactions) { transaction in
                                     TransactionCardView(
                                         transaction: transaction,

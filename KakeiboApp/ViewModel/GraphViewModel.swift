@@ -22,6 +22,14 @@ final class GraphViewModel: ObservableObject {
     let categoryStore: CategoryStoreProtocol
     let transactionStore: TransactionStoreProtocol
 
+    var totalAmount: Double {
+        categorySummaries.reduce(0) { $0 + $1.totalAmount }
+    }
+
+    var totalTitle: String {
+        selectedType == .income ? "収入合計" : "支出合計"
+    }
+
     private var cancellables = Set<AnyCancellable>()
 
     init(categoryStore: CategoryStoreProtocol, transactionStore: TransactionStoreProtocol) {

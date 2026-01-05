@@ -10,7 +10,6 @@ import SwiftUI
 
 struct CategoryInputView: View {
     @ObservedObject var categoryInputViewModel: CategoryInputViewModel
-    @Namespace private var animation
     @Environment(\.colorScheme) var colorScheme
     @FocusState private var isFocused: Bool
 
@@ -83,9 +82,9 @@ struct CategoryInputView: View {
                     Task { @MainActor in
                         isFocused = false
 
-                        try? await Task.sleep(nanoseconds: 300_000_000)  // 0.3秒
+                        //                        try? await Task.sleep(nanoseconds: 050_000_000)
 
-                        categoryInputViewModel.save()
+                        categoryInputViewModel.cancel()
                     }
                 } label: {
                     Text("中止")
