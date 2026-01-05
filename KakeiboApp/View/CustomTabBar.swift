@@ -14,7 +14,8 @@ struct CustomTabBar: View {
     var onSearchBarExpanded: (Bool) -> Void
     var onSearchTextChanged: (String) -> Void
     /// View Properties
-    @GestureState private var isActive: Bool = false
+    @GestureState private var isDragging: Bool = false
+    @State private var isTappedActive: Bool = false
     @State private var isInitialOffsetSet: Bool = false
     @State private var dragOffset: CGFloat = 0
     @State private var lastDragOffset: CGFloat?
@@ -22,6 +23,10 @@ struct CustomTabBar: View {
     @State private var isSearchExpanded: Bool = false
     @State private var searchText: String = ""
     @FocusState private var isKeyboardActive: Bool
+
+    var isTabActive: Bool {
+        isDragging || isTappedActive
+    }
 
     var body: some View {
         GeometryReader {
@@ -60,7 +65,7 @@ struct CustomTabBar: View {
                             ZStack {
                                 Capsule(style: .continuous)
                                     .stroke(.gray.opacity(0.25), lineWidth: 3)
-                                    .opacity(isActive ? 1 : 0)
+                                    .opacity(isTabActive ? 1 : 0)
 
                                 Capsule(style: .continuous)
                                     .fill(.background)
@@ -68,7 +73,7 @@ struct CustomTabBar: View {
                             .compositingGroup()
                             .frame(width: tabItemWidth, height: tabItemHeight)
                             /// Scaling when drag gesture becomes active
-                            .scaleEffect(isActive ? 1.3 : 1)
+                            .scaleEffect(isTabActive ? 1.3 : 1)
                             .offset(x: dragOffset)
                             .opacity(isSearchExpanded ? 0 : 1)
                         }
@@ -111,7 +116,7 @@ struct CustomTabBar: View {
         .padding(.bottom)
         /// Animations (Customize it as per your needs!)
         .animation(.bouncy, value: dragOffset)
-        .animation(.bouncy, value: isActive)
+        .animation(.bouncy, value: isTabActive)
         .animation(.smooth, value: activeTab)
         .animation(.easeInOut(duration: 0.25), value: isKeyboardActive)
         .customOnChange(value: isSearchExpanded) {
@@ -145,7 +150,7 @@ struct CustomTabBar: View {
         .simultaneousGesture(
             DragGesture(minimumDistance: 0)
                 .updating(
-                    $isActive,
+                    $isDragging,
                     body: { _, out, _ in
                         out = true
                     }
@@ -172,8 +177,15 @@ struct CustomTabBar: View {
         .simultaneousGesture(
             TapGesture()
                 .onEnded({ _ in
+                    isTappedActive = true
+
                     activeTab = tab
                     dragOffset = CGFloat(tab.index) * width
+
+                    Task { @MainActor in
+                        try? await Task.sleep(nanoseconds: 200_000_000)
+                        self.isTappedActive = false
+                    }
                 })
         )
         .optionalGeometryGroup()
