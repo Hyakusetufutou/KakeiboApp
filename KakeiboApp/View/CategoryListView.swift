@@ -14,14 +14,14 @@ struct CategoryListView: View {
     @Binding var categories: [CategoryModel]
 
     let onDeleteCategory: (CategoryModel) -> Void
-    let type: String
+    let type: TransactionType
 
     init(
         categoryInputViewModel: CategoryInputViewModel,
         isPresentCategoryList: Binding<Bool>,
         categories: Binding<[CategoryModel]>,
         onDeleteCategory: @escaping (CategoryModel) -> Void,
-        type: String
+        type: TransactionType
     ) {
         self.categoryInputViewModel = categoryInputViewModel
         self._isPresentCategoryList = isPresentCategoryList
@@ -35,7 +35,7 @@ struct CategoryListView: View {
             HStack {
                 Button {
                     withAnimation(.snappy) {
-                        categoryInputViewModel.presentInputView()
+                        categoryInputViewModel.presentInputView(type: type)
                     }
                 } label: {
                     Image(systemName: "plus")
@@ -49,7 +49,7 @@ struct CategoryListView: View {
 
                 Spacer()
 
-                Text("\(type)カテゴリ")
+                Text("\(type.rawValue)カテゴリ")
                     .font(.title3)
                     .fontWeight(.bold)
 
@@ -83,7 +83,7 @@ struct CategoryListView: View {
                     }
                     .contentShape(Rectangle())
                     .onTapGesture {
-                        categoryInputViewModel.presentInputView(category)
+                        categoryInputViewModel.presentInputView(type: type, categoryItem: category)
                     }
                     .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                         Button {

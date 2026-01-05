@@ -120,7 +120,7 @@ struct GraphView: View {
                 onDeleteCategory: { category in
                     graphViewModel.deleteCategory(category)
                 },
-                type: graphViewModel.selectedType.rawValue
+                type: graphViewModel.selectedType
             )
             .interactiveDismissDisabled(true)
             .overlay {

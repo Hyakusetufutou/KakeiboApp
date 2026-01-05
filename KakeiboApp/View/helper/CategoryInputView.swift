@@ -10,103 +10,112 @@ import SwiftUI
 
 struct CategoryInputView: View {
     @ObservedObject var categoryInputViewModel: CategoryInputViewModel
-    @Environment(\.colorScheme) var colorScheme
     @FocusState private var isFocused: Bool
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("カテゴリ名")
-                .font(.caption)
+        VStack(spacing: 16) {
 
-            TextField("食事", text: $categoryInputViewModel.name)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 12)
-                .background {
-                    RoundedRectangle(cornerRadius: 10)
-                        .fill(Color.gray.opacity(0.1))
-                }
-                .focused($isFocused)
+            // MARK: - Header
+            Text(categoryInputViewModel.isEdit ? "カテゴリを編集" : "カテゴリを追加")
+                .font(.headline)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
-            TransactionTypeSelector(
-                transactionType: $categoryInputViewModel.type,
-                onChange: {}
-            )
+            // MARK: - Name Input
+            VStack(alignment: .leading, spacing: 6) {
+                Text("名前")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
 
-            Text("色")
-                .font(.caption)
+                TextField("食事", text: $categoryInputViewModel.name)
+                    .padding(.vertical, 14)
+                    .padding(.horizontal, 12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(.thinMaterial)
+                    )
+                    .focused($isFocused)
+            }
 
-            LazyVGrid(
-                columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 6),
-                spacing: 10
-            ) {
-                ForEach(AppTheme.categoryColors, id: \.self) { color in
-                    Circle()
-                        .fill(color)
-                        .frame(width: 32, height: 32)
-                        .overlay {
-                            if color == categoryInputViewModel.color {
-                                Circle()
-                                    .stroke(Color.primary, lineWidth: 3)
+            // MARK: - Color Picker
+            VStack(alignment: .leading, spacing: 6) {
+                Text("カラー")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                LazyVGrid(
+                    columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 6),
+                    spacing: 12
+                ) {
+                    ForEach(AppTheme.categoryColors, id: \.self) { color in
+                        Circle()
+                            .fill(color)
+                            .frame(width: 34, height: 34)
+                            .overlay {
+                                if color == categoryInputViewModel.color {
+                                    Circle()
+                                        .stroke(color.opacity(0.8), lineWidth: 4)
+                                        .shadow(color: color.opacity(0.4), radius: 6)
+                                }
                             }
-                        }
-                        .onTapGesture {
-                            categoryInputViewModel.color = color
-                        }
+                            .scaleEffect(color == categoryInputViewModel.color ? 1.15 : 1)
+                            .animation(
+                                .spring(response: 0.35, dampingFraction: 0.7),
+                                value: categoryInputViewModel.color
+                            )
+                            .onTapGesture {
+                                categoryInputViewModel.color = color
+                            }
+                    }
                 }
             }
-            .padding(.bottom, 8)
 
-            HStack {
+            // MARK: - Actions
+            HStack(spacing: 12) {
                 Button {
+                    isFocused = false
+
                     Task { @MainActor in
-                        isFocused = false
-
-                        try? await Task.sleep(nanoseconds: 050_000_000)
-
+                        await Task.yield()
                         categoryInputViewModel.save()
                     }
                 } label: {
                     Text(categoryInputViewModel.isEdit ? "更新" : "作成")
-                        .font(.title3)
-                        .foregroundStyle(.backgroundLight)
+                        .font(.headline)
                         .frame(maxWidth: .infinity, minHeight: 50)
-                        .background {
-                            RoundedRectangle(cornerRadius: 10)
-                                .fill(.purple)
-                                .opacity(categoryInputViewModel.name.isEmpty ? 0.2 : 1)
-                        }
+                        .background(
+                            RoundedRectangle(cornerRadius: 14)
+                                .fill(
+                                    categoryInputViewModel.name.isEmpty
+                                        ? .gray.opacity(0.2) : .accentColor
+                                )
+                        )
+                        .foregroundStyle(.white)
                 }
                 .disabled(categoryInputViewModel.name.isEmpty)
 
                 Button {
+                    isFocused = false
                     Task { @MainActor in
-                        isFocused = false
-
-                        //                        try? await Task.sleep(nanoseconds: 050_000_000)
-
+                        await Task.yield()
                         categoryInputViewModel.cancel()
                     }
                 } label: {
-                    Text("中止")
-                        .font(.title3)
-                        .foregroundStyle(.backgroundLight)
+                    Text("キャンセル")
+                        .font(.headline)
                         .frame(maxWidth: .infinity, minHeight: 50)
-                        .background {
-                            RoundedRectangle(cornerRadius: 10)
-                                .fill(.red)
-                        }
+                        .background(
+                            RoundedRectangle(cornerRadius: 14)
+                                .fill(.red.opacity(0.9))
+                        )
+                        .foregroundStyle(.white)
                 }
             }
         }
-        .padding(15)
-        .background(.bar, in: .rect(cornerRadius: 10))
-        .padding(.horizontal, 30)
+        .padding(20)
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(.ultraThinMaterial)
+        )
+        .padding(.horizontal, 24)
     }
-}
-
-#Preview {
-    let categoryInputViewModel = ViewModelFactory().categoryInputViewModel
-    CategoryInputView(
-        categoryInputViewModel: categoryInputViewModel
-    )
 }

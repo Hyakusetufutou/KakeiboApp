@@ -1,5 +1,5 @@
 //
-//  CategoryInputVIewModel.swift
+//  CategoryInputViewModel.swift
 //  KakeiboApp
 //
 //  Created by Hyakusetufutou on 2025/10/11
@@ -24,7 +24,8 @@ final class CategoryInputViewModel: ObservableObject {
         self.categoryStore = categoryStore
     }
 
-    func presentInputView(_ categoryItem: CategoryModel? = nil) {
+    func presentInputView(type: TransactionType, categoryItem: CategoryModel? = nil) {
+        self.type = type
         if let category = categoryItem {
             restore(category)
             isEdit = true
@@ -56,7 +57,7 @@ final class CategoryInputViewModel: ObservableObject {
         id = UUID()
         name = ""
         color = .blue
-        type = .expense
+        //      type = .expense
     }
 
     func restore(_ category: CategoryModel) {
