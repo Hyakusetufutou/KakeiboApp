@@ -44,6 +44,7 @@ final class HomeViewModel: ObservableObject {
                 transactions.filter { transaction in
                     startDate <= transaction.date
                         && transaction.date <= endDate
+                        && transaction.type == selectedType
                 }
             }
             .assign(to: &$filterdTransactions)

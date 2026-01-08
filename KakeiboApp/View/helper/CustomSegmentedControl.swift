@@ -14,24 +14,27 @@ struct CustomSegmentedControl: View {
     var body: some View {
         HStack(spacing: 0) {
             ForEach(TransactionType.allCases, id: \.self) { type in
-                Text(type.rawValue)
-                    .hSpacing()
-                    .padding(.vertical, 10)
-                    .background {
-                        if type == selectedType {
-                            Capsule()
-                                .fill(.background)
-                                .matchedGeometryEffect(id: "TYPE", in: animation)
+                HStack {
+                    Image(systemName: type.imageName)
+                    Text(type.rawValue)
+                }
+                .hSpacing()
+                .padding(.vertical, 10)
+                .background {
+                    if type == selectedType {
+                        Capsule()
+                            .fill(.background)
+                            .matchedGeometryEffect(id: "TYPE", in: animation)
+                    }
+                }
+                .contentShape(.capsule)
+                .onTapGesture {
+                    withAnimation(.snappy) {
+                        if selectedType != type {
+                            selectedType = type
                         }
                     }
-                    .contentShape(.capsule)
-                    .onTapGesture {
-                        withAnimation(.snappy) {
-                            if selectedType != type {
-                                selectedType = type
-                            }
-                        }
-                    }
+                }
             }
         }
         .background(.gray.opacity(0.15), in: .capsule)
