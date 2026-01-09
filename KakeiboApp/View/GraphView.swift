@@ -29,87 +29,56 @@ struct GraphView: View {
 
     var body: some View {
         NavigationStack {
-            VStack {
-                ChangeMonthView(
-                    date: $graphViewModel.startDate,
-                    onPreviousMonth: {
-                        graphViewModel.changeMonth(by: -1)
-                    },
-                    onNextMonth: {
-                        graphViewModel.changeMonth(by: 1)
-                    }
-                )
-
-                HStack {
-                    Spacer()
-
-                    CustomSegmentedControl(selectedType: $graphViewModel.selectedType)
-
-                    Spacer()
-                }
-
-                if !graphViewModel.categorySummaries.isEmpty {
-                    Text(
-                        "\(graphViewModel.totalTitle)  \(currencyString(graphViewModel.totalAmount, allowedDigits: 0))"
-                    )
-                    .font(.title3.bold())
-                    .padding(.vertical, 8)
-
-                    PieChartView(data: graphViewModel.categorySummaries)
-                        .frame(height: 200)
-
-                    List {
-                        ForEach(
-                            graphViewModel.categorySummaries
-                        ) { summary in
-                            NavigationLink(
-                                destination: TransactionListByCategory(
-                                    transactionInputViewModel: transactionInputViewModel,
-                                    categorySummary: summary,
-                                    onDeleteTransaction: { transaction in
-                                        graphViewModel.deleteTransaction(transaction)
-                                    },
-                                    onFindCategory: { id in
-                                        graphViewModel.findCategory(id: id)
-                                    }
-                                )
-                            ) {
-                                HStack {
-                                    Circle()
-                                        .frame(width: 12)
-                                        .foregroundStyle(summary.color)
-                                    Text(summary.categoryName)
-
-                                    Spacer()
-
-                                    Text(currencyString(summary.totalAmount, allowedDigits: 2))
+            ScrollView(.vertical) {
+                LazyVStack(spacing: 10, pinnedViews: [.sectionHeaders]) {
+                    Section {
+                        VStack {
+                            ChangeMonthView(
+                                date: $graphViewModel.startDate,
+                                onPreviousMonth: {
+                                    graphViewModel.changeMonth(by: -1)
+                                },
+                                onNextMonth: {
+                                    graphViewModel.changeMonth(by: 1)
                                 }
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                    .scrollContentBackground(.hidden)
-                } else {
-                    Text("取引なし")
-                        .frame(maxHeight: .infinity)
-                        .padding()
-                }
+                            )
 
-            }
-            .padding(.horizontal, 15)
-            .background(Color(.systemGroupedBackground))
-            .disabled(categoryInputViewModel.isPresentInputView)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        isPresentCategoryList = true
-                    } label: {
-                        Image(systemName: "list.bullet")
+                            CustomSegmentedControl(selectedType: $graphViewModel.selectedType)
+                                .hSpacing()
+
+                            graphViewCategoryList()
+
+                        }
+                        .padding(.horizontal, 16)
+                        .background(Color(.systemGroupedBackground))
+                        .disabled(categoryInputViewModel.isPresentInputView)
+                    } header: {
+                        HStack {
+                            Text("グラフ")
+                                .font(.title2.bold())
+
+                            Spacer()
+
+                            Button {
+                                isPresentCategoryList = true
+                            } label: {
+                                Image(systemName: "list.bullet")
+                                    .font(.title2)
+                                    .foregroundStyle(.primary)
+                                    .padding(.vertical, 10)
+                                    .padding(.horizontal, 14)
+                                    .background {
+                                        Capsule()
+                                            .fill(.white)
+                                            .shadow(color: .gray.opacity(0.3), radius: 8, y: 1)
+                                    }
+                            }
+                        }
+                        .padding(.horizontal, 16)
                     }
                 }
             }
-            .navigationTitle("グラフ")
-            .navigationBarTitleDisplayMode(.inline)
+            .background(Color(.systemGroupedBackground))
         }
         .animation(.snappy, value: graphViewModel.selectedType)
         .sheet(isPresented: $isPresentCategoryList) {
@@ -155,6 +124,62 @@ struct GraphView: View {
                 .padding(.top, 16)
             Spacer()
         }
+    }
+
+    @ViewBuilder
+    func graphViewCategoryList() -> some View {
+        if !graphViewModel.categorySummaries.isEmpty {
+            Text(
+                "\(graphViewModel.totalTitle)  \(currencyString(graphViewModel.totalAmount, allowedDigits: 0))"
+            )
+            .font(.title3.bold())
+            .padding(.vertical, 8)
+
+            PieChartView(data: graphViewModel.categorySummaries)
+                .frame(height: 200)
+
+            List {
+                ForEach(
+                    graphViewModel.categorySummaries
+                ) { summary in
+                    NavigationLink(
+                        destination: TransactionListByCategory(
+                            transactionInputViewModel: transactionInputViewModel,
+                            categorySummary: summary,
+                            onDeleteTransaction: { transaction in
+                                graphViewModel.deleteTransaction(transaction)
+                            },
+                            onFindCategory: { id in
+                                graphViewModel.findCategory(id: id)
+                            }
+                        )
+                    ) {
+                        HStack {
+                            Circle()
+                                .frame(width: 12)
+                                .foregroundStyle(summary.color)
+                            Text(summary.categoryName)
+
+                            Spacer()
+
+                            Text(currencyString(summary.totalAmount, allowedDigits: 2))
+                        }
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .scrollContentBackground(.hidden)
+        } else {
+            VStack {
+                Text("取引なし")
+                    .font(.subheadline)
+                    .foregroundStyle(.gray)
+                Image(systemName: "xmark.seal.fill")
+                    .font(.custom("", size: 100))
+            }
+            .padding(.top, 24)
+        }
+
     }
 }
 

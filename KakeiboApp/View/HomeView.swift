@@ -77,7 +77,7 @@ struct HomeView: View {
 
             if homeViewModel.filterdTransactions.isEmpty {
                 VStack {
-                    Text("取引はありません")
+                    Text("取引なし")
                         .font(.subheadline)
                         .foregroundStyle(.gray)
                     Image(systemName: "xmark.seal.fill")
