@@ -74,7 +74,7 @@ struct CalendarView: View {
                         Text("カレンダー")
                             .font(.title2.bold())
                             .hSpacing(.leading)
-                            .padding()
+                            .padding(.horizontal, 16)
                     }
 
                 }

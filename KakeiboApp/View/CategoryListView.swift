@@ -40,10 +40,13 @@ struct CategoryListView: View {
                 } label: {
                     Image(systemName: "plus")
                         .font(.title2)
+                        .foregroundStyle(.primary)
+                        .padding(.vertical, 10)
+                        .padding(.horizontal, 14)
                         .background {
-                            Circle()
-                                .frame(width: 50, height: 50)
-                                .foregroundStyle(.black)
+                            Capsule()
+                                .fill(.white)
+                                .shadow(color: .gray.opacity(0.3), radius: 8, y: 1)
                         }
                 }
 
@@ -60,10 +63,13 @@ struct CategoryListView: View {
                 } label: {
                     Image(systemName: "checkmark")
                         .font(.title2)
+                        .foregroundStyle(.primary)
+                        .padding(.vertical, 10)
+                        .padding(.horizontal, 14)
                         .background {
-                            Circle()
-                                .frame(width: 50, height: 50)
-                                .foregroundStyle(.black)
+                            Capsule()
+                                .fill(.white)
+                                .shadow(color: .gray.opacity(0.3), radius: 8, y: 1)
                         }
                 }
             }

@@ -76,20 +76,20 @@ struct TransactionInputView: View {
             .scrollIndicators(.hidden)
             .background(.gray.opacity(0.15))
             .toolbar {
-                ToolbarItemGroup(placement: .keyboard) {
-                    Spacer()
-                    Button("閉じる") {
-                        isNumberPadActive = false
-                    }
-                }
-
                 ToolbarItem(placement: .topBarLeading) {
                     Button {
                         viewModel.cancel()
                     } label: {
-                        Text("キャンセル")
-                            .font(.system(size: 16))
-                            .foregroundColor(.blue)
+                        Image(systemName: "xmark")
+                            .font(.headline)
+                            .foregroundStyle(.primary)
+                            .padding(.vertical, 10)
+                            .padding(.horizontal, 14)
+                            .background {
+                                Capsule()
+                                    .fill(.white)
+                                    .shadow(color: .gray.opacity(0.3), radius: 8, y: 1)
+                            }
                     }
                 }
 
@@ -97,9 +97,16 @@ struct TransactionInputView: View {
                     Button {
                         viewModel.save()
                     } label: {
-                        Text("保存")
-                            .font(.system(size: 16))
-                            .foregroundColor(.blue)
+                        Image(systemName: "checkmark")
+                            .font(.headline)
+                            .foregroundStyle(.primary)
+                            .padding(.vertical, 10)
+                            .padding(.horizontal, 14)
+                            .background {
+                                Capsule()
+                                    .fill(.white)
+                                    .shadow(color: .gray.opacity(0.3), radius: 8, y: 1)
+                            }
                     }
                     .disabled(!viewModel.isValid())
                     .opacity(viewModel.isValid() ? 1.0 : 0.2)
