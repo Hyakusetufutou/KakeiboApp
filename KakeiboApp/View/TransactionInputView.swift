@@ -9,11 +9,7 @@
 import SwiftUI
 
 struct TransactionInputView: View {
-    @State private var title = ""
-    @State private var memo = ""
-    @State private var amount = ""
-    @State private var date = Date()
-    @Binding var isPresented: Bool
+    @ObservedObject var viewModel: TransactionInputViewModel
 
     @Namespace private var animation
     @FocusState private var isNumberPadActive
@@ -22,20 +18,24 @@ struct TransactionInputView: View {
     var body: some View {
         NavigationStack {
             ScrollView(.vertical) {
+
                 VStack(alignment: .leading, spacing: 12) {
                     customTextField(
                         "タイトル",
                         hint: "タイトル",
-                        value: $title
+                        value: $viewModel.title
                     )
                     customTextField(
                         "メモ",
                         hint: "メモ",
-                        value: $memo
+                        value: $viewModel.memo
                     )
 
                     HStack(alignment: .top, spacing: 15) {
-                        transactionTypeSelector()
+                        TransactionTypeSelector(
+                            transactionType: $viewModel.type,
+                            onChange: { viewModel.resetSelectedCategory() }
+                        )
                         categorySelector()
                     }
                     .frame(maxWidth: .infinity)
@@ -43,7 +43,7 @@ struct TransactionInputView: View {
                     customTextField(
                         "金額",
                         hint: "金額",
-                        value: $amount,
+                        value: $viewModel.amount,
                         keyboardType: .numberPad
                     )
 
@@ -53,14 +53,22 @@ struct TransactionInputView: View {
                             .foregroundStyle(.gray)
                             .hSpacing(.leading)
 
-                        DatePicker(
-                            "日付",
-                            selection: $date,
-                            displayedComponents: [.date]
-                        )
-                        .environment(\.locale, Locale(identifier: "ja_JP"))
-                        .datePickerStyle(.graphical)
-                        .background(.clear)
+                        HStack {
+                            Spacer()
+
+                            DatePicker(
+                                "日付",
+                                selection: $viewModel.date,
+                                displayedComponents: [.date]
+                            )
+                            .environment(\.locale, Locale(identifier: "ja_JP"))
+                            .datePickerStyle(.graphical)
+                            .clipped()
+                            .frame(maxWidth: .infinity)
+
+                            Spacer()
+                        }
+                        .background(.background, in: .rect(cornerRadius: 10))
                     }
                 }
             }
@@ -68,31 +76,40 @@ struct TransactionInputView: View {
             .scrollIndicators(.hidden)
             .background(.gray.opacity(0.15))
             .toolbar {
-                ToolbarItemGroup(placement: .keyboard) {
-                    Spacer()
-                    Button("閉じる") {
-                        isNumberPadActive = false
-                    }
-                }
-
                 ToolbarItem(placement: .topBarLeading) {
                     Button {
-                        isPresented = false
+                        viewModel.cancel()
                     } label: {
-                        Text("キャンセル")
-                            .font(.system(size: 16))
-                            .foregroundColor(.blue)
+                        Image(systemName: "xmark")
+                            .font(.headline)
+                            .foregroundStyle(.primary)
+                            .padding(.vertical, 10)
+                            .padding(.horizontal, 14)
+                            .background {
+                                Capsule()
+                                    .fill(.white)
+                                    .shadow(color: .gray.opacity(0.3), radius: 8, y: 1)
+                            }
                     }
                 }
 
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
-                        //@@@ 保存処理実装時に対応
+                        viewModel.save()
                     } label: {
-                        Text("保存")
-                            .font(.system(size: 16))
-                            .foregroundColor(.blue)
+                        Image(systemName: "checkmark")
+                            .font(.headline)
+                            .foregroundStyle(.primary)
+                            .padding(.vertical, 10)
+                            .padding(.horizontal, 14)
+                            .background {
+                                Capsule()
+                                    .fill(.white)
+                                    .shadow(color: .gray.opacity(0.3), radius: 8, y: 1)
+                            }
                     }
+                    .disabled(!viewModel.isValid())
+                    .opacity(viewModel.isValid() ? 1.0 : 0.2)
                 }
             }
         }
@@ -129,14 +146,17 @@ struct TransactionInputView: View {
         VStack(alignment: .leading, spacing: 6) {
             sectionHeader("カテゴリ")
             Menu {
-                ForEach([CategoryModel.mock1, CategoryModel.mock2, CategoryModel.mock3], id: \.id) {
+                ForEach(
+                    viewModel.availableCategories
+                ) {
                     item in
                     Button(item.name) {
+                        viewModel.selectedCategoryId = item.id
                     }
                 }
             } label: {
                 HStack {
-                    Text("選択してください")
+                    Text(viewModel.selectedCategory?.name ?? "選択してください")
                         .font(.callout)
                         .padding(.leading, 12)
                     Spacer()
@@ -151,45 +171,6 @@ struct TransactionInputView: View {
                 .foregroundStyle(colorScheme == .dark ? .white : .black)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(.background, in: .rect(cornerRadius: 10))
-            }
-        }
-    }
-
-    @ViewBuilder
-    func transactionTypeSelector() -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("種類")
-                .font(.caption)
-                .foregroundStyle(.gray)
-                .hSpacing(.leading)
-
-            HStack(spacing: 10) {
-                ForEach(TransactionType.allCases, id: \.self) { type in
-                    ZStack {
-                        Text(type.rawValue)
-                            .font(.callout)
-                            .padding(.vertical, 6)
-                            .frame(maxWidth: .infinity)
-                            .background {
-                                if type == type {
-                                    RoundedRectangle(cornerRadius: 10)
-                                        .fill(.gray.opacity(0.15))
-                                        .matchedGeometryEffect(id: "TYPE", in: animation)
-                                }
-                            }
-                            .contentShape(RoundedRectangle(cornerRadius: 10))
-                    }
-                    .contentShape(RoundedRectangle(cornerRadius: 10))
-                }
-            }
-            .padding(8)
-            .cornerRadius(40)
-            .background {
-                if colorScheme == .dark {
-                    Color.black.cornerRadius(10)
-                } else {
-                    Color.white.cornerRadius(10)
-                }
             }
         }
     }

@@ -16,6 +16,10 @@ struct SwipeAction<Content: View>: View {
     @ViewBuilder var content: Content
     let onDelete: () -> Void
 
+    private let actionWidth: CGFloat = 60
+    private let deleteWidth: CGFloat = 1000
+    private let swipeThreshold: CGFloat = 50
+
     var body: some View {
         ZStack {
             if startSwiping {
@@ -31,7 +35,7 @@ struct SwipeAction<Content: View>: View {
                     }
                 } label: {
                     Image(systemName: "trash")
-                        .frame(width: 60)
+                        .frame(width: actionWidth)
                         .foregroundStyle(.white)
                 }
             }
@@ -46,11 +50,12 @@ struct SwipeAction<Content: View>: View {
     }
 
     private func onChanged(value: DragGesture.Value) {
+        guard abs(value.translation.width) > abs(value.translation.height) else { return }
         if value.translation.width < 0 {
             startSwiping = true
             if isSwiped {
                 withAnimation {
-                    offset = value.translation.width - 60
+                    offset = value.translation.width - actionWidth
                 }
             } else {
                 withAnimation {
@@ -61,24 +66,42 @@ struct SwipeAction<Content: View>: View {
     }
 
     private func onEnd(value: DragGesture.Value) {
+        guard abs(value.translation.width) > abs(value.translation.height) else {
+            reset()
+            return
+        }
         withAnimation(.easeOut) {
             if value.translation.width < 0 {
                 if -value.translation.width > UIScreen.main.bounds.width / 2 {
-                    offset = -1000
-                    onDelete()
-                } else if -offset > 50 {
-                    isSwiped = true
-                    offset = -60
+                    delete()
+                } else if -offset > swipeThreshold {
+                    open()
                 } else {
-                    startSwiping = false
-                    isSwiped = false
-                    offset = 0
+                    close()
                 }
             } else {
-                startSwiping = false
-                isSwiped = false
-                offset = 0
+                close()
             }
         }
+    }
+
+    private func open() {
+        isSwiped = true
+        offset = -actionWidth
+    }
+
+    private func close() {
+        startSwiping = false
+        isSwiped = false
+        offset = 0
+    }
+
+    private func delete() {
+        offset = -deleteWidth
+        onDelete()
+    }
+
+    private func reset() {
+        isSwiped ? open() : close()
     }
 }

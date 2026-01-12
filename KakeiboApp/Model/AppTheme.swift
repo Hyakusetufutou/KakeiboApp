@@ -22,20 +22,38 @@ struct AppTheme: Equatable {
         background: Color("BackgroundDark")
     )
 
+    static let categoryColors: [Color] = [
+        .red, .orange, .yellow, .green, .mint, .teal, .blue, .indigo, .purple, .pink, .brown, .gray,
+    ]
+
     static func stringToColor(_ colorString: String) -> Color {
         switch colorString {
         case "red":
             return .red
-        case "blue":
-            return .blue
+        case "orange":
+            return .orange
         case "yellow":
             return .yellow
+        case "green":
+            return .green
+        case "mint":
+            return .mint
+        case "teal":
+            return .teal
+        case "blue":
+            return .blue
+        case "indigo":
+            return .indigo
         case "purple":
             return .purple
-        case "white":
-            return .white
+        case "pink":
+            return .pink
+        case "brown":
+            return .brown
+        case "gray":
+            return .gray
         default:
-            return .white
+            return .blue
         }
     }
 
@@ -43,14 +61,30 @@ struct AppTheme: Equatable {
         switch color {
         case .red:
             return "red"
-        case .blue:
-            return "blue"
+        case .orange:
+            return "orange"
         case .yellow:
             return "yellow"
+        case .green:
+            return "green"
+        case .mint:
+            return "mint"
+        case .teal:
+            return "teal"
+        case .blue:
+            return "blue"
+        case .indigo:
+            return "indigo"
         case .purple:
             return "purple"
+        case .pink:
+            return "pink"
+        case .brown:
+            return "brown"
+        case .gray:
+            return "gray"
         default:
-            return "white"
+            return "blue"
         }
     }
 }

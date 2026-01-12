@@ -8,8 +8,17 @@
 
 import Foundation
 import CoreData
+import Combine
 
-class TransactionRepository {
+protocol TransactionRepositoryProtocol {
+    func search(text: String?) -> Result<[TransactionModel], CustomError>
+    func fetch(from startDate: Date?, to endDate: Date?) -> Result<[TransactionModel], CustomError>
+    func add(_ transactionModel: TransactionModel) -> Result<Void, CustomError>
+    func delete(_ transactionModel: TransactionModel) -> Result<Void, CustomError>
+    func update(_ transactionModel: TransactionModel) -> Result<Void, CustomError>
+}
+
+class TransactionRepository: TransactionRepositoryProtocol {
     private let context: NSManagedObjectContext
     private let categoryRepository: CategoryRepository
 
@@ -19,6 +28,25 @@ class TransactionRepository {
     ) {
         self.context = context
         self.categoryRepository = categoryRepository
+    }
+
+    func search(text: String?) -> Result<[TransactionModel], CustomError> {
+        let fetchRequest: NSFetchRequest<TransactionEntity> = TransactionEntity.fetchRequest()
+
+        if let text = text, !text.isEmpty {
+            fetchRequest.predicate = NSPredicate(
+                format: "title CONTAINS[c] %@ OR memo CONTAINS[c] %@",
+                text,
+                text
+            )
+        }
+
+        do {
+            let transactions = try context.fetch(fetchRequest)
+            return .success(transactions.map { $0.toModel() })
+        } catch {
+            return .failure(.transactionNotFoundError)
+        }
     }
 
     func fetch(from startDate: Date?, to endDate: Date?) -> Result<[TransactionModel], CustomError>
@@ -117,6 +145,7 @@ class TransactionRepository {
             }
             return .success(())
         } catch {
+            context.rollback()
             return .failure(.saveError)
         }
     }

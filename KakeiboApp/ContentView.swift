@@ -14,13 +14,35 @@ struct ContentView: View {
 
     @State private var activeTab: TabModel = .home
     @State private var isTabBarHidden = false
-    @State private var isPresentInputView = false
-    @State private var isPresentCategoryInputView = false
+    @State private var showTabView = true
+
+    @StateObject private var keyboardObserver = KeyboardObserver()
+
+    @ObservedObject var homeViewModel: HomeViewModel
+    @ObservedObject var graphViewModel: GraphViewModel
+    @ObservedObject var calendarViewModel: CalendarViewModel
+    @ObservedObject var transactionInputViewModel: TransactionInputViewModel
+    @ObservedObject var categoryInputViewModel: CategoryInputViewModel
+    @ObservedObject var searchViewModel: SearchViewModel
+
+    init() {
+        let viewModelFactory = ViewModelFactory()
+        self.homeViewModel = viewModelFactory.homeViewModel
+        self.graphViewModel = viewModelFactory.graphViewModel
+        self.calendarViewModel = viewModelFactory.calendarViewModel
+        self.transactionInputViewModel = viewModelFactory.transactionInputViewModel
+        self.categoryInputViewModel = viewModelFactory.categoryInputViewModel
+        self.searchViewModel = viewModelFactory.searchViewModel
+    }
 
     var body: some View {
         VStack(spacing: 0) {
-            TabView(selection: $activeTab) {
-                HomeView()
+            ZStack {
+                TabView(selection: $activeTab) {
+                    HomeView(
+                        homeViewModel: homeViewModel,
+                        transactionInputViewModel: transactionInputViewModel
+                    )
                     .tag(TabModel.home)
                     .background {
                         if !isTabBarHidden {
@@ -30,26 +52,47 @@ struct ContentView: View {
                         }
                     }
 
-                Text("Calendar")
+                    CalendarView(
+                        calendarViewModel: calendarViewModel,
+                        transactionInputViewModel: transactionInputViewModel
+                    )
                     .tag(TabModel.calendar)
 
-                GraphView(isPresentCategoryInputView: $isPresentCategoryInputView)
+                    GraphView(
+                        graphViewModel: graphViewModel,
+                        transactionInputViewModel: transactionInputViewModel,
+                        categoryInputViewModel: categoryInputViewModel
+                    )
                     .tag(TabModel.graph)
 
-                SettingView()
-                    .tag(TabModel.setting)
+                    SettingView()
+                        .tag(TabModel.setting)
+                }
+
+                if !showTabView {
+                    SearchView(
+                        searchViewModel: searchViewModel,
+                        transactionInputViewModel: transactionInputViewModel
+                    )
+                }
             }
 
-            if !isPresentCategoryInputView {
-                CustomTabBar(
-                    activeTab: $activeTab,
-                    isPresentInputView: $isPresentInputView,
-                    isPresentCategoryInputView: $isPresentCategoryInputView
-                )
+            if !categoryInputViewModel.isPresentInputView
+                && (!showTabView || !keyboardObserver.isVisible)
+            {
+                CustomTabBar(showSearchBar: true, activeTab: $activeTab) { isExpanded in
+                    showTabView = !isExpanded
+                } onSearchTextChanged: { searchText in
+                    searchViewModel.searchText = searchText
+                }
             }
         }
-        .fullScreenCover(isPresented: $isPresentInputView) {
-            TransactionInputView(isPresented: $isPresentInputView)
+        .background(Color(.systemGroupedBackground))
+        .fullScreenCover(isPresented: $transactionInputViewModel.isPresentInputView) {
+            TransactionInputView(
+                viewModel: transactionInputViewModel
+            )
+            .background(Color(.systemGroupedBackground))
         }
     }
 }
@@ -76,5 +119,6 @@ struct HideTabBar: UIViewRepresentable {
 
 #Preview {
     ContentView()
+        .environmentObject(ViewModelFactory())
         .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
 }

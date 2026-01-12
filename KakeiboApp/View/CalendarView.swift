@@ -9,131 +9,212 @@
 import SwiftUI
 
 struct CalendarView: View {
-    @State private var currrentDate: Date = Date()
-    @State private var startDate: Date = .now.startOfMonth
-    @State private var endDate: Date = .now.endOfMonth
+    @ObservedObject var calendarViewModel: CalendarViewModel
+    @ObservedObject var transactionInputViewModel: TransactionInputViewModel
+
     private var daysInMonth: [Date] {
-        guard let range = Calendar.current.range(of: .day, in: .month, for: currrentDate),
+        guard
+            let range = Calendar.current.range(
+                of: .day,
+                in: .month,
+                for: calendarViewModel.currentDate
+            ),
             let monthStart = Calendar.current.date(
-                from: Calendar.current.dateComponents([.year, .month], from: currrentDate)
+                from: Calendar.current.dateComponents(
+                    [.year, .month],
+                    from: calendarViewModel.currentDate
+                )
             )
-        else {
-            return []
-        }
+        else { return [] }
 
         return range.compactMap { day -> Date? in
             Calendar.current.date(byAdding: .day, value: day - 1, to: monthStart)
         }
     }
 
+    init(calendarViewModel: CalendarViewModel, transactionInputViewModel: TransactionInputViewModel)
+    {
+        self.calendarViewModel = calendarViewModel
+        self.transactionInputViewModel = transactionInputViewModel
+    }
+
     var body: some View {
         NavigationStack {
-            VStack {
-                HStack {
-                    ForEach(["日", "月", "火", "水", "木", "金", "土"], id: \.self) { day in
-                        HStack {
-                            Spacer()
+            ScrollView(.vertical) {
+                LazyVStack(spacing: 10, pinnedViews: [.sectionHeaders]) {
+                    Section {
+                        VStack(spacing: 0) {
+                            // MARK: - 月切り替え
+                            ChangeMonthView(
+                                date: $calendarViewModel.currentDate,
+                                onPreviousMonth: {
+                                    calendarViewModel.changeMonth(by: -1)
+                                    calendarViewModel.currentDate = Calendar.current.date(
+                                        byAdding: .month,
+                                        value: -1,
+                                        to: calendarViewModel.currentDate
+                                    )!
+                                },
+                                onNextMonth: {
+                                    calendarViewModel.changeMonth(by: 1)
+                                    calendarViewModel.currentDate = Calendar.current.date(
+                                        byAdding: .month,
+                                        value: 1,
+                                        to: calendarViewModel.currentDate
+                                    )!
+                                }
+                            )
 
-                            Text(day)
-                                .frame(maxWidth: .infinity)
-                                .font(.subheadline)
-                                .foregroundStyle(
-                                    day == "日" ? .red : (day == "土") ? .blue : .primary
-                                )
+                            calendarUnit()
 
-                            Spacer()
+                            calendarTransactionList()
+                                .background(Color(.systemGroupedBackground))
                         }
+                    } header: {
+                        Text("カレンダー")
+                            .font(.title2.bold())
+                            .hSpacing(.leading)
+                            .padding(.horizontal, 16)
                     }
-                }
-                .padding(.top, 20)
 
-                let firstWeekday = Calendar.current.component(
-                    .weekday,
-                    from: daysInMonth.first ?? Date()
+                }
+            }
+            .background(Color(.systemGroupedBackground))
+        }
+
+    }
+
+    @ViewBuilder
+    func calendarUnit() -> some View {
+        // MARK: - カレンダー本体
+        let firstWeekday = Calendar.current.component(
+            .weekday,
+            from: daysInMonth.first ?? Date()
+        )
+
+        LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 2) {
+            ForEach(["日", "月", "火", "水", "木", "金", "土"], id: \.self) { day in
+                Text(day)
+                    .frame(maxWidth: .infinity)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(day == "日" ? .red : (day == "土" ? .blue : .primary))
+            }
+            // 先頭の空白セルを同じ高さで埋める
+            ForEach(0..<(firstWeekday - 1), id: \.self) { _ in
+                Color.clear
+                    .frame(height: 60)
+            }
+
+            ForEach(daysInMonth, id: \.self) { date in
+                let summary = calendarViewModel.dailySummaries[
+                    Calendar.current.startOfDay(for: date)
+                ]
+                let isToday = Calendar.current.isDateInToday(date)
+                let isSelected = Calendar.current.isDate(
+                    date,
+                    inSameDayAs: calendarViewModel.selectedDate ?? Date.distantPast
                 )
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 8) {
-                    ForEach(0..<(firstWeekday - 1), id: \.self) { _ in
-                        Text("")
-                    }
 
-                    ForEach(daysInMonth, id: \.self) { date in
-                        Button {
+                Button {
+                    calendarViewModel.selectedDate = date
+                } label: {
+                    VStack(spacing: 2) {
+                        // 日付
+                        Text("\(Calendar.current.component(.day, from: date))")
+                            .font(.callout)
+                            .fontWeight(isToday ? .bold : .regular)
+                            .foregroundStyle(isToday ? .blue : .primary)
+                            .frame(width: 28, height: 28)
+                            .background(
+                                Circle()
+                                    .fill(
+                                        isSelected ? Color.blue.opacity(0.2) : Color.clear
+                                    )
+                            )
 
-                        } label: {
-                            VStack {
-                                HStack {
-                                    Spacer()
+                        // 収支（高さ固定）
+                        VStack(spacing: 1) {
+                            if let income = summary?.income, income > 0 {
+                                Text("\(currencyString(income, allowedDigits: 0))")
+                                    .font(.caption)
+                                    .foregroundStyle(.green)
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.8)
+                            } else {
+                                Text(" ")
+                                    .font(.caption)
+                            }
 
-                                    Text("\(Calendar.current.component(.day, from: date))")
-                                        .frame(maxWidth: .infinity, minHeight: 40)
-
-                                        .background(
-                                            isToday(date) ? Color.blue.opacity(0.2) : Color.clear
-                                        )
-                                        .clipShape(Circle())
-                                        .foregroundStyle(isToday(date) ? .blue : .primary)
-
-                                    Spacer()
-                                }
-
-                                Spacer()
-
-                                HStack {
-                                    Spacer()
-                                    Text("10000")
-                                        .font(.caption2)
-
-                                    Spacer()
-                                }
-
+                            if let expense = summary?.expense, expense > 0 {
+                                Text("\(currencyString(expense, allowedDigits: 0))")
+                                    .font(.caption)
+                                    .foregroundStyle(.red)
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.8)
+                            } else {
+                                Text(" ")
+                                    .font(.caption)
                             }
                         }
-
+                        .frame(height: 22)
                     }
+                    .frame(maxWidth: .infinity, minHeight: 32)
+                    //                            .background(isSelected ? Color.blue.opacity(0.1) : Color.clear)
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
                 }
-                .padding(.horizontal, 4)
-                .padding(.bottom, 20)
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal)
+        .padding(.vertical, 8)
+    }
 
-                ScrollView {
-                    LazyVStack {
-                        FilterTransactionsView(startDate: startDate, endDate: endDate) {
-                            transactions in
-                            ForEach(
-                                transactions
-                            ) { transaction in
-                                NavigationLink(value: transaction) {
-                                    TransactionCardView(transaction: transaction)
-                                }
-                                .buttonStyle(.plain)
+    @ViewBuilder
+    func calendarTransactionList() -> some View {
+        if let selectedDate = calendarViewModel.selectedDate {
+            let selected = Calendar.current.startOfDay(for: selectedDate)
+            let summary = calendarViewModel.dailySummaries[selected]
+            let transactions =
+                calendarViewModel.dailySummaries[selected]?.transactions ?? []
+
+            if let summary {
+                DaySummaryView(income: summary.income, expense: summary.expense)
+                    .padding(.horizontal)
+                    .padding(.top, 8)
+            }
+
+            if transactions.isEmpty {
+                Text("この日の取引はありません")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .padding(.top, 30)
+            } else {
+                LazyVStack(spacing: 8) {
+                    ForEach(transactions) { transaction in
+                        TransactionCardView(
+                            transaction: transaction,
+                            category: calendarViewModel.category(
+                                for: transaction.categoryId
+                            ),
+                            onDelete: { transaction in
+                                calendarViewModel.delete(
+                                    transaction
+                                )
                             }
+                        )
+                        .onTapGesture {
+                            transactionInputViewModel.presentInputView(transaction)
                         }
                     }
                 }
+                .padding(.horizontal)
+                .padding(.top, 6)
             }
-            .background(.gray.opacity(0.15))
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Text("カレンダー")
-                        .font(.title.bold())
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-
-                    } label: {
-                        Image(systemName: "calendar")
-                    }
-
-                }
-            }
-
+        } else {
+            Text("日付を選択してください")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .padding(.top, 30)
         }
     }
-
-    private func isToday(_ date: Date) -> Bool {
-        Calendar.current.isDateInToday(date)
-    }
-}
-
-#Preview {
-    CalendarView()
 }

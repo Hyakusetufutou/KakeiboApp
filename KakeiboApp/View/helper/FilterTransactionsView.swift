@@ -11,6 +11,7 @@ import SwiftUI
 struct FilterTransactionsView<Content: View>: View {
     var content: ([TransactionModel]) -> Content
     private var transactions: [TransactionModel]
+    @EnvironmentObject var appViewModel: ViewModelFactory
 
     init(
         startDate: Date,

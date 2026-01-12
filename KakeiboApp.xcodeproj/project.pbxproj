@@ -188,11 +188,12 @@
 				};
 			};
 			buildConfigurationList = 220CB3932E6D59B1001A0F5B /* Build configuration list for PBXProject "KakeiboApp" */;
-			developmentRegion = en;
+			developmentRegion = ja;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
 				Base,
+				ja,
 			);
 			mainGroup = 220CB38F2E6D59B1001A0F5B;
 			minimizedProjectReferenceProxies = 1;

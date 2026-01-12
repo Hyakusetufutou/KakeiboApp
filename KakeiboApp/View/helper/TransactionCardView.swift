@@ -10,16 +10,17 @@ import SwiftUI
 
 struct TransactionCardView: View {
     var transaction: TransactionModel
-    var showsCategory: Bool = false
+    var category: CategoryModel?
+    var onDelete: (TransactionModel) -> Void
     var body: some View {
         SwipeAction(cornerRadius: 10) {
             HStack(spacing: 12) {
-                Text("\(String(transaction.title.prefix(1)))")
+                Text("\(category?.name.prefix(1) ?? "")")
                     .font(.title)
                     .fontWeight(.semibold)
                     .foregroundStyle(.white)
                     .frame(width: 45, height: 45)
-                //                    .background(transaction.color.gradient, in: .circle)
+                    .background((category?.color ?? .blue).gradient, in: .circle)
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(transaction.title)
@@ -29,17 +30,22 @@ struct TransactionCardView: View {
                         .font(.caption)
                         .foregroundStyle(Color.primary)
 
-                    Text(format(date: transaction.date, format: "dd MMM yyyy"))
-                        .font(.caption2)
-                        .foregroundStyle(.gray)
+                    HStack {
+                        Text(format(date: transaction.date, format: "yyyy/MM/dd"))
+                            .font(.caption2)
+                            .foregroundStyle(.gray)
 
-                    if showsCategory {
-                        //                        Text(transaction.category)
-                        //                            .font(.caption2)
-                        //                            .padding(.horizontal, 5)
-                        //                            .padding(.vertical, 2)
-                        //                            .foregroundStyle(.white)
-                        //                            .background(transaction.category == Category.income.rawValue ? Color.green.gradient : Color.red.gradient, in: .capsule)
+                        if let category = category {
+                            Text(category.name)
+                                .font(.caption2)
+                                .padding(.horizontal, 5)
+                                .padding(.vertical, 2)
+                                .foregroundStyle(.white)
+                                .background(
+                                    category.color.gradient,
+                                    in: .capsule
+                                )
+                        }
                     }
                 }
                 .lineLimit(1)
@@ -52,6 +58,7 @@ struct TransactionCardView: View {
             .padding(.vertical, 10)
             .background(.background, in: .rect(cornerRadius: 10))
         } onDelete: {
+            onDelete(transaction)
         }
 
     }
@@ -59,4 +66,6 @@ struct TransactionCardView: View {
 
 #Preview {
     ContentView()
+        .environmentObject(ViewModelFactory())
+        .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
 }

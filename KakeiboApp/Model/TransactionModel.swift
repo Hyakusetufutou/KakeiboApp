@@ -45,6 +45,15 @@ struct TransactionModel: Identifiable, Hashable {
 enum TransactionType: String, CaseIterable {
     case income = "収入"
     case expense = "支出"
+
+    var imageName: String {
+        switch self {
+        case .income:
+            return "tray.and.arrow.down.fill"
+        case .expense:
+            return "tray.and.arrow.up.fill"
+        }
+    }
 }
 
 extension TransactionEntity {
