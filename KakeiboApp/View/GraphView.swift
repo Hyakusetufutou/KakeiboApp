@@ -64,7 +64,7 @@ struct GraphView: View {
                             } label: {
                                 Image(systemName: "list.bullet")
                                     .font(.title2)
-                                    .foregroundStyle(.primary)
+                                    .foregroundStyle(.black)
                                     .padding(.vertical, 10)
                                     .padding(.horizontal, 14)
                                     .background {
@@ -75,6 +75,7 @@ struct GraphView: View {
                             }
                         }
                         .padding(.horizontal, 16)
+                        .background(Color(.systemGroupedBackground))
                     }
                 }
             }
@@ -95,7 +96,7 @@ struct GraphView: View {
             .overlay {
                 ZStack {
                     if categoryInputViewModel.isPresentInputView {
-                        Color.black.opacity(0.5)
+                        Color.gray.opacity(0.5)
                             .ignoresSafeArea()
                     }
 
@@ -138,19 +139,17 @@ struct GraphView: View {
             PieChartView(data: graphViewModel.categorySummaries)
                 .frame(height: 200)
 
-            List {
+            VStack(spacing: 0) {
                 ForEach(
                     graphViewModel.categorySummaries
                 ) { summary in
                     NavigationLink(
                         destination: TransactionListByCategory(
+                            graphViewModel: graphViewModel,
                             transactionInputViewModel: transactionInputViewModel,
-                            categorySummary: summary,
+                            categoryID: summary.categoryID,
                             onDeleteTransaction: { transaction in
                                 graphViewModel.deleteTransaction(transaction)
-                            },
-                            onFindCategory: { id in
-                                graphViewModel.findCategory(id: id)
                             }
                         )
                     ) {
@@ -164,11 +163,21 @@ struct GraphView: View {
 
                             Text(currencyString(summary.totalAmount, allowedDigits: 2))
                         }
+                        .padding(.vertical, 12)
+                        .padding(.horizontal, 16)
+                        .background(Color(.systemBackground))
                     }
                     .buttonStyle(.plain)
+
+                    if summary.id != graphViewModel.categorySummaries.last?.id {
+                        Divider()
+                            .padding(.leading, 44)
+                    }
                 }
             }
-            .scrollContentBackground(.hidden)
+            .background(Color(.systemBackground))
+            .cornerRadius(10)
+            .padding(.top, 8)
         } else {
             VStack {
                 Text("取引なし")
@@ -179,7 +188,6 @@ struct GraphView: View {
             }
             .padding(.top, 24)
         }
-
     }
 }
 

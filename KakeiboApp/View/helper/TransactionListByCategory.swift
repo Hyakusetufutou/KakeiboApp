@@ -9,83 +9,89 @@
 import SwiftUI
 
 struct TransactionListByCategory: View {
-
+    @ObservedObject var graphViewModel: GraphViewModel
     @ObservedObject var transactionInputViewModel: TransactionInputViewModel
-    let categorySummary: CategorySummary
+
+    let categoryID: UUID
     let onDeleteTransaction: (TransactionModel) -> Void
-    let onFindCategory: (UUID) -> CategoryModel?
 
-    @Environment(\.dismiss) var dismiss
-
-    init(
-        transactionInputViewModel: TransactionInputViewModel,
-        categorySummary: CategorySummary,
-        onDeleteTransaction: @escaping (TransactionModel) -> Void,
-        onFindCategory: @escaping (UUID) -> CategoryModel?
-    ) {
-        self.transactionInputViewModel = transactionInputViewModel
-        self.categorySummary = categorySummary
-        self.onDeleteTransaction = onDeleteTransaction
-        self.onFindCategory = onFindCategory
+    var categorySummary: CategorySummary? {
+        graphViewModel.categorySummaries.first {
+            $0.categoryID == categoryID
+        }
     }
 
     var body: some View {
         NavigationStack {
-            HStack {
-                Text("合計金額")
-                    .font(.title2)
-                    .fontWeight(.bold)
-
-                Spacer()
-
-                Text(currencyString(categorySummary.totalAmount))
-                    .font(.title2)
-                    .fontWeight(.bold)
-            }
-            .padding(.vertical, 12)
 
             VStack {
-                if !categorySummary.transactions.isEmpty {
-                    ScrollView {
-                        ForEach(
-                            categorySummary.transactions
-                        ) {
-                            transaction in
-                            NavigationLink(value: transaction) {
-                                TransactionCardView(
-                                    transaction: transaction,
-                                    category: onFindCategory(transaction.categoryId),
-                                    onDelete: onDeleteTransaction
-                                )
-                                .onTapGesture {
-                                    transactionInputViewModel.presentInputView(transaction)
-                                }
-                            }
-                            .buttonStyle(.plain)
-                        }
+                if let summary = categorySummary {
+                    VStack {
+                        header(summary)
+                        transactionList(summary.transactions)
                     }
                 } else {
-                    VStack(alignment: .center) {
-                        Spacer()
+                    ZStack {
+                        Color(.systemGroupedBackground)
+                            .ignoresSafeArea()
 
-                        Text("取引なし")
-                            .font(.title2)
-
-                        Spacer()
+                        VStack {
+                            Text("取引なし")
+                                .font(.subheadline)
+                                .foregroundStyle(.gray)
+                            Image(systemName: "xmark.seal.fill")
+                                .font(.custom("", size: 100))
+                        }
                     }
                 }
             }
             .toolbar {
                 ToolbarItem(placement: .principal) {
-                    Text(categorySummary.categoryName)
+                    Text(graphViewModel.findCategory(id: categoryID)?.name ?? "")
                         .font(.title2)
                         .fontWeight(.bold)
                 }
             }
             //            .toolbarBackground(categorySummary.color, for: .navigationBar)
             //            .toolbarBackground(.visible, for: .navigationBar)
+            .padding(.horizontal, 16)
+            .background(Color(.systemGroupedBackground))
         }
-        .padding(.horizontal, 16)
-        .background(.gray.opacity(0.15))
+    }
+
+    @ViewBuilder
+    private func header(_ summary: CategorySummary) -> some View {
+        HStack {
+            Text("合計金額")
+                .font(.title2)
+                .fontWeight(.bold)
+
+            Spacer()
+
+            Text(currencyString(summary.totalAmount))
+                .font(.title2)
+                .fontWeight(.bold)
+        }
+        .padding(.vertical, 12)
+    }
+
+    @ViewBuilder
+    private func transactionList(_ transactions: [TransactionModel]) -> some View {
+        ScrollView {
+            ForEach(transactions) {
+                transaction in
+                NavigationLink(value: transaction) {
+                    TransactionCardView(
+                        transaction: transaction,
+                        category: graphViewModel.findCategory(id: transaction.categoryId),
+                        onDelete: onDeleteTransaction
+                    )
+                    .onTapGesture {
+                        transactionInputViewModel.presentInputView(transaction)
+                    }
+                }
+                .buttonStyle(.plain)
+            }
+        }
     }
 }

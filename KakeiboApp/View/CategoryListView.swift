@@ -40,7 +40,7 @@ struct CategoryListView: View {
                 } label: {
                     Image(systemName: "plus")
                         .font(.title2)
-                        .foregroundStyle(.primary)
+                        .foregroundStyle(.black)
                         .padding(.vertical, 10)
                         .padding(.horizontal, 14)
                         .background {
@@ -63,7 +63,7 @@ struct CategoryListView: View {
                 } label: {
                     Image(systemName: "checkmark")
                         .font(.title2)
-                        .foregroundStyle(.primary)
+                        .foregroundStyle(.black)
                         .padding(.vertical, 10)
                         .padding(.horizontal, 14)
                         .background {

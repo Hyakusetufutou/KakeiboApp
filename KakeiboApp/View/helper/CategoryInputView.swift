@@ -73,11 +73,21 @@ struct CategoryInputView: View {
             HStack(spacing: 12) {
                 Button {
                     isFocused = false
+                    categoryInputViewModel.cancel()
+                } label: {
+                    Text("キャンセル")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity, minHeight: 50)
+                        .background(
+                            RoundedRectangle(cornerRadius: 14)
+                                .fill(.gray.opacity(0.6))
+                        )
+                        .foregroundStyle(.black)
+                }
 
-                    Task { @MainActor in
-                        await Task.yield()
-                        categoryInputViewModel.save()
-                    }
+                Button {
+                    isFocused = false
+                    categoryInputViewModel.save()
                 } label: {
                     Text(categoryInputViewModel.isEdit ? "更新" : "作成")
                         .font(.headline)
@@ -86,29 +96,12 @@ struct CategoryInputView: View {
                             RoundedRectangle(cornerRadius: 14)
                                 .fill(
                                     categoryInputViewModel.name.isEmpty
-                                        ? .gray.opacity(0.2) : .accentColor
+                                        ? .blue.opacity(0.2) : .blue
                                 )
                         )
                         .foregroundStyle(.white)
                 }
                 .disabled(categoryInputViewModel.name.isEmpty)
-
-                Button {
-                    isFocused = false
-                    Task { @MainActor in
-                        await Task.yield()
-                        categoryInputViewModel.cancel()
-                    }
-                } label: {
-                    Text("キャンセル")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity, minHeight: 50)
-                        .background(
-                            RoundedRectangle(cornerRadius: 14)
-                                .fill(.red.opacity(0.9))
-                        )
-                        .foregroundStyle(.white)
-                }
             }
         }
         .padding(20)
