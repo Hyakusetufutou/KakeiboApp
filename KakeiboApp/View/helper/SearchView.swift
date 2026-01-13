@@ -34,7 +34,9 @@ struct SearchView: View {
                                         id: transaction.categoryId
                                     ),
                                     onDelete: { transaction in
-                                        searchViewModel.deleteTransaction(transaction)
+                                        Task {
+                                            await searchViewModel.deleteTransaction(transaction)
+                                        }
                                     }
                                 )
                                 .onTapGesture {

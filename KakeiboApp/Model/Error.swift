@@ -14,7 +14,7 @@ enum CustomError: Error {
     case saveError
     case fetchError(String)
     case invalidData
-    
+
     var description: String {
         switch self {
         case .categoryNotFoundError:
@@ -30,4 +30,3 @@ enum CustomError: Error {
         }
     }
 }
-

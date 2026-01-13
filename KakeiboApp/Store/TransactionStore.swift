@@ -27,34 +27,34 @@ final class TransactionStore: TransactionStoreProtocol {
     @Published private var _transactions: [TransactionModel] = []
     @Published private var _errorMessage: String?
     @Published private var _isLoading = false
-    
+
     var transactions: AnyPublisher<[TransactionModel], Never> {
         $_transactions.eraseToAnyPublisher()
     }
-    
+
     var errorMessage: AnyPublisher<String?, Never> {
         $_errorMessage.eraseToAnyPublisher()
     }
-    
+
     var isLoading: AnyPublisher<Bool, Never> {
         $_isLoading.eraseToAnyPublisher()
     }
-    
+
     private let transactionRepository: TransactionRepositoryProtocol
     private let initialLoadLimit = 100
-    
+
     init(transactionRepository: TransactionRepositoryProtocol) {
         self.transactionRepository = transactionRepository
         Task {
             await load()
         }
     }
-    
+
     func add(_ transaction: TransactionModel) async {
         _isLoading = true
         let result = await transactionRepository.add(transaction)
         _isLoading = false
-        
+
         switch result {
         case .success:
             await load()
@@ -62,12 +62,12 @@ final class TransactionStore: TransactionStoreProtocol {
             _errorMessage = error.description
         }
     }
-    
+
     func update(_ transaction: TransactionModel) async {
         _isLoading = true
         let result = await transactionRepository.update(transaction)
         _isLoading = false
-        
+
         switch result {
         case .success:
             await load()
@@ -75,12 +75,12 @@ final class TransactionStore: TransactionStoreProtocol {
             _errorMessage = error.description
         }
     }
-    
+
     func delete(_ transaction: TransactionModel) async {
         _isLoading = true
         let result = await transactionRepository.delete(transaction)
         _isLoading = false
-        
+
         switch result {
         case .success:
             await load()
@@ -88,7 +88,7 @@ final class TransactionStore: TransactionStoreProtocol {
             _errorMessage = error.description
         }
     }
-    
+
     func search(text: String?) async -> [TransactionModel] {
         let result = await transactionRepository.search(text: text)
         switch result {
@@ -99,7 +99,7 @@ final class TransactionStore: TransactionStoreProtocol {
             return []
         }
     }
-    
+
     func loadMore(limit: Int = 50, offset: Int) async {
         let result = await transactionRepository.fetch(
             from: nil,
@@ -107,7 +107,7 @@ final class TransactionStore: TransactionStoreProtocol {
             limit: limit,
             offset: offset
         )
-        
+
         switch result {
         case .success(let newTransactions):
             _transactions.append(contentsOf: newTransactions)
@@ -116,11 +116,11 @@ final class TransactionStore: TransactionStoreProtocol {
             _errorMessage = error.description
         }
     }
-    
+
     func reload() async {
         await load()
     }
-    
+
     private func load() async {
         _isLoading = true
         let result = await transactionRepository.fetch(
@@ -130,7 +130,7 @@ final class TransactionStore: TransactionStoreProtocol {
             offset: 0
         )
         _isLoading = false
-        
+
         switch result {
         case .success(let transactions):
             _transactions = transactions

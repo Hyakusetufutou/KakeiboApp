@@ -26,33 +26,33 @@ final class CategoryStore: CategoryStoreProtocol {
     @Published private var _categories: [CategoryModel] = []
     @Published private var _errorMessage: String?
     @Published private var _isLoading = false
-    
+
     var categories: AnyPublisher<[CategoryModel], Never> {
         $_categories.eraseToAnyPublisher()
     }
-    
+
     var errorMessage: AnyPublisher<String?, Never> {
         $_errorMessage.eraseToAnyPublisher()
     }
-    
+
     var isLoading: AnyPublisher<Bool, Never> {
         $_isLoading.eraseToAnyPublisher()
     }
-    
+
     private let categoryRepository: CategoryRepositoryProtocol
-    
+
     init(categoryRepository: CategoryRepositoryProtocol) {
         self.categoryRepository = categoryRepository
         Task {
             await load()
         }
     }
-    
+
     func add(_ category: CategoryModel) async {
         _isLoading = true
         let result = await categoryRepository.add(category)
         _isLoading = false
-        
+
         switch result {
         case .success:
             await load()
@@ -60,12 +60,12 @@ final class CategoryStore: CategoryStoreProtocol {
             _errorMessage = error.description
         }
     }
-    
+
     func update(_ category: CategoryModel) async {
         _isLoading = true
         let result = await categoryRepository.update(category)
         _isLoading = false
-        
+
         switch result {
         case .success:
             await load()
@@ -73,12 +73,12 @@ final class CategoryStore: CategoryStoreProtocol {
             _errorMessage = error.description
         }
     }
-    
+
     func delete(_ category: CategoryModel) async {
         _isLoading = true
         let result = await categoryRepository.delete(category)
         _isLoading = false
-        
+
         switch result {
         case .success:
             await load()
@@ -86,20 +86,20 @@ final class CategoryStore: CategoryStoreProtocol {
             _errorMessage = error.description
         }
     }
-    
+
     func find(id: UUID) -> CategoryModel? {
         _categories.first { $0.id == id }
     }
-    
+
     func reload() async {
         await load()
     }
-    
+
     private func load() async {
         _isLoading = true
         let result = await categoryRepository.fetchAll()
         _isLoading = false
-        
+
         switch result {
         case .success(let categories):
             _categories = categories

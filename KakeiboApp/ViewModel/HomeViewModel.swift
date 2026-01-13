@@ -11,19 +11,19 @@ import Combine
 
 @MainActor
 final class HomeViewModel: ObservableObject {
-    @Published private(set) var filteredTransactions: [TransactionModel] = []
     @Published private(set) var isLoading = false
     @Published private(set) var errorMessage: String?
-    
+
+    @Published var filteredTransactions: [TransactionModel] = []
     @Published var startDate: Date = Date().startOfMonth
     @Published var endDate: Date = Date().endOfMonth
     @Published var selectedType: TransactionType = .expense
     @Published var showFilterView = false
-    
+
     private let categoryStore: CategoryStoreProtocol
     private let transactionStore: TransactionStoreProtocol
     private var cancellables = Set<AnyCancellable>()
-    
+
     init(categoryStore: CategoryStoreProtocol, transactionStore: TransactionStoreProtocol) {
         self.categoryStore = categoryStore
         self.transactionStore = transactionStore
@@ -31,15 +31,15 @@ final class HomeViewModel: ObservableObject {
         bindLoadingState()
         bindErrorMessages()
     }
-    
+
     func categoryFind(id: UUID) -> CategoryModel? {
         categoryStore.find(id: id)
     }
-    
+
     func deleteTransaction(_ transaction: TransactionModel) async {
         await transactionStore.delete(transaction)
     }
-    
+
     private func bindTransactions() {
         Publishers.CombineLatest4(
             transactionStore.transactions,
@@ -50,16 +50,15 @@ final class HomeViewModel: ObservableObject {
         .map { transactions, startDate, endDate, selectedType in
             transactions
                 .filter { transaction in
-                    startDate <= transaction.date &&
-                    transaction.date <= endDate &&
-                    transaction.type == selectedType
+                    startDate <= transaction.date && transaction.date <= endDate
+                        && transaction.type == selectedType
                 }
                 .sorted { $0.date > $1.date }
         }
         .receive(on: DispatchQueue.main)
         .assign(to: &$filteredTransactions)
     }
-    
+
     private func bindLoadingState() {
         Publishers.CombineLatest(
             transactionStore.isLoading,
@@ -69,7 +68,7 @@ final class HomeViewModel: ObservableObject {
         .receive(on: DispatchQueue.main)
         .assign(to: &$isLoading)
     }
-    
+
     private func bindErrorMessages() {
         Publishers.Merge(
             transactionStore.errorMessage,

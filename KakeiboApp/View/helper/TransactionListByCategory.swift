@@ -56,6 +56,13 @@ struct TransactionListByCategory: View {
             //            .toolbarBackground(.visible, for: .navigationBar)
             .padding(.horizontal, 16)
             .background(Color(.systemGroupedBackground))
+            .alert("エラー", isPresented: .constant(graphViewModel.errorMessage != nil)) {
+                Button("OK") {}
+            } message: {
+                if let errorMessage = graphViewModel.errorMessage {
+                    Text(errorMessage)
+                }
+            }
         }
     }
 

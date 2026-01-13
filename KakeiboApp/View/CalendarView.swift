@@ -76,17 +76,31 @@ struct CalendarView: View {
                             .hSpacing(.leading)
                             .padding(.horizontal, 16)
                     }
-
                 }
             }
             .background(Color(.systemGroupedBackground))
+            .overlay {
+                if calendarViewModel.isLoading {
+                    ProgressView()
+                        .scaleEffect(1.5)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(Color.black.opacity(0.2))
+                }
+            }
+            .alert("エラー", isPresented: .constant(calendarViewModel.errorMessage != nil)) {
+                Button("OK") {
+                    // エラーメッセージをクリア
+                }
+            } message: {
+                if let errorMessage = calendarViewModel.errorMessage {
+                    Text(errorMessage)
+                }
+            }
         }
-
     }
 
     @ViewBuilder
     func calendarUnit() -> some View {
-        // MARK: - カレンダー本体
         let firstWeekday = Calendar.current.component(
             .weekday,
             from: daysInMonth.first ?? Date()
@@ -99,7 +113,7 @@ struct CalendarView: View {
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(day == "日" ? .red : (day == "土" ? .blue : .primary))
             }
-            // 先頭の空白セルを同じ高さで埋める
+
             ForEach(0..<(firstWeekday - 1), id: \.self) { _ in
                 Color.clear
                     .frame(height: 60)
@@ -119,7 +133,6 @@ struct CalendarView: View {
                     calendarViewModel.selectedDate = date
                 } label: {
                     VStack(spacing: 2) {
-                        // 日付
                         Text("\(Calendar.current.component(.day, from: date))")
                             .font(.callout)
                             .fontWeight(isToday ? .bold : .regular)
@@ -127,12 +140,9 @@ struct CalendarView: View {
                             .frame(width: 28, height: 28)
                             .background(
                                 Circle()
-                                    .fill(
-                                        isSelected ? Color.blue.opacity(0.2) : Color.clear
-                                    )
+                                    .fill(isSelected ? Color.blue.opacity(0.2) : Color.clear)
                             )
 
-                        // 収支（高さ固定）
                         VStack(spacing: 1) {
                             if let income = summary?.income, income > 0 {
                                 Text("\(currencyString(income, allowedDigits: 0))")
@@ -159,7 +169,6 @@ struct CalendarView: View {
                         .frame(height: 22)
                     }
                     .frame(maxWidth: .infinity, minHeight: 32)
-                    //                            .background(isSelected ? Color.blue.opacity(0.1) : Color.clear)
                     .clipShape(RoundedRectangle(cornerRadius: 6))
                 }
                 .buttonStyle(.plain)
@@ -174,8 +183,7 @@ struct CalendarView: View {
         if let selectedDate = calendarViewModel.selectedDate {
             let selected = Calendar.current.startOfDay(for: selectedDate)
             let summary = calendarViewModel.dailySummaries[selected]
-            let transactions =
-                calendarViewModel.dailySummaries[selected]?.transactions ?? []
+            let transactions = summary?.transactions ?? []
 
             if let summary {
                 DaySummaryView(income: summary.income, expense: summary.expense)
@@ -193,13 +201,11 @@ struct CalendarView: View {
                     ForEach(transactions) { transaction in
                         TransactionCardView(
                             transaction: transaction,
-                            category: calendarViewModel.category(
-                                for: transaction.categoryId
-                            ),
+                            category: calendarViewModel.category(for: transaction.categoryId),
                             onDelete: { transaction in
-                                calendarViewModel.delete(
-                                    transaction
-                                )
+                                Task {
+                                    await calendarViewModel.delete(transaction)
+                                }
                             }
                         )
                         .onTapGesture {
