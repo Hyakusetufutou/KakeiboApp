@@ -60,17 +60,15 @@ struct LockView: View {
                 }
             }
         }
-        .onAppear {
-            Task {
-                if !isAuthenticating && !isUnlocked {
-                    authenticate()
-                }
+        .task {
+            if !isAuthenticating && !isUnlocked {
+                authenticate()
             }
         }
     }
 
     private func authenticate() {
-        // 既に認証中の場合は処理しない
+        // 既に認証中の場合は処理しない(念のため入れる)
         guard !isAuthenticating else { return }
 
         isAuthenticating = true
