@@ -9,18 +9,25 @@
 import Foundation
 
 enum CustomError: Error {
-    case saveError
     case categoryNotFoundError
     case transactionNotFoundError
-
+    case saveError
+    case fetchError(String)
+    case invalidData
+    
     var description: String {
         switch self {
+        case .categoryNotFoundError:
+            return "カテゴリが見つかりません"
+        case .transactionNotFoundError:
+            return "取引が見つかりません"
         case .saveError:
             return "保存に失敗しました"
-        case .categoryNotFoundError:
-            return "カテゴリが見つかりませんでした"
-        case .transactionNotFoundError:
-            return "取引が見つかりませんでしあ"
+        case .fetchError(let message):
+            return "取得に失敗しました: \(message)"
+        case .invalidData:
+            return "不正なデータです"
         }
     }
 }
+

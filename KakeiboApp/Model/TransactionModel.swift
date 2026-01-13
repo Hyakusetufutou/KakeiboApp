@@ -14,7 +14,7 @@ struct TransactionModel: Identifiable, Hashable {
     let memo: String
     let amount: Double
     let date: Date
-    let createAt: Date
+    let createdAt: Date
     let updatedAt: Date
     let type: TransactionType
     let categoryId: UUID
@@ -35,7 +35,7 @@ struct TransactionModel: Identifiable, Hashable {
         self.memo = memo
         self.amount = amount
         self.date = date
-        self.createAt = createAt
+        self.createdAt = createAt
         self.updatedAt = updatedAt
         self.type = type
         self.categoryId = categoryId
@@ -65,7 +65,7 @@ extension TransactionEntity {
             amount: self.amount,
             date: self.date ?? Date(),
             createAt: self.createdAt ?? Date(),
-            updatedAt: self.upadtedAt ?? Date(),
+            updatedAt: self.updatedAt ?? Date(),
             type: TransactionType(rawValue: self.type ?? "expense") ?? .expense,
             categoryId: self.category?.id ?? UUID()
         )

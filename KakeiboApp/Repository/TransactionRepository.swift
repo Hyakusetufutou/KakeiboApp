@@ -8,136 +8,165 @@
 
 import Foundation
 import CoreData
-import Combine
 
 protocol TransactionRepositoryProtocol {
-    func search(text: String?) -> Result<[TransactionModel], CustomError>
-    func fetch(from startDate: Date?, to endDate: Date?) -> Result<[TransactionModel], CustomError>
-    func add(_ transactionModel: TransactionModel) -> Result<Void, CustomError>
-    func delete(_ transactionModel: TransactionModel) -> Result<Void, CustomError>
-    func update(_ transactionModel: TransactionModel) -> Result<Void, CustomError>
+    func search(text: String?) async -> Result<[TransactionModel], CustomError>
+    func fetch(from startDate: Date?, to endDate: Date?, limit: Int?, offset: Int?) async -> Result<[TransactionModel], CustomError>
+    func add(_ transactionModel: TransactionModel) async -> Result<Void, CustomError>
+    func delete(_ transactionModel: TransactionModel) async -> Result<Void, CustomError>
+    func update(_ transactionModel: TransactionModel) async -> Result<Void, CustomError>
 }
 
-class TransactionRepository: TransactionRepositoryProtocol {
+final class TransactionRepository: TransactionRepositoryProtocol {
     private let context: NSManagedObjectContext
-    private let categoryRepository: CategoryRepository
-
-    init(
-        context: NSManagedObjectContext = PersistenceController.shared.container.viewContext,
-        categoryRepository: CategoryRepository
-    ) {
+    
+    init(context: NSManagedObjectContext = PersistenceController.shared.container.viewContext) {
         self.context = context
-        self.categoryRepository = categoryRepository
     }
-
-    func search(text: String?) -> Result<[TransactionModel], CustomError> {
-        let fetchRequest: NSFetchRequest<TransactionEntity> = TransactionEntity.fetchRequest()
-
-        if let text = text, !text.isEmpty {
-            fetchRequest.predicate = NSPredicate(
-                format: "title CONTAINS[c] %@ OR memo CONTAINS[c] %@",
-                text,
-                text
-            )
-        }
-
-        do {
-            let transactions = try context.fetch(fetchRequest)
-            return .success(transactions.map { $0.toModel() })
-        } catch {
-            return .failure(.transactionNotFoundError)
-        }
-    }
-
-    func fetch(from startDate: Date?, to endDate: Date?) -> Result<[TransactionModel], CustomError>
-    {
-        let fetchRequest: NSFetchRequest<TransactionEntity> = TransactionEntity.fetchRequest()
-
-        if let startDate = startDate, let endDate = endDate {
-            fetchRequest.predicate = NSPredicate(
-                format: "date >= %@ AND date <= %@",
-                startDate as NSDate,
-                endDate as NSDate
-            )
-        }
-
-        do {
-            let transactions = try context.fetch(fetchRequest)
-            return .success(transactions.map { $0.toModel() })
-        } catch {
-            return .failure(.transactionNotFoundError)
+    
+    func search(text: String?) async -> Result<[TransactionModel], CustomError> {
+        await context.perform {
+            let fetchRequest: NSFetchRequest<TransactionEntity> = TransactionEntity.fetchRequest()
+            
+            if let text = text, !text.isEmpty {
+                fetchRequest.predicate = NSPredicate(
+                    format: "title CONTAINS[c] %@ OR memo CONTAINS[c] %@",
+                    text, text
+                )
+            }
+            
+            fetchRequest.sortDescriptors = [NSSortDescriptor(keyPath: \TransactionEntity.date, ascending: false)]
+            
+            do {
+                let transactions = try self.context.fetch(fetchRequest)
+                return .success(transactions.map { $0.toModel() })
+            } catch {
+                return .failure(.fetchError(error.localizedDescription))
+            }
         }
     }
-
-    func add(_ transactionModel: TransactionModel) -> Result<Void, CustomError> {
-        do {
-            let category = try categoryRepository.fetchEntity(by: transactionModel.categoryId)
-            let transaction = TransactionEntity(context: context)
-
-            transaction.id = transactionModel.id
-            transaction.amount = transactionModel.amount
-            transaction.date = transactionModel.date
-            transaction.createdAt = transactionModel.createAt
-            transaction.upadtedAt = transactionModel.updatedAt
-            transaction.title = transactionModel.title
-            transaction.memo = transactionModel.memo
-            transaction.type = transactionModel.type.rawValue
-            transaction.category = category
-
-            return saveContext()
-        } catch let error as CustomError {
-            return .failure(error)
-        } catch {
-            return .failure(.transactionNotFoundError)
+    
+    func fetch(from startDate: Date?, to endDate: Date?, limit: Int? = nil, offset: Int? = nil) async -> Result<[TransactionModel], CustomError> {
+        await context.perform {
+            let fetchRequest: NSFetchRequest<TransactionEntity> = TransactionEntity.fetchRequest()
+            
+            var predicates: [NSPredicate] = []
+            if let startDate = startDate {
+                predicates.append(NSPredicate(format: "date >= %@", startDate as NSDate))
+            }
+            if let endDate = endDate {
+                predicates.append(NSPredicate(format: "date <= %@", endDate as NSDate))
+            }
+            
+            if !predicates.isEmpty {
+                fetchRequest.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
+            }
+            
+            fetchRequest.sortDescriptors = [NSSortDescriptor(keyPath: \TransactionEntity.date, ascending: false)]
+            
+            if let limit = limit {
+                fetchRequest.fetchLimit = limit
+            }
+            if let offset = offset {
+                fetchRequest.fetchOffset = offset
+            }
+            
+            do {
+                let transactions = try self.context.fetch(fetchRequest)
+                return .success(transactions.map { $0.toModel() })
+            } catch {
+                return .failure(.fetchError(error.localizedDescription))
+            }
         }
     }
-
-    func delete(_ transactionModel: TransactionModel) -> Result<Void, CustomError> {
-        do {
-            let transaction = try fetchEntiry(by: transactionModel.id)
-            context.delete(transaction)
-            return saveContext()
-        } catch let error as CustomError {
-            return .failure(error)
-        } catch {
-            return .failure(.transactionNotFoundError)
+    
+    func add(_ transactionModel: TransactionModel) async -> Result<Void, CustomError> {
+        await context.perform {
+            do {
+                guard let category = try self.fetchCategoryEntity(by: transactionModel.categoryId) else {
+                    return .failure(.categoryNotFoundError)
+                }
+                
+                let transaction = TransactionEntity(context: self.context)
+                transaction.id = transactionModel.id
+                transaction.amount = transactionModel.amount
+                transaction.date = transactionModel.date
+                transaction.createdAt = transactionModel.createdAt
+                transaction.updatedAt = transactionModel.updatedAt
+                transaction.title = transactionModel.title
+                transaction.memo = transactionModel.memo
+                transaction.type = transactionModel.type.rawValue
+                transaction.category = category
+                
+                return self.saveContext()
+            } catch let error as CustomError {
+                return .failure(error)
+            } catch {
+                return .failure(.fetchError(error.localizedDescription))
+            }
         }
     }
-
-    func update(_ transactionModel: TransactionModel) -> Result<Void, CustomError> {
-        do {
-            let transaction = try fetchEntiry(by: transactionModel.id)
-            let category = try categoryRepository.fetchEntity(by: transactionModel.categoryId)
-
-            transaction.id = transactionModel.id
-            transaction.amount = transactionModel.amount
-            transaction.date = transactionModel.date
-            transaction.createdAt = transactionModel.createAt
-            transaction.upadtedAt = transactionModel.updatedAt
-            transaction.title = transactionModel.title
-            transaction.memo = transactionModel.memo
-            transaction.type = transactionModel.type.rawValue
-            transaction.category = category
-
-            return saveContext()
-        } catch let error as CustomError {
-            return .failure(error)
-        } catch {
-            return .failure(.transactionNotFoundError)
+    
+    func delete(_ transactionModel: TransactionModel) async -> Result<Void, CustomError> {
+        await context.perform {
+            do {
+                let transaction = try self.fetchEntity(by: transactionModel.id)
+                self.context.delete(transaction)
+                return self.saveContext()
+            } catch let error as CustomError {
+                return .failure(error)
+            } catch {
+                return .failure(.fetchError(error.localizedDescription))
+            }
         }
     }
-
-    private func fetchEntiry(by id: UUID) throws -> TransactionEntity {
+    
+    func update(_ transactionModel: TransactionModel) async -> Result<Void, CustomError> {
+        await context.perform {
+            do {
+                let transaction = try self.fetchEntity(by: transactionModel.id)
+                guard let category = try self.fetchCategoryEntity(by: transactionModel.categoryId) else {
+                    return .failure(.categoryNotFoundError)
+                }
+                
+                transaction.amount = transactionModel.amount
+                transaction.date = transactionModel.date
+                transaction.createdAt = transactionModel.createdAt
+                transaction.updatedAt = transactionModel.updatedAt
+                transaction.title = transactionModel.title
+                transaction.memo = transactionModel.memo
+                transaction.type = transactionModel.type.rawValue
+                transaction.category = category
+                
+                return self.saveContext()
+            } catch let error as CustomError {
+                return .failure(error)
+            } catch {
+                return .failure(.fetchError(error.localizedDescription))
+            }
+        }
+    }
+    
+    // MARK: - Private Methods
+    private func fetchEntity(by id: UUID) throws -> TransactionEntity {
         let fetchRequest: NSFetchRequest<TransactionEntity> = TransactionEntity.fetchRequest()
         fetchRequest.predicate = NSPredicate(format: "id == %@", id as NSUUID)
-
+        fetchRequest.fetchLimit = 1
+        
         guard let transaction = try context.fetch(fetchRequest).first else {
             throw CustomError.transactionNotFoundError
         }
-
         return transaction
     }
-
+    
+    private func fetchCategoryEntity(by id: UUID) throws -> CategoryEntity? {
+        let fetchRequest: NSFetchRequest<CategoryEntity> = CategoryEntity.fetchRequest()
+        fetchRequest.predicate = NSPredicate(format: "id == %@", id as NSUUID)
+        fetchRequest.fetchLimit = 1
+        
+        return try context.fetch(fetchRequest).first
+    }
+    
     private func saveContext() -> Result<Void, CustomError> {
         do {
             if context.hasChanges {

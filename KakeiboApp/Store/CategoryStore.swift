@@ -12,72 +12,100 @@ import Combine
 @MainActor
 protocol CategoryStoreProtocol {
     var categories: AnyPublisher<[CategoryModel], Never> { get }
-    var errorMessage: AnyPublisher<String, Never> { get }
-    func add(_ category: CategoryModel)
-    func update(_ category: CategoryModel)
-    func delete(_ category: CategoryModel)
+    var errorMessage: AnyPublisher<String?, Never> { get }
+    var isLoading: AnyPublisher<Bool, Never> { get }
+    func add(_ category: CategoryModel) async
+    func update(_ category: CategoryModel) async
+    func delete(_ category: CategoryModel) async
     func find(id: UUID) -> CategoryModel?
+    func reload() async
 }
 
 @MainActor
 final class CategoryStore: CategoryStoreProtocol {
     @Published private var _categories: [CategoryModel] = []
-    @Published private var _errorMessage: String = ""
-
+    @Published private var _errorMessage: String?
+    @Published private var _isLoading = false
+    
     var categories: AnyPublisher<[CategoryModel], Never> {
         $_categories.eraseToAnyPublisher()
     }
-
-    var errorMessage: AnyPublisher<String, Never> {
+    
+    var errorMessage: AnyPublisher<String?, Never> {
         $_errorMessage.eraseToAnyPublisher()
     }
-
+    
+    var isLoading: AnyPublisher<Bool, Never> {
+        $_isLoading.eraseToAnyPublisher()
+    }
+    
     private let categoryRepository: CategoryRepositoryProtocol
-    private var cancellables = Set<AnyCancellable>()
-
+    
     init(categoryRepository: CategoryRepositoryProtocol) {
         self.categoryRepository = categoryRepository
-        load()
+        Task {
+            await load()
+        }
     }
-
-    func add(_ category: CategoryModel) {
-        switch categoryRepository.add(category) {
-        case .success(()):
-            load()
+    
+    func add(_ category: CategoryModel) async {
+        _isLoading = true
+        let result = await categoryRepository.add(category)
+        _isLoading = false
+        
+        switch result {
+        case .success:
+            await load()
         case .failure(let error):
             _errorMessage = error.description
         }
     }
-
-    func update(_ category: CategoryModel) {
-        switch categoryRepository.update(category) {
-        case .success(()):
-            load()
+    
+    func update(_ category: CategoryModel) async {
+        _isLoading = true
+        let result = await categoryRepository.update(category)
+        _isLoading = false
+        
+        switch result {
+        case .success:
+            await load()
         case .failure(let error):
             _errorMessage = error.description
         }
     }
-
-    func delete(_ category: CategoryModel) {
-        switch categoryRepository.delete(category) {
-        case .success(()):
-            load()
+    
+    func delete(_ category: CategoryModel) async {
+        _isLoading = true
+        let result = await categoryRepository.delete(category)
+        _isLoading = false
+        
+        switch result {
+        case .success:
+            await load()
         case .failure(let error):
             _errorMessage = error.description
         }
     }
-
+    
     func find(id: UUID) -> CategoryModel? {
         _categories.first { $0.id == id }
     }
-
-    private func load() {
-        switch categoryRepository.fetchAll() {
+    
+    func reload() async {
+        await load()
+    }
+    
+    private func load() async {
+        _isLoading = true
+        let result = await categoryRepository.fetchAll()
+        _isLoading = false
+        
+        switch result {
         case .success(let categories):
-            self._categories = categories
-            _errorMessage = ""
+            _categories = categories
+            _errorMessage = nil
         case .failure(let error):
-            self._categories = []
+            _categories = []
             _errorMessage = error.description
         }
     }
