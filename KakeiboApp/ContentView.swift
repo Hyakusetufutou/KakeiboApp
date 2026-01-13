@@ -11,10 +11,15 @@ import CoreData
 
 struct ContentView: View {
     @Environment(\.managedObjectContext) private var viewContext
+    @Environment(\.scenePhase) private var scenePhase
+
+    @AppStorage("isAppLockEnabled") private var isAppLockEnabled: Bool = false
+    @AppStorage("lockWhenAppGoesBackground") private var lockWhenAppGoesBackground: Bool = false
 
     @State private var activeTab: TabModel = .home
     @State private var isTabBarHidden = false
     @State private var showTabView = true
+    @State private var isUnlocked = true
 
     @StateObject private var keyboardObserver = KeyboardObserver()
 
@@ -36,63 +41,102 @@ struct ContentView: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            ZStack {
-                TabView(selection: $activeTab) {
-                    HomeView(
-                        homeViewModel: homeViewModel,
-                        transactionInputViewModel: transactionInputViewModel
-                    )
-                    .tag(TabModel.home)
-                    .background {
-                        if !isTabBarHidden {
-                            HideTabBar {
-                                isTabBarHidden = true
+        ZStack {
+            VStack(spacing: 0) {
+                ZStack {
+                    TabView(selection: $activeTab) {
+                        HomeView(
+                            homeViewModel: homeViewModel,
+                            transactionInputViewModel: transactionInputViewModel
+                        )
+                        .tag(TabModel.home)
+                        .background {
+                            if !isTabBarHidden {
+                                HideTabBar {
+                                    isTabBarHidden = true
+                                }
                             }
                         }
+
+                        CalendarView(
+                            calendarViewModel: calendarViewModel,
+                            transactionInputViewModel: transactionInputViewModel
+                        )
+                        .tag(TabModel.calendar)
+
+                        GraphView(
+                            graphViewModel: graphViewModel,
+                            transactionInputViewModel: transactionInputViewModel,
+                            categoryInputViewModel: categoryInputViewModel
+                        )
+                        .tag(TabModel.graph)
+
+                        SettingView()
+                            .tag(TabModel.setting)
                     }
 
-                    CalendarView(
-                        calendarViewModel: calendarViewModel,
-                        transactionInputViewModel: transactionInputViewModel
-                    )
-                    .tag(TabModel.calendar)
-
-                    GraphView(
-                        graphViewModel: graphViewModel,
-                        transactionInputViewModel: transactionInputViewModel,
-                        categoryInputViewModel: categoryInputViewModel
-                    )
-                    .tag(TabModel.graph)
-
-                    SettingView()
-                        .tag(TabModel.setting)
+                    if !showTabView {
+                        SearchView(
+                            searchViewModel: searchViewModel,
+                            transactionInputViewModel: transactionInputViewModel
+                        )
+                    }
                 }
 
-                if !showTabView {
-                    SearchView(
-                        searchViewModel: searchViewModel,
-                        transactionInputViewModel: transactionInputViewModel
-                    )
+                if !categoryInputViewModel.isPresentInputView
+                    && (!showTabView || !keyboardObserver.isVisible)
+                {
+                    CustomTabBar(showSearchBar: true, activeTab: $activeTab) { isExpanded in
+                        showTabView = !isExpanded
+                    } onSearchTextChanged: { searchText in
+                        searchViewModel.searchText = searchText
+                    }
                 }
             }
+            .background(Color(.systemGroupedBackground))
+            .fullScreenCover(isPresented: $transactionInputViewModel.isPresentInputView) {
+                TransactionInputView(
+                    viewModel: transactionInputViewModel
+                )
+                .background(Color(.systemGroupedBackground))
+            }
+            .blur(radius: shouldShowLockScreen() ? 10 : 0)
 
-            if !categoryInputViewModel.isPresentInputView
-                && (!showTabView || !keyboardObserver.isVisible)
-            {
-                CustomTabBar(showSearchBar: true, activeTab: $activeTab) { isExpanded in
-                    showTabView = !isExpanded
-                } onSearchTextChanged: { searchText in
-                    searchViewModel.searchText = searchText
-                }
+            // ロック画面を表示
+            if shouldShowLockScreen() {
+                LockView(isUnlocked: $isUnlocked)
             }
         }
-        .background(Color(.systemGroupedBackground))
-        .fullScreenCover(isPresented: $transactionInputViewModel.isPresentInputView) {
-            TransactionInputView(
-                viewModel: transactionInputViewModel
-            )
-            .background(Color(.systemGroupedBackground))
+        .onAppear {
+            // アプリ起動時にロックが有効な場合はロック状態にする
+            if isAppLockEnabled {
+                isUnlocked = false
+            }
+        }
+        .onChange(of: scenePhase) { newPhase in
+            handleScenePhaseChange(newPhase)
+        }
+    }
+
+    private func shouldShowLockScreen() -> Bool {
+        return isAppLockEnabled && !isUnlocked
+    }
+
+    private func handleScenePhaseChange(_ phase: ScenePhase) {
+        switch phase {
+        case .background:
+            // アプリがバックグラウンドに移行した時
+            if isAppLockEnabled && lockWhenAppGoesBackground {
+                isUnlocked = false
+            }
+        case .active:
+            // アプリがアクティブになった時（特に何もしない）
+            break
+        case .inactive:
+            // 一時的に非アクティブになった時（通知センターを開いた時など）
+            break
+        @unknown default:
+            break
         }
     }
 }
