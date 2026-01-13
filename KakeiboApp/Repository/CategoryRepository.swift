@@ -9,7 +9,7 @@
 import Foundation
 import CoreData
 
-protocol CategoryRepositoryProtocol {
+protocol CategoryRepositoryProtocol: Sendable {
     func fetchAll() async -> Result<[CategoryModel], CustomError>
     func fetch(by id: UUID) async -> Result<CategoryModel, CustomError>
     func add(_ categoryModel: CategoryModel) async -> Result<Void, CustomError>
@@ -17,7 +17,7 @@ protocol CategoryRepositoryProtocol {
     func update(_ categoryModel: CategoryModel) async -> Result<Void, CustomError>
 }
 
-final class CategoryRepository: CategoryRepositoryProtocol {
+final class CategoryRepository: CategoryRepositoryProtocol, @unchecked Sendable {
     private let context: NSManagedObjectContext
 
     init(context: NSManagedObjectContext = PersistenceController.shared.container.viewContext) {
@@ -25,7 +25,11 @@ final class CategoryRepository: CategoryRepositoryProtocol {
     }
 
     func fetchAll() async -> Result<[CategoryModel], CustomError> {
-        await context.perform {
+        await context.perform { [weak self] in
+            guard let self = self else {
+                return .failure(.fetchError("Repository was deallocated"))
+            }
+
             let fetchRequest: NSFetchRequest<CategoryEntity> = CategoryEntity.fetchRequest()
             fetchRequest.sortDescriptors = [
                 NSSortDescriptor(keyPath: \CategoryEntity.name, ascending: true)
@@ -41,7 +45,11 @@ final class CategoryRepository: CategoryRepositoryProtocol {
     }
 
     func fetch(by id: UUID) async -> Result<CategoryModel, CustomError> {
-        await context.perform {
+        await context.perform { [weak self] in
+            guard let self = self else {
+                return .failure(.fetchError("Repository was deallocated"))
+            }
+
             do {
                 let category = try self.fetchEntity(by: id)
                 return .success(category.toModel())
@@ -54,7 +62,11 @@ final class CategoryRepository: CategoryRepositoryProtocol {
     }
 
     func add(_ categoryModel: CategoryModel) async -> Result<Void, CustomError> {
-        await context.perform {
+        await context.perform { [weak self] in
+            guard let self = self else {
+                return .failure(.saveError)
+            }
+
             let category = CategoryEntity(context: self.context)
             category.id = categoryModel.id
             category.name = categoryModel.name
@@ -67,7 +79,11 @@ final class CategoryRepository: CategoryRepositoryProtocol {
     }
 
     func delete(_ categoryModel: CategoryModel) async -> Result<Void, CustomError> {
-        await context.perform {
+        await context.perform { [weak self] in
+            guard let self = self else {
+                return .failure(.saveError)
+            }
+
             do {
                 let category = try self.fetchEntity(by: categoryModel.id)
                 self.context.delete(category)
@@ -81,7 +97,11 @@ final class CategoryRepository: CategoryRepositoryProtocol {
     }
 
     func update(_ categoryModel: CategoryModel) async -> Result<Void, CustomError> {
-        await context.perform {
+        await context.perform { [weak self] in
+            guard let self = self else {
+                return .failure(.saveError)
+            }
+
             do {
                 let category = try self.fetchEntity(by: categoryModel.id)
                 category.name = categoryModel.name

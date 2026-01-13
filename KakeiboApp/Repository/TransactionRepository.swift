@@ -9,7 +9,7 @@
 import Foundation
 import CoreData
 
-protocol TransactionRepositoryProtocol {
+protocol TransactionRepositoryProtocol: Sendable {
     func search(text: String?) async -> Result<[TransactionModel], CustomError>
     func fetch(
         from startDate: Date?,
@@ -22,7 +22,7 @@ protocol TransactionRepositoryProtocol {
     func update(_ transactionModel: TransactionModel) async -> Result<Void, CustomError>
 }
 
-final class TransactionRepository: TransactionRepositoryProtocol {
+final class TransactionRepository: TransactionRepositoryProtocol, @unchecked Sendable {
     private let context: NSManagedObjectContext
 
     init(context: NSManagedObjectContext = PersistenceController.shared.container.viewContext) {
@@ -30,7 +30,11 @@ final class TransactionRepository: TransactionRepositoryProtocol {
     }
 
     func search(text: String?) async -> Result<[TransactionModel], CustomError> {
-        await context.perform {
+        await context.perform { [weak self] in
+            guard let self = self else {
+                return .failure(.fetchError("Repository was deallocated"))
+            }
+
             let fetchRequest: NSFetchRequest<TransactionEntity> = TransactionEntity.fetchRequest()
 
             if let text = text, !text.isEmpty {
@@ -60,7 +64,11 @@ final class TransactionRepository: TransactionRepositoryProtocol {
         limit: Int? = nil,
         offset: Int? = nil
     ) async -> Result<[TransactionModel], CustomError> {
-        await context.perform {
+        await context.perform { [weak self] in
+            guard let self = self else {
+                return .failure(.fetchError("Repository was deallocated"))
+            }
+
             let fetchRequest: NSFetchRequest<TransactionEntity> = TransactionEntity.fetchRequest()
 
             var predicates: [NSPredicate] = []
@@ -98,7 +106,11 @@ final class TransactionRepository: TransactionRepositoryProtocol {
     }
 
     func add(_ transactionModel: TransactionModel) async -> Result<Void, CustomError> {
-        await context.perform {
+        await context.perform { [weak self] in
+            guard let self = self else {
+                return .failure(.saveError)
+            }
+
             do {
                 guard let category = try self.fetchCategoryEntity(by: transactionModel.categoryId)
                 else {
@@ -126,7 +138,11 @@ final class TransactionRepository: TransactionRepositoryProtocol {
     }
 
     func delete(_ transactionModel: TransactionModel) async -> Result<Void, CustomError> {
-        await context.perform {
+        await context.perform { [weak self] in
+            guard let self = self else {
+                return .failure(.saveError)
+            }
+
             do {
                 let transaction = try self.fetchEntity(by: transactionModel.id)
                 self.context.delete(transaction)
@@ -140,7 +156,11 @@ final class TransactionRepository: TransactionRepositoryProtocol {
     }
 
     func update(_ transactionModel: TransactionModel) async -> Result<Void, CustomError> {
-        await context.perform {
+        await context.perform { [weak self] in
+            guard let self = self else {
+                return .failure(.saveError)
+            }
+
             do {
                 let transaction = try self.fetchEntity(by: transactionModel.id)
                 guard let category = try self.fetchCategoryEntity(by: transactionModel.categoryId)
