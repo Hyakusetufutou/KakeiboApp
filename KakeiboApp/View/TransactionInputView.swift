@@ -155,12 +155,16 @@ struct TransactionInputView: View {
         VStack(alignment: .leading, spacing: 6) {
             sectionHeader("カテゴリ")
             Menu {
-                ForEach(
-                    viewModel.availableCategories
-                ) {
-                    item in
-                    Button(item.name) {
-                        viewModel.selectedCategoryId = item.id
+                if viewModel.availableCategories.isEmpty {
+                    Text("カテゴリなし")
+                } else {
+                    ForEach(
+                        viewModel.availableCategories
+                    ) {
+                        item in
+                        Button(item.name) {
+                            viewModel.selectedCategoryId = item.id
+                        }
                     }
                 }
             } label: {
