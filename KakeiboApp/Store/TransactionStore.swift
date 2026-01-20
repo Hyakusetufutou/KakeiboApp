@@ -12,83 +12,156 @@ import Combine
 @MainActor
 protocol TransactionStoreProtocol {
     var transactions: AnyPublisher<[TransactionModel], Never> { get }
-    var errorMessage: AnyPublisher<String, Never> { get }
-    func add(_ transaction: TransactionModel)
-    func update(_ transaction: TransactionModel)
-    func delete(_ transaction: TransactionModel)
-    func search(text: String?) -> [TransactionModel]
+    var errorMessage: AnyPublisher<String?, Never> { get }
+    var isLoading: AnyPublisher<Bool, Never> { get }
+
+    func add(_ transaction: TransactionModel) async
+    func update(_ transaction: TransactionModel) async
+    func delete(_ transaction: TransactionModel) async
+    func search(text: String?) async -> [TransactionModel]
+    func loadMore() async
+    func reload() async
 }
 
 @MainActor
-class TransactionStore: TransactionStoreProtocol {
+final class TransactionStore: TransactionStoreProtocol {
+
+    // MARK: - State
     @Published private var _transactions: [TransactionModel] = []
-    @Published private var _errorMessage: String = ""
+    @Published private var _errorMessage: String?
+    @Published private var _isLoading = false
 
     var transactions: AnyPublisher<[TransactionModel], Never> {
         $_transactions.eraseToAnyPublisher()
     }
 
-    var errorMessage: AnyPublisher<String, Never> {
+    var errorMessage: AnyPublisher<String?, Never> {
         $_errorMessage.eraseToAnyPublisher()
     }
 
-    private let categoryRepository: CategoryRepositoryProtocol
-    private let transactionRepository: TransactionRepository
-
-    init(
-        categoryRepository: CategoryRepositoryProtocol,
-        transactionRepository: TransactionRepository
-    ) {
-        self.categoryRepository = categoryRepository
-        self.transactionRepository = transactionRepository
-        load()
+    var isLoading: AnyPublisher<Bool, Never> {
+        $_isLoading.eraseToAnyPublisher()
     }
 
-    func add(_ transaction: TransactionModel) {
-        switch transactionRepository.add(transaction) {
-        case .success(()):
-            load()
-        case .failure(let error):
-            _errorMessage = error.description
+    // MARK: - Dependencies
+    private let repository: TransactionRepositoryProtocol
+    private let initialLimit = 100
+    private let loadMoreLimit = 50
+    private var hasMoreData = true
+
+    // MARK: - Init
+    init(repository: TransactionRepositoryProtocol) {
+        self.repository = repository
+        Task { await reload() }
+    }
+
+    // MARK: - Actions
+    func add(_ transaction: TransactionModel) async {
+        _isLoading = true
+        defer { _isLoading = false }
+
+        do {
+            try await repository.add(transaction)
+            await reloadInternal()
+        } catch {
+            handleError(error)
         }
     }
 
-    func update(_ transaction: TransactionModel) {
-        switch transactionRepository.update(transaction) {
-        case .success(()):
-            load()
-        case .failure(let error):
-            _errorMessage = error.description
+    func update(_ transaction: TransactionModel) async {
+        _isLoading = true
+        defer { _isLoading = false }
+
+        do {
+            try await repository.update(transaction)
+            await reloadInternal()
+        } catch {
+            handleError(error)
         }
     }
 
-    func delete(_ transaction: TransactionModel) {
-        switch transactionRepository.delete(transaction) {
-        case .success(()):
-            load()
-        case .failure(let error):
-            _errorMessage = error.description
+    func delete(_ transaction: TransactionModel) async {
+        _isLoading = true
+        defer { _isLoading = false }
+
+        do {
+            try await repository.delete(transaction)
+            await reloadInternal()
+        } catch {
+            handleError(error)
         }
     }
 
-    func search(text: String?) -> [TransactionModel] {
-        switch transactionRepository.search(text: text) {
-        case .success(let transactions):
-            return transactions
-        case .failure(let error):
+    func search(text: String?) async -> [TransactionModel] {
+        _isLoading = true
+        defer { _isLoading = false }
+
+        do {
+            let result = try await repository.search(text: text)
+            _errorMessage = nil
+            return result
+        } catch {
+            handleError(error)
             return []
         }
     }
 
-    private func load() {
-        // TODO: 全数取得を行うが、期間を限定し都度追加で取得する形にできればした方がいい
-        switch transactionRepository.fetch(from: nil, to: nil) {
-        case .success(let transactions):
-            self._transactions = transactions
-            _errorMessage = ""
-        case .failure(let error):
-            self._transactions = []
-            _errorMessage = error.description
+    func loadMore() async {
+        guard hasMoreData, !_isLoading else { return }
+
+        _isLoading = true
+        defer { _isLoading = false }
+
+        do {
+            let offset = _transactions.count
+            let newItems = try await repository.fetch(
+                from: nil,
+                to: nil,
+                limit: loadMoreLimit,
+                offset: offset
+            )
+
+            if newItems.isEmpty {
+                hasMoreData = false
+                return
+            }
+
+            let existingIds = Set(_transactions.map { $0.id })
+            let uniqueItems = newItems.filter { !existingIds.contains($0.id) }
+            _transactions.append(contentsOf: uniqueItems)
+        } catch {
+            handleError(error)
         }
+    }
+
+    func reload() async {
+        _isLoading = true
+        defer { _isLoading = false }
+
+        hasMoreData = true
+        await reloadInternal()
+    }
+
+    // MARK: - Private
+    private func reloadInternal() async {
+        do {
+            let items = try await repository.fetch(
+                from: nil,
+                to: nil,
+                limit: initialLimit,
+                offset: 0
+            )
+            _transactions = items
+            _errorMessage = nil
+            hasMoreData = items.count == initialLimit
+        } catch {
+            handleError(error)
+        }
+    }
+
+    private func handleError(_ error: Error) {
+        _errorMessage =
+            (error as? CustomError)?.description
+            ?? error.localizedDescription
     }
 }

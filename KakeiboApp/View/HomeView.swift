@@ -53,6 +53,13 @@ struct HomeView: View {
             }
         }
         .animation(.snappy, value: homeViewModel.showFilterView)
+        .alert("エラー", isPresented: .constant(homeViewModel.errorMessage != nil)) {
+            Button("OK") {}
+        } message: {
+            if let errorMessage = homeViewModel.errorMessage {
+                Text(errorMessage)
+            }
+        }
     }
 
     @ViewBuilder
@@ -66,8 +73,8 @@ struct HomeView: View {
 
         VStack {
             CardView(
-                income: total(homeViewModel.filterdTransactions, type: .income),
-                expense: total(homeViewModel.filterdTransactions, type: .expense)
+                income: total(homeViewModel.filteredTransactions, type: .income),
+                expense: total(homeViewModel.filteredTransactions, type: .expense)
             )
             .padding(.bottom, 8)
 
@@ -75,7 +82,7 @@ struct HomeView: View {
             CustomSegmentedControl(selectedType: $homeViewModel.selectedType)
                 .padding(.bottom, 10)
 
-            if homeViewModel.filterdTransactions.isEmpty {
+            if homeViewModel.filteredTransactions.isEmpty {
                 VStack {
                     Text("取引なし")
                         .font(.subheadline)
@@ -87,7 +94,7 @@ struct HomeView: View {
 
             } else {
                 ForEach(
-                    homeViewModel.filterdTransactions
+                    homeViewModel.filteredTransactions
                 ) {
                     transaction in
                     NavigationLink(value: transaction) {
@@ -95,7 +102,9 @@ struct HomeView: View {
                             transaction: transaction,
                             category: homeViewModel.categoryFind(id: transaction.categoryId),
                             onDelete: { transaction in
-                                homeViewModel.deleteTransaction(transaction)
+                                Task {
+                                    await homeViewModel.deleteTransaction(transaction)
+                                }
                             }
                         )
                         .onTapGesture {

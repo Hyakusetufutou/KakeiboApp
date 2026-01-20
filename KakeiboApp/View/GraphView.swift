@@ -88,7 +88,9 @@ struct GraphView: View {
                 isPresentCategoryList: $isPresentCategoryList,
                 categories: $graphViewModel.categories,
                 onDeleteCategory: { category in
-                    graphViewModel.deleteCategory(category)
+                    Task {
+                        await graphViewModel.deleteCategory(category)
+                    }
                 },
                 type: graphViewModel.selectedType
             )
@@ -149,7 +151,9 @@ struct GraphView: View {
                             transactionInputViewModel: transactionInputViewModel,
                             categoryID: summary.categoryID,
                             onDeleteTransaction: { transaction in
-                                graphViewModel.deleteTransaction(transaction)
+                                Task {
+                                    await graphViewModel.deleteTransaction(transaction)
+                                }
                             }
                         )
                     ) {

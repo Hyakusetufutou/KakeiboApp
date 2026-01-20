@@ -19,12 +19,11 @@ final class ViewModelFactory: ObservableObject {
 
     init() {
         let categoryRepository = CategoryRepository()
-        let transactionRepository = TransactionRepository(categoryRepository: categoryRepository)
+        let transactionRepository = TransactionRepository()
 
-        let categoryStore = CategoryStore(categoryRepository: categoryRepository)
+        let categoryStore = CategoryStore(repository: categoryRepository)
         let transactionStore = TransactionStore(
-            categoryRepository: categoryRepository,
-            transactionRepository: transactionRepository
+            repository: transactionRepository
         )
 
         self.homeViewModel = HomeViewModel(

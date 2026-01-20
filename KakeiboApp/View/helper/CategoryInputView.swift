@@ -86,8 +86,10 @@ struct CategoryInputView: View {
                 }
 
                 Button {
-                    isFocused = false
-                    categoryInputViewModel.save()
+                    Task {
+                        isFocused = false
+                        await categoryInputViewModel.save()
+                    }
                 } label: {
                     Text(categoryInputViewModel.isEdit ? "更新" : "作成")
                         .font(.headline)
@@ -110,5 +112,12 @@ struct CategoryInputView: View {
                 .fill(.ultraThinMaterial)
         )
         .padding(.horizontal, 24)
+        .alert("エラー", isPresented: .constant(categoryInputViewModel.errorMessage != nil)) {
+            Button("OK") {}
+        } message: {
+            if let errorMessage = categoryInputViewModel.errorMessage {
+                Text(errorMessage)
+            }
+        }
     }
 }

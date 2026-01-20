@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="23605" systemVersion="24G231" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="24512" systemVersion="24G419" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
     <entity name="CategoryEntity" representedClassName="CategoryEntity" syncable="YES" codeGenerationType="class">
         <attribute name="color" attributeType="String"/>
         <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
@@ -16,7 +16,7 @@
         <attribute name="memo" optional="YES" attributeType="String" minValueString="0"/>
         <attribute name="title" attributeType="String"/>
         <attribute name="type" attributeType="String"/>
-        <attribute name="upadtedAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="updatedAt" attributeType="Date" usesScalarValueType="NO"/>
         <relationship name="category" maxCount="1" deletionRule="Nullify" destinationEntity="CategoryEntity" inverseName="transactions" inverseEntity="CategoryEntity"/>
     </entity>
 </model>

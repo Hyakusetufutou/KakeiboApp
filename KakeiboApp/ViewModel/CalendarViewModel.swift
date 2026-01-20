@@ -9,14 +9,17 @@
 import Foundation
 import Combine
 
+// MARK: - Calendar ViewModel
 @MainActor
 final class CalendarViewModel: ObservableObject {
     @Published private(set) var dailySummaries: [Date: DailySummary] = [:]
+    @Published private(set) var isLoading = false
+    @Published private(set) var errorMessage: String?
 
     @Published var selectedDate: Date?
     @Published var currentDate: Date = Date()
-    @Published var startDate: Date = .now.startOfMonth
-    @Published var endDate: Date = .now.endOfMonth
+    @Published var startDate: Date = Date().startOfMonth
+    @Published var endDate: Date = Date().endOfMonth
 
     private var cancellables = Set<AnyCancellable>()
 
@@ -36,8 +39,10 @@ final class CalendarViewModel: ObservableObject {
         endDate = newDate.endOfMonth
     }
 
-    func delete(_ transaction: TransactionModel) {
-        transactionStore.delete(transaction)
+    func delete(_ transaction: TransactionModel) async {
+        isLoading = true
+        await transactionStore.delete(transaction)
+        isLoading = false
     }
 
     func category(for id: UUID) -> CategoryModel? {
@@ -45,32 +50,37 @@ final class CalendarViewModel: ObservableObject {
     }
 
     private func bindDailySummaries() {
-        Publishers.CombineLatest3(
+        Publishers.CombineLatest4(
             transactionStore.transactions,
             categoryStore.categories,
-            Publishers.CombineLatest($startDate, $endDate)
+            $startDate,
+            $endDate
         )
-        .map { [weak self] transactions, categories, period in
+        .map { [weak self] transactions, _, startDate, endDate in
             self?
                 .makeDailySummaries(
                     transactions: transactions,
-                    categories: categories,
-                    startDate: period.0,
-                    endDate: period.1
+                    startDate: startDate,
+                    endDate: endDate
                 ) ?? [:]
         }
         .receive(on: DispatchQueue.main)
         .assign(to: &$dailySummaries)
 
+        // エラーメッセージのバインディング
+        Publishers.Merge(
+            transactionStore.errorMessage,
+            categoryStore.errorMessage
+        )
+        .receive(on: DispatchQueue.main)
+        .assign(to: &$errorMessage)
     }
 
     private func makeDailySummaries(
         transactions: [TransactionModel],
-        categories: [CategoryModel],
         startDate: Date,
         endDate: Date
     ) -> [Date: DailySummary] {
-
         let filteredTransactions = transactions.filter {
             startDate <= $0.date && $0.date <= endDate
         }
@@ -79,7 +89,9 @@ final class CalendarViewModel: ObservableObject {
             Calendar.current.startOfDay(for: $0.date)
         }
         .mapValues { dailyTransactions -> DailySummary in
-            let income = dailyTransactions.filter { $0.type == .income }
+            let income =
+                dailyTransactions
+                .filter { $0.type == .income }
                 .reduce(0) { $0 + $1.amount }
 
             let expense =
@@ -87,9 +99,8 @@ final class CalendarViewModel: ObservableObject {
                 .filter { $0.type == .expense }
                 .reduce(0) { $0 + $1.amount }
 
-            let date = Calendar.current.startOfDay(
-                for: dailyTransactions[0].date
-            )
+            let date = Calendar.current.startOfDay(for: dailyTransactions[0].date)
+
             return DailySummary(
                 date: date,
                 income: income,

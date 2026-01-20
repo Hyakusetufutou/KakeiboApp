@@ -11,16 +11,14 @@ import Combine
 
 @MainActor
 final class GraphViewModel: ObservableObject {
-    @Published var categorySummaries: [CategorySummary] = []
+    @Published private(set) var categorySummaries: [CategorySummary] = []
+    @Published private(set) var isLoading = false
+    @Published private(set) var errorMessage: String?
+
     @Published var categories: [CategoryModel] = []
-    @Published var filteredCategories: [CategoryModel] = []
-
-    @Published var startDate: Date = .now.startOfMonth
-    @Published var endDate: Date = .now.endOfMonth
+    @Published var startDate: Date = Date().startOfMonth
+    @Published var endDate: Date = Date().endOfMonth
     @Published var selectedType: TransactionType = .expense
-
-    let categoryStore: CategoryStoreProtocol
-    let transactionStore: TransactionStoreProtocol
 
     var totalAmount: Double {
         categorySummaries.reduce(0) { $0 + $1.totalAmount }
@@ -30,6 +28,8 @@ final class GraphViewModel: ObservableObject {
         selectedType == .income ? "収入合計" : "支出合計"
     }
 
+    private let categoryStore: CategoryStoreProtocol
+    private let transactionStore: TransactionStoreProtocol
     private var cancellables = Set<AnyCancellable>()
 
     init(categoryStore: CategoryStoreProtocol, transactionStore: TransactionStoreProtocol) {
@@ -37,18 +37,27 @@ final class GraphViewModel: ObservableObject {
         self.transactionStore = transactionStore
         bindCategories()
         bindCategorySummaries()
+        bindLoadingState()
+        bindErrorMessages()
     }
 
     func findCategory(id: UUID) -> CategoryModel? {
         categoryStore.find(id: id)
     }
 
-    func deleteTransaction(_ transaction: TransactionModel) {
-        transactionStore.delete(transaction)
+    func deleteTransaction(_ transaction: TransactionModel) async {
+        await transactionStore.delete(transaction)
     }
 
-    func deleteCategory(_ category: CategoryModel) {
-        categoryStore.delete(category)
+    func deleteCategory(_ category: CategoryModel) async {
+        await categoryStore.delete(category)
+    }
+
+    func changeMonth(by value: Int) {
+        guard let newDate = Calendar.current.date(byAdding: .month, value: value, to: startDate)
+        else { return }
+        startDate = newDate.startOfMonth
+        endDate = newDate.endOfMonth
     }
 
     private func bindCategories() {
@@ -57,8 +66,7 @@ final class GraphViewModel: ObservableObject {
             $selectedType
         )
         .map { categories, selectedType in
-            categories
-                .filter { $0.type == selectedType }
+            categories.filter { $0.type == selectedType }
         }
         .receive(on: DispatchQueue.main)
         .assign(to: &$categories)
@@ -85,6 +93,25 @@ final class GraphViewModel: ObservableObject {
         .assign(to: &$categorySummaries)
     }
 
+    private func bindLoadingState() {
+        Publishers.CombineLatest(
+            transactionStore.isLoading,
+            categoryStore.isLoading
+        )
+        .map { $0 || $1 }
+        .receive(on: DispatchQueue.main)
+        .assign(to: &$isLoading)
+    }
+
+    private func bindErrorMessages() {
+        Publishers.Merge(
+            transactionStore.errorMessage,
+            categoryStore.errorMessage
+        )
+        .receive(on: DispatchQueue.main)
+        .assign(to: &$errorMessage)
+    }
+
     private func makeCategorySummaries(
         transactions: [TransactionModel],
         categories: [CategoryModel],
@@ -95,12 +122,15 @@ final class GraphViewModel: ObservableObject {
         let filteredTransactions = transactions.filter {
             startDate <= $0.date && $0.date <= endDate && $0.type == type
         }
+
         let summaries =
             categories
             .filter { $0.type == type }
             .compactMap { category -> CategorySummary? in
                 let related = filteredTransactions.filter { $0.categoryId == category.id }
-                let total = related.map(\.amount)
+                let total =
+                    related
+                    .map(\.amount)
                     .filter { $0.isFinite && !$0.isNaN }
                     .reduce(0, +)
 
@@ -116,13 +146,6 @@ final class GraphViewModel: ObservableObject {
                 )
             }
 
-        return summaries
-    }
-
-    func changeMonth(by value: Int) {
-        guard let newDate = Calendar.current.date(byAdding: .month, value: value, to: startDate)
-        else { return }
-        startDate = newDate.startOfMonth
-        endDate = newDate.endOfMonth
+        return summaries.sorted { $0.totalAmount > $1.totalAmount }
     }
 }

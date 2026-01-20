@@ -95,7 +95,9 @@ struct TransactionInputView: View {
 
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
-                        viewModel.save()
+                        Task {
+                            await viewModel.save()
+                        }
                     } label: {
                         Image(systemName: "checkmark")
                             .font(.headline)
@@ -110,6 +112,13 @@ struct TransactionInputView: View {
                     }
                     .disabled(!viewModel.isValid())
                     .opacity(viewModel.isValid() ? 1.0 : 0.2)
+                }
+            }
+            .alert("エラー", isPresented: .constant(viewModel.errorMessage != nil)) {
+                Button("OK") {}
+            } message: {
+                if let errorMessage = viewModel.errorMessage {
+                    Text(errorMessage)
                 }
             }
         }
@@ -146,12 +155,16 @@ struct TransactionInputView: View {
         VStack(alignment: .leading, spacing: 6) {
             sectionHeader("カテゴリ")
             Menu {
-                ForEach(
-                    viewModel.availableCategories
-                ) {
-                    item in
-                    Button(item.name) {
-                        viewModel.selectedCategoryId = item.id
+                if viewModel.availableCategories.isEmpty {
+                    Text("カテゴリなし")
+                } else {
+                    ForEach(
+                        viewModel.availableCategories
+                    ) {
+                        item in
+                        Button(item.name) {
+                            viewModel.selectedCategoryId = item.id
+                        }
                     }
                 }
             } label: {

@@ -11,16 +11,18 @@ import Combine
 
 @MainActor
 final class TransactionInputViewModel: ObservableObject {
-    @Published var categories: [CategoryModel] = []
+    @Published private(set) var categories: [CategoryModel] = []
+    @Published private(set) var isLoading = false
+    @Published private(set) var errorMessage: String?
 
-    @Published var isPresentInputView: Bool = false
-    @Published var isEdit: Bool = false
+    @Published var isPresentInputView = false
+    @Published var isEdit = false
 
-    @Published var id: UUID = UUID()
-    @Published var title: String = ""
-    @Published var memo: String = ""
-    @Published var amount: String = ""
-    @Published var date: Date = Date()
+    @Published var id = UUID()
+    @Published var title = ""
+    @Published var memo = ""
+    @Published var amount = ""
+    @Published var date = Date()
     @Published var type: TransactionType = .expense
     @Published var selectedCategoryId: UUID?
 
@@ -34,13 +36,15 @@ final class TransactionInputViewModel: ObservableObject {
 
     private let categoryStore: CategoryStoreProtocol
     private let transactionStore: TransactionStoreProtocol
-
     private var cancellables = Set<AnyCancellable>()
 
     init(categoryStore: CategoryStoreProtocol, transactionStore: TransactionStoreProtocol) {
         self.categoryStore = categoryStore
         self.transactionStore = transactionStore
         bindCategories()
+        bindLoadingState()
+        bindErrorMessages()
+        observeTypeChange()
     }
 
     func resetSelectedCategory() {
@@ -58,8 +62,11 @@ final class TransactionInputViewModel: ObservableObject {
         isPresentInputView = true
     }
 
-    func save() {
-        guard isValid() else { return }
+    func save() async {
+        guard isValid() else {
+            errorMessage = validationErrorMessage()
+            return
+        }
 
         let transaction = TransactionModel(
             id: id,
@@ -73,11 +80,13 @@ final class TransactionInputViewModel: ObservableObject {
             categoryId: selectedCategoryId ?? UUID()
         )
 
+        isLoading = true
         if isEdit {
-            transactionStore.update(transaction)
+            await transactionStore.update(transaction)
         } else {
-            transactionStore.add(transaction)
+            await transactionStore.add(transaction)
         }
+        isLoading = false
 
         reset()
         cancel()
@@ -85,9 +94,17 @@ final class TransactionInputViewModel: ObservableObject {
 
     func cancel() {
         isPresentInputView = false
+        errorMessage = nil
     }
 
-    func reset() {
+    func isValid() -> Bool {
+        guard !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return false }
+        guard let amountValue = Double(amount), amountValue > 0 else { return false }
+        guard selectedCategoryId != nil else { return false }
+        return true
+    }
+
+    private func reset() {
         id = UUID()
         title = ""
         memo = ""
@@ -97,21 +114,27 @@ final class TransactionInputViewModel: ObservableObject {
         selectedCategoryId = nil
     }
 
-    func restore(from transaction: TransactionModel) {
+    private func restore(from transaction: TransactionModel) {
         id = transaction.id
         title = transaction.title
-        memo = transaction.memo
+        memo = transaction.memo ?? ""
         amount = String(Int(transaction.amount))
         date = transaction.date
         type = transaction.type
         selectedCategoryId = transaction.categoryId
     }
 
-    func isValid() -> Bool {
-        guard !title.isEmpty, Double(amount) != nil, selectedCategoryId != nil else {
-            return false
+    private func validationErrorMessage() -> String {
+        if title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return "タイトルを入力してください"
         }
-        return true
+        if Double(amount) == nil || Double(amount)! <= 0 {
+            return "有効な金額を入力してください"
+        }
+        if selectedCategoryId == nil {
+            return "カテゴリを選択してください"
+        }
+        return "入力内容を確認してください"
     }
 
     private func bindCategories() {
@@ -119,6 +142,34 @@ final class TransactionInputViewModel: ObservableObject {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] categories in
                 self?.categories = categories
+            }
+            .store(in: &cancellables)
+    }
+
+    private func bindLoadingState() {
+        Publishers.CombineLatest(
+            transactionStore.isLoading,
+            categoryStore.isLoading
+        )
+        .map { $0 || $1 }
+        .receive(on: DispatchQueue.main)
+        .assign(to: &$isLoading)
+    }
+
+    private func bindErrorMessages() {
+        Publishers.Merge(
+            transactionStore.errorMessage,
+            categoryStore.errorMessage
+        )
+        .receive(on: DispatchQueue.main)
+        .assign(to: &$errorMessage)
+    }
+
+    private func observeTypeChange() {
+        $type
+            .dropFirst()
+            .sink { [weak self] _ in
+                self?.selectedCategoryId = nil
             }
             .store(in: &cancellables)
     }
