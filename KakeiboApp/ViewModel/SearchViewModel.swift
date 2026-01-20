@@ -13,7 +13,6 @@ import Combine
 final class SearchViewModel: ObservableObject {
     @Published var searchText = ""
     @Published private(set) var resultTransactions: [TransactionModel] = []
-    @Published private(set) var isLoading = false
     @Published private(set) var errorMessage: String?
 
     private let categoryStore: CategoryStoreProtocol
@@ -55,9 +54,7 @@ final class SearchViewModel: ObservableObject {
         }
 
         searchTask = Task { @MainActor in
-            isLoading = true
             let results = await transactionStore.search(text: text)
-            isLoading = false
 
             if !Task.isCancelled {
                 resultTransactions = results.sorted { $0.date > $1.date }

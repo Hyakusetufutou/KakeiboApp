@@ -6,139 +6,85 @@
 //
 //
 
-import Foundation
 import CoreData
 
+// MARK: - Category Repository Protocol
 protocol CategoryRepositoryProtocol: Sendable {
-    func fetchAll() async -> Result<[CategoryModel], CustomError>
-    func fetch(by id: UUID) async -> Result<CategoryModel, CustomError>
-    func add(_ categoryModel: CategoryModel) async -> Result<Void, CustomError>
-    func delete(_ categoryModel: CategoryModel) async -> Result<Void, CustomError>
-    func update(_ categoryModel: CategoryModel) async -> Result<Void, CustomError>
+    func fetchAll() async throws -> [CategoryModel]
+    func fetch(by id: UUID) async throws -> CategoryModel
+    func add(_ categoryModel: CategoryModel) async throws
+    func delete(_ categoryModel: CategoryModel) async throws
+    func update(_ categoryModel: CategoryModel) async throws
 }
 
-final class CategoryRepository: CategoryRepositoryProtocol, @unchecked Sendable {
-    private let context: NSManagedObjectContext
+// MARK: - Category Repository Implementation
+actor CategoryRepository: CategoryRepositoryProtocol {
+    private let container: NSPersistentContainer
 
-    init(context: NSManagedObjectContext = PersistenceController.shared.container.viewContext) {
-        self.context = context
+    init(container: NSPersistentContainer = PersistenceController.shared.container) {
+        self.container = container
     }
 
-    func fetchAll() async -> Result<[CategoryModel], CustomError> {
-        await context.perform { [weak self] in
-            guard let self = self else {
-                return .failure(.fetchError("Repository was deallocated"))
-            }
-
-            let fetchRequest: NSFetchRequest<CategoryEntity> = CategoryEntity.fetchRequest()
-            fetchRequest.sortDescriptors = [
+    func fetchAll() async throws -> [CategoryModel] {
+        return try await container.performBackgroundTask { context in
+            let request = CategoryEntity.fetchRequest()
+            request.sortDescriptors = [
                 NSSortDescriptor(keyPath: \CategoryEntity.name, ascending: true)
             ]
-
-            do {
-                let categories = try self.context.fetch(fetchRequest)
-                return .success(categories.map { $0.toModel() })
-            } catch {
-                return .failure(.fetchError(error.localizedDescription))
-            }
+            return try context.fetch(request).map { $0.toModel() }
         }
     }
 
-    func fetch(by id: UUID) async -> Result<CategoryModel, CustomError> {
-        await context.perform { [weak self] in
-            guard let self = self else {
-                return .failure(.fetchError("Repository was deallocated"))
-            }
-
-            do {
-                let category = try self.fetchEntity(by: id)
-                return .success(category.toModel())
-            } catch let error as CustomError {
-                return .failure(error)
-            } catch {
-                return .failure(.fetchError(error.localizedDescription))
-            }
+    func fetch(by id: UUID) async throws -> CategoryModel {
+        return try await container.performBackgroundTask { context in
+            let entity = try self.fetchEntity(by: id, in: context)
+            return entity.toModel()
         }
     }
 
-    func add(_ categoryModel: CategoryModel) async -> Result<Void, CustomError> {
-        await context.perform { [weak self] in
-            guard let self = self else {
-                return .failure(.saveError)
-            }
-
-            let category = CategoryEntity(context: self.context)
-            category.id = categoryModel.id
-            category.name = categoryModel.name
-            category.color = AppTheme.colorToString(categoryModel.color)
-            category.type = categoryModel.type.rawValue
-            category.isDefault = categoryModel.isDefault
-
-            return self.saveContext()
+    func add(_ categoryModel: CategoryModel) async throws {
+        try await container.performBackgroundTask { context in
+            let entity = CategoryEntity(context: context)
+            entity.id = categoryModel.id
+            entity.name = categoryModel.name
+            entity.color = AppTheme.colorToString(categoryModel.color)
+            entity.type = categoryModel.type.rawValue
+            entity.isDefault = categoryModel.isDefault
+            try context.save()
         }
     }
 
-    func delete(_ categoryModel: CategoryModel) async -> Result<Void, CustomError> {
-        await context.perform { [weak self] in
-            guard let self = self else {
-                return .failure(.saveError)
-            }
-
-            do {
-                let category = try self.fetchEntity(by: categoryModel.id)
-                self.context.delete(category)
-                return self.saveContext()
-            } catch let error as CustomError {
-                return .failure(error)
-            } catch {
-                return .failure(.fetchError(error.localizedDescription))
-            }
+    func update(_ categoryModel: CategoryModel) async throws {
+        try await container.performBackgroundTask { context in
+            let entity = try self.fetchEntity(by: categoryModel.id, in: context)
+            entity.name = categoryModel.name
+            entity.color = AppTheme.colorToString(categoryModel.color)
+            entity.type = categoryModel.type.rawValue
+            entity.isDefault = categoryModel.isDefault
+            try context.save()
         }
     }
 
-    func update(_ categoryModel: CategoryModel) async -> Result<Void, CustomError> {
-        await context.perform { [weak self] in
-            guard let self = self else {
-                return .failure(.saveError)
-            }
-
-            do {
-                let category = try self.fetchEntity(by: categoryModel.id)
-                category.name = categoryModel.name
-                category.color = AppTheme.colorToString(categoryModel.color)
-                category.type = categoryModel.type.rawValue
-                category.isDefault = categoryModel.isDefault
-
-                return self.saveContext()
-            } catch let error as CustomError {
-                return .failure(error)
-            } catch {
-                return .failure(.fetchError(error.localizedDescription))
-            }
+    func delete(_ categoryModel: CategoryModel) async throws {
+        try await container.performBackgroundTask { context in
+            let entity = try self.fetchEntity(by: categoryModel.id, in: context)
+            context.delete(entity)
+            try context.save()
         }
     }
 
-    // MARK: - Private Methods
-    private func fetchEntity(by id: UUID) throws -> CategoryEntity {
-        let fetchRequest: NSFetchRequest<CategoryEntity> = CategoryEntity.fetchRequest()
-        fetchRequest.predicate = NSPredicate(format: "id == %@", id as NSUUID)
-        fetchRequest.fetchLimit = 1
+    // MARK: - Private Helpers
+    private func fetchEntity(
+        by id: UUID,
+        in context: NSManagedObjectContext
+    ) throws -> CategoryEntity {
+        let request = CategoryEntity.fetchRequest()
+        request.predicate = NSPredicate(format: "id == %@", id as NSUUID)
+        request.fetchLimit = 1
 
-        guard let category = try context.fetch(fetchRequest).first else {
+        guard let entity = try context.fetch(request).first else {
             throw CustomError.categoryNotFoundError
         }
-        return category
-    }
-
-    private func saveContext() -> Result<Void, CustomError> {
-        do {
-            if context.hasChanges {
-                try context.save()
-            }
-            return .success(())
-        } catch {
-            context.rollback()
-            return .failure(.saveError)
-        }
+        return entity
     }
 }

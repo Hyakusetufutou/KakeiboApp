@@ -14,6 +14,7 @@ protocol CategoryStoreProtocol {
     var categories: AnyPublisher<[CategoryModel], Never> { get }
     var errorMessage: AnyPublisher<String?, Never> { get }
     var isLoading: AnyPublisher<Bool, Never> { get }
+
     func add(_ category: CategoryModel) async
     func update(_ category: CategoryModel) async
     func delete(_ category: CategoryModel) async
@@ -23,6 +24,8 @@ protocol CategoryStoreProtocol {
 
 @MainActor
 final class CategoryStore: CategoryStoreProtocol {
+
+    // MARK: - State
     @Published private var _categories: [CategoryModel] = []
     @Published private var _errorMessage: String?
     @Published private var _isLoading = false
@@ -39,51 +42,49 @@ final class CategoryStore: CategoryStoreProtocol {
         $_isLoading.eraseToAnyPublisher()
     }
 
-    private let categoryRepository: CategoryRepositoryProtocol
+    // MARK: - Dependency
+    private let repository: CategoryRepositoryProtocol
 
-    init(categoryRepository: CategoryRepositoryProtocol) {
-        self.categoryRepository = categoryRepository
-        Task {
-            await load()
-        }
+    // MARK: - Init
+    init(repository: CategoryRepositoryProtocol) {
+        self.repository = repository
+        Task { await reload() }
     }
 
+    // MARK: - Actions
     func add(_ category: CategoryModel) async {
         _isLoading = true
-        let result = await categoryRepository.add(category)
-        _isLoading = false
+        defer { _isLoading = false }
 
-        switch result {
-        case .success:
-            await load()
-        case .failure(let error):
-            _errorMessage = error.description
+        do {
+            try await repository.add(category)
+            await reloadInternal()
+        } catch {
+            handleError(error)
         }
     }
 
     func update(_ category: CategoryModel) async {
         _isLoading = true
-        let result = await categoryRepository.update(category)
-        _isLoading = false
+        defer { _isLoading = false }
 
-        switch result {
-        case .success:
-            await load()
-        case .failure(let error):
-            _errorMessage = error.description
+        do {
+            try await repository.update(category)
+            await reloadInternal()
+        } catch {
+            handleError(error)
         }
     }
 
     func delete(_ category: CategoryModel) async {
         _isLoading = true
-        let result = await categoryRepository.delete(category)
-        _isLoading = false
+        defer { _isLoading = false }
 
-        switch result {
-        case .success:
-            await load()
-        case .failure(let error):
-            _errorMessage = error.description
+        do {
+            try await repository.delete(category)
+            await reloadInternal()
+        } catch {
+            handleError(error)
         }
     }
 
@@ -92,21 +93,25 @@ final class CategoryStore: CategoryStoreProtocol {
     }
 
     func reload() async {
-        await load()
+        _isLoading = true
+        defer { _isLoading = false }
+        await reloadInternal()
     }
 
-    private func load() async {
-        _isLoading = true
-        let result = await categoryRepository.fetchAll()
-        _isLoading = false
-
-        switch result {
-        case .success(let categories):
+    // MARK: - Private
+    private func reloadInternal() async {
+        do {
+            let categories = try await repository.fetchAll()
             _categories = categories
             _errorMessage = nil
-        case .failure(let error):
-            _categories = []
-            _errorMessage = error.description
+        } catch {
+            handleError(error)
         }
+    }
+
+    private func handleError(_ error: Error) {
+        _errorMessage =
+            (error as? CustomError)?.description
+            ?? error.localizedDescription
     }
 }
