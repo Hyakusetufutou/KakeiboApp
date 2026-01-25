@@ -134,37 +134,13 @@ struct HomeView: View {
 
             Spacer(minLength: 0)
 
-            Button {
+            ActionButton(imageName: "calendar") {
                 homeViewModel.showFilterView = true
-            } label: {
-                Image(systemName: "calendar")
-                    .font(.title2)
-                    .foregroundStyle(.primary)
-                    .padding(.vertical, 10)
-                    .padding(.horizontal, 14)
-                    .background {
-                        Capsule()
-                            .fill(.white)
-                            .shadow(color: .gray.opacity(0.3), radius: 8, y: 1)
-                    }
             }
-            .buttonStyle(.plain)
 
-            Button {
+            ActionButton(imageName: "plus") {
                 transactionInputViewModel.presentInputView()
-            } label: {
-                Image(systemName: "plus")
-                    .font(.title2)
-                    .foregroundStyle(.primary)
-                    .padding(.vertical, 10)
-                    .padding(.horizontal, 14)
-                    .background {
-                        Capsule()
-                            .fill(.white)
-                            .shadow(color: .gray.opacity(0.3), radius: 8, y: 1)
-                    }
             }
-            .buttonStyle(.plain)
         }
         .padding(.bottom, userName.isEmpty ? 10 : 5)
         .background(Color(.systemGroupedBackground))
