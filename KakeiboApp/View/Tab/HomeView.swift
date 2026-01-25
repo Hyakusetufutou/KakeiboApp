@@ -64,14 +64,14 @@ struct HomeView: View {
 
     @ViewBuilder
     func sectionView() -> some View {
-        Text(
-            "\(format(date: homeViewModel.startDate, format: "yyyy年MM月dd日")) ~ \(format(date: homeViewModel.endDate, format: "yyyy年MM月dd日"))"
-        )
-        .font(.caption2)
-        .foregroundStyle(.gray)
-        .hSpacing(.leading)
-
         VStack {
+            Text(
+                "\(format(date: homeViewModel.startDate, format: "yyyy年MM月dd日")) ~ \(format(date: homeViewModel.endDate, format: "yyyy年MM月dd日"))"
+            )
+            .font(.caption2)
+            .foregroundStyle(.gray)
+            .hSpacing(.leading)
+            
             CardView(
                 income: total(homeViewModel.filteredTransactions, type: .income),
                 expense: total(homeViewModel.filteredTransactions, type: .expense)
@@ -84,13 +84,16 @@ struct HomeView: View {
 
             if homeViewModel.filteredTransactions.isEmpty {
                 VStack {
-                    Text("取引なし")
+                    Image(systemName: "tray")
+                        .font(.system(size: 56))
+                        .foregroundStyle(.secondary)
+
+                    Text("取引がありません")
                         .font(.subheadline)
-                        .foregroundStyle(.gray)
-                    Image(systemName: "xmark.seal.fill")
-                        .font(.custom("", size: 100))
+                        .foregroundStyle(.secondary)
                 }
-                .padding(.top, 20)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 60)
 
             } else {
                 ForEach(
