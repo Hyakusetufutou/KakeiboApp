@@ -42,40 +42,8 @@ struct CalendarView: View {
         NavigationStack {
             ScrollView(.vertical) {
                 LazyVStack(spacing: 10, pinnedViews: [.sectionHeaders]) {
-                    Section {
-                        VStack(spacing: 0) {
-                            // MARK: - 月切り替え
-                            ChangeMonthView(
-                                date: $calendarViewModel.currentDate,
-                                onPreviousMonth: {
-                                    calendarViewModel.changeMonth(by: -1)
-                                    calendarViewModel.currentDate = Calendar.current.date(
-                                        byAdding: .month,
-                                        value: -1,
-                                        to: calendarViewModel.currentDate
-                                    )!
-                                },
-                                onNextMonth: {
-                                    calendarViewModel.changeMonth(by: 1)
-                                    calendarViewModel.currentDate = Calendar.current.date(
-                                        byAdding: .month,
-                                        value: 1,
-                                        to: calendarViewModel.currentDate
-                                    )!
-                                }
-                            )
-
-                            calendarUnit()
-
-                            calendarTransactionList()
-                                .background(Color(.systemGroupedBackground))
-                        }
-                    } header: {
-                        Text("カレンダー")
-                            .font(.title2.bold())
-                            .hSpacing(.leading)
-                            .padding(.horizontal, 16)
-                    }
+                    headerView()
+                    sectionView()
                 }
             }
             .background(Color(.systemGroupedBackground))
@@ -96,6 +64,48 @@ struct CalendarView: View {
                     Text(errorMessage)
                 }
             }
+        }
+    }
+
+    @ViewBuilder
+    func sectionView() -> some View {
+        VStack(spacing: 0) {
+            // MARK: - 月切り替え
+            ChangeMonthView(
+                date: $calendarViewModel.currentDate,
+                onPreviousMonth: {
+                    calendarViewModel.changeMonth(by: -1)
+                    calendarViewModel.currentDate = Calendar.current.date(
+                        byAdding: .month,
+                        value: -1,
+                        to: calendarViewModel.currentDate
+                    )!
+                },
+                onNextMonth: {
+                    calendarViewModel.changeMonth(by: 1)
+                    calendarViewModel.currentDate = Calendar.current.date(
+                        byAdding: .month,
+                        value: 1,
+                        to: calendarViewModel.currentDate
+                    )!
+                }
+            )
+
+            calendarUnit()
+
+            calendarTransactionList()
+                .background(Color(.systemGroupedBackground))
+        }
+    }
+
+    @ViewBuilder
+    func headerView() -> some View {
+        HStack {
+            Text("カレンダー")
+                .font(.title2.bold())
+                .padding(.horizontal, 16)
+
+            Spacer()
         }
     }
 
