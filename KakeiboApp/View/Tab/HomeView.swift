@@ -22,11 +22,11 @@ struct HomeView: View {
     var body: some View {
         NavigationStack {
             ScrollView(.vertical) {
-                LazyVStack(spacing: 10, pinnedViews: [.sectionHeaders]) {
+                LazyVStack(spacing: 8, pinnedViews: [.sectionHeaders]) {
                     VStack {
                         headerView()
                         sectionView()
-                            .padding(.horizontal, 9)
+                            .padding(.horizontal, 8)
                     }
                 }
                 .padding(15)
@@ -83,17 +83,7 @@ struct HomeView: View {
                 .padding(.bottom, 10)
 
             if homeViewModel.filteredTransactions.isEmpty {
-                VStack {
-                    Image(systemName: "tray")
-                        .font(.system(size: 56))
-                        .foregroundStyle(.secondary)
-
-                    Text("取引がありません")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 60)
+                NoTransactionView()
 
             } else {
                 ForEach(

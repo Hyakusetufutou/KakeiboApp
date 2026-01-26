@@ -30,52 +30,11 @@ struct GraphView: View {
     var body: some View {
         NavigationStack {
             ScrollView(.vertical) {
-                LazyVStack(spacing: 10, pinnedViews: [.sectionHeaders]) {
-                    Section {
-                        VStack {
-                            ChangeMonthView(
-                                date: $graphViewModel.startDate,
-                                onPreviousMonth: {
-                                    graphViewModel.changeMonth(by: -1)
-                                },
-                                onNextMonth: {
-                                    graphViewModel.changeMonth(by: 1)
-                                }
-                            )
-
-                            CustomSegmentedControl(selectedType: $graphViewModel.selectedType)
-                                .hSpacing()
-
-                            graphViewCategoryList()
-
-                        }
-                        .padding(.horizontal, 16)
-                        .background(Color(.systemGroupedBackground))
-                        .disabled(categoryInputViewModel.isPresentInputView)
-                    } header: {
-                        HStack {
-                            Text("グラフ")
-                                .font(.title2.bold())
-
-                            Spacer()
-
-                            Button {
-                                isPresentCategoryList = true
-                            } label: {
-                                Image(systemName: "list.bullet")
-                                    .font(.title2)
-                                    .foregroundStyle(.black)
-                                    .padding(.vertical, 10)
-                                    .padding(.horizontal, 14)
-                                    .background {
-                                        Capsule()
-                                            .fill(.white)
-                                            .shadow(color: .gray.opacity(0.3), radius: 8, y: 1)
-                                    }
-                            }
-                        }
-                        .padding(.horizontal, 16)
-                        .background(Color(.systemGroupedBackground))
+                LazyVStack(spacing: 8, pinnedViews: [.sectionHeaders]) {
+                    VStack {
+                        headerView()
+                        sectionView()
+                            .padding(.horizontal, 8)
                     }
                 }
             }
@@ -119,14 +78,43 @@ struct GraphView: View {
     }
 
     @ViewBuilder
-    func navigationTitle() -> some View {
+    func sectionView() -> some View {
+        VStack {
+            ChangeMonthView(
+                date: $graphViewModel.startDate,
+                onPreviousMonth: {
+                    graphViewModel.changeMonth(by: -1)
+                },
+                onNextMonth: {
+                    graphViewModel.changeMonth(by: 1)
+                }
+            )
+
+            CustomSegmentedControl(selectedType: $graphViewModel.selectedType)
+                .hSpacing()
+
+            graphViewCategoryList()
+
+        }
+        .padding(.horizontal, 16)
+        .background(Color(.systemGroupedBackground))
+        .disabled(categoryInputViewModel.isPresentInputView)
+    }
+
+    @ViewBuilder
+    func headerView() -> some View {
         HStack {
             Text("グラフ")
-                .font(.title.bold())
-                .padding(.leading)
-                .padding(.top, 16)
+                .font(.title2.bold())
+
             Spacer()
+
+            ActionButton(imageName: "list.bullet") {
+                isPresentCategoryList = true
+            }
         }
+        .padding(.horizontal, 16)
+        .background(Color(.systemGroupedBackground))
     }
 
     @ViewBuilder
@@ -183,14 +171,7 @@ struct GraphView: View {
             .cornerRadius(10)
             .padding(.top, 8)
         } else {
-            VStack {
-                Text("取引なし")
-                    .font(.subheadline)
-                    .foregroundStyle(.gray)
-                Image(systemName: "xmark.seal.fill")
-                    .font(.custom("", size: 100))
-            }
-            .padding(.top, 24)
+            NoTransactionView()
         }
     }
 }
