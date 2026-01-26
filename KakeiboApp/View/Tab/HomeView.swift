@@ -71,7 +71,7 @@ struct HomeView: View {
             .font(.caption2)
             .foregroundStyle(.gray)
             .hSpacing(.leading)
-            
+
             CardView(
                 income: total(homeViewModel.filteredTransactions, type: .income),
                 expense: total(homeViewModel.filteredTransactions, type: .expense)
