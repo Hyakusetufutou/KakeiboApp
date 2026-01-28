@@ -14,104 +14,27 @@ struct TransactionInputView: View {
     @Namespace private var animation
     @FocusState private var isNumberPadActive
     @Environment(\.colorScheme) var colorScheme
-    @State private var category: String = "なし"
+
     var body: some View {
         NavigationStack {
             ScrollView(.vertical) {
-
                 VStack(alignment: .leading, spacing: 12) {
-                    customTextField(
-                        "タイトル",
-                        hint: "タイトル",
-                        value: $viewModel.title
-                    )
-                    customTextField(
-                        "メモ",
-                        hint: "メモ",
-                        value: $viewModel.memo
-                    )
-
-                    HStack(alignment: .top, spacing: 15) {
-                        TransactionTypeSelector(
-                            transactionType: $viewModel.type,
-                            onChange: { viewModel.resetSelectedCategory() }
-                        )
-                        categorySelector()
-                    }
-                    .frame(maxWidth: .infinity)
-
-                    customTextField(
-                        "金額",
-                        hint: "金額",
-                        value: $viewModel.amount,
-                        keyboardType: .numberPad
-                    )
-
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("日付")
-                            .font(.caption)
-                            .foregroundStyle(.gray)
-                            .hSpacing(.leading)
-
-                        HStack {
-                            Spacer()
-
-                            DatePicker(
-                                "日付",
-                                selection: $viewModel.date,
-                                displayedComponents: [.date]
-                            )
-                            .environment(\.locale, Locale(identifier: "ja_JP"))
-                            .datePickerStyle(.graphical)
-                            .clipped()
-                            .frame(maxWidth: .infinity)
-
-                            Spacer()
-                        }
-                        .background(.background, in: .rect(cornerRadius: 10))
-                    }
+                    titleField
+                    memoField
+                    typeAndCategorySection
+                    amountField
+                    datePickerSection
                 }
+                .padding(15)
             }
-            .padding(15)
             .scrollIndicators(.hidden)
             .background(.gray.opacity(0.15))
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button {
-                        viewModel.cancel()
-                    } label: {
-                        Image(systemName: "xmark")
-                            .font(.headline)
-                            .foregroundStyle(.primary)
-                            .padding(.vertical, 10)
-                            .padding(.horizontal, 14)
-                            .background {
-                                Capsule()
-                                    .fill(.white)
-                                    .shadow(color: .gray.opacity(0.3), radius: 8, y: 1)
-                            }
-                    }
+                    cancelButton
                 }
-
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        Task {
-                            await viewModel.save()
-                        }
-                    } label: {
-                        Image(systemName: "checkmark")
-                            .font(.headline)
-                            .foregroundStyle(.primary)
-                            .padding(.vertical, 10)
-                            .padding(.horizontal, 14)
-                            .background {
-                                Capsule()
-                                    .fill(.white)
-                                    .shadow(color: .gray.opacity(0.3), radius: 8, y: 1)
-                            }
-                    }
-                    .disabled(!viewModel.isValid())
-                    .opacity(viewModel.isValid() ? 1.0 : 0.2)
+                    saveButton
                 }
             }
             .alert("エラー", isPresented: .constant(viewModel.errorMessage != nil)) {
@@ -124,16 +47,168 @@ struct TransactionInputView: View {
         }
     }
 
-    @ViewBuilder
-    func sectionHeader(_ text: String) -> some View {
+    // MARK: - Input Fields
+
+    private var titleField: some View {
+        customTextField(
+            "タイトル",
+            hint: "タイトル",
+            value: $viewModel.title
+        )
+    }
+
+    private var memoField: some View {
+        customTextField(
+            "メモ",
+            hint: "メモ",
+            value: $viewModel.memo
+        )
+    }
+
+    private var amountField: some View {
+        customTextField(
+            "金額",
+            hint: "金額",
+            value: $viewModel.amount,
+            keyboardType: .numberPad
+        )
+    }
+
+    // MARK: - Type and Category Section
+
+    private var typeAndCategorySection: some View {
+        HStack(alignment: .top, spacing: 15) {
+            TransactionTypeSelector(
+                transactionType: $viewModel.type,
+                onChange: { viewModel.resetSelectedCategory() }
+            )
+            categorySelector
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private var categorySelector: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            sectionHeader("カテゴリ")
+
+            Menu {
+                categoryMenuContent
+            } label: {
+                categoryMenuLabel
+            }
+        }
+    }
+
+    private var categoryMenuContent: some View {
+        Group {
+            if viewModel.availableCategories.isEmpty {
+                Text("カテゴリなし")
+            } else {
+                ForEach(viewModel.availableCategories) { item in
+                    Button(item.name) {
+                        viewModel.selectedCategoryId = item.id
+                    }
+                }
+            }
+        }
+    }
+
+    private var categoryMenuLabel: some View {
+        HStack {
+            Text(viewModel.selectedCategory?.name ?? "選択してください")
+                .font(.callout)
+                .padding(.leading, 12)
+
+            Spacer()
+
+            VStack(spacing: 2) {
+                Image(systemName: "arrowtriangle.up.fill")
+                Image(systemName: "arrowtriangle.down.fill")
+            }
+            .font(.system(size: 8))
+            .padding(.trailing, 12)
+            .opacity(0.5)
+        }
+        .foregroundStyle(colorScheme == .dark ? .white : .black)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(.background, in: .rect(cornerRadius: 10))
+    }
+
+    // MARK: - Date Picker Section
+
+    private var datePickerSection: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            sectionHeader("日付")
+
+            HStack {
+                Spacer()
+
+                DatePicker(
+                    "日付",
+                    selection: $viewModel.date,
+                    displayedComponents: [.date]
+                )
+                .environment(\.locale, Locale(identifier: "ja_JP"))
+                .datePickerStyle(.graphical)
+                .clipped()
+                .frame(maxWidth: .infinity)
+
+                Spacer()
+            }
+            .background(.background, in: .rect(cornerRadius: 10))
+        }
+    }
+
+    // MARK: - Toolbar Buttons
+
+    private var cancelButton: some View {
+        Button {
+            viewModel.cancel()
+        } label: {
+            Image(systemName: "xmark")
+                .font(.headline)
+                .foregroundStyle(.primary)
+                .frame(width: 44, height: 44)
+            //                .background(
+            //                    Circle()
+            //                        .fill(Color(.systemBackground))
+            //                        .shadow(color: .black.opacity(0.1), radius: 4, y: 2)
+            //                )
+        }
+        //        .buttonStyle(.borderless)
+    }
+
+    private var saveButton: some View {
+        Button {
+            Task {
+                await viewModel.save()
+            }
+        } label: {
+            Image(systemName: "checkmark")
+                .font(.headline)
+                .foregroundStyle(.primary)
+                .frame(width: 44, height: 44)
+            //                .background(
+            //                    Circle()
+            //                        .fill(Color(.systemBackground))
+            //                        .shadow(color: .black.opacity(0.1), radius: 4, y: 2)
+            //                )
+        }
+        //        .buttonStyle(.borderless)
+        .disabled(!viewModel.isValid())
+        .opacity(viewModel.isValid() ? 1.0 : 0.2)
+    }
+
+    // MARK: - Helper Views
+
+    private func sectionHeader(_ text: String) -> some View {
         Text(text)
             .font(.caption)
             .foregroundStyle(.gray)
             .hSpacing(.leading)
     }
 
-    @ViewBuilder
-    func customTextField(
+    private func customTextField(
         _ title: String,
         hint: String,
         value: Binding<String>,
@@ -141,50 +216,13 @@ struct TransactionInputView: View {
     ) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             sectionHeader(title)
+
             TextField(hint, text: value)
                 .padding(.horizontal, 15)
                 .padding(.vertical, 12)
                 .background(.background, in: .rect(cornerRadius: 10))
                 .keyboardType(keyboardType)
                 .focused($isNumberPadActive)
-        }
-    }
-
-    @ViewBuilder
-    func categorySelector() -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            sectionHeader("カテゴリ")
-            Menu {
-                if viewModel.availableCategories.isEmpty {
-                    Text("カテゴリなし")
-                } else {
-                    ForEach(
-                        viewModel.availableCategories
-                    ) {
-                        item in
-                        Button(item.name) {
-                            viewModel.selectedCategoryId = item.id
-                        }
-                    }
-                }
-            } label: {
-                HStack {
-                    Text(viewModel.selectedCategory?.name ?? "選択してください")
-                        .font(.callout)
-                        .padding(.leading, 12)
-                    Spacer()
-                    VStack(spacing: 2) {
-                        Image(systemName: "arrowtriangle.up.fill")
-                        Image(systemName: "arrowtriangle.down.fill")
-                    }
-                    .font(.system(size: 8))
-                    .padding(.trailing, 12)
-                    .opacity(0.5)
-                }
-                .foregroundStyle(colorScheme == .dark ? .white : .black)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(.background, in: .rect(cornerRadius: 10))
-            }
         }
     }
 }
