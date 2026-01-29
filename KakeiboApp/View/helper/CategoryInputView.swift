@@ -27,7 +27,7 @@ struct CategoryInputView: View {
                     .foregroundStyle(.secondary)
 
                 TextField("食事", text: $categoryInputViewModel.name)
-                    .padding(.vertical, 14)
+                    .padding(.vertical, 12)
                     .padding(.horizontal, 12)
                     .background(
                         RoundedRectangle(cornerRadius: 12)
@@ -52,9 +52,13 @@ struct CategoryInputView: View {
                             .frame(width: 34, height: 34)
                             .overlay {
                                 if color == categoryInputViewModel.color {
-                                    Circle()
-                                        .stroke(color.opacity(0.8), lineWidth: 4)
-                                        .shadow(color: color.opacity(0.4), radius: 6)
+                                    //                                    Circle()
+                                    //                                        .stroke(color.opacity(0.8), lineWidth: 4)
+                                    //                                        .shadow(color: color.opacity(0.4), radius: 6)
+
+                                    Image(systemName: "checkmark")
+                                        .font(.caption.bold())
+                                        .foregroundStyle(.white)
                                 }
                             }
                             .scaleEffect(color == categoryInputViewModel.color ? 1.15 : 1)
@@ -80,9 +84,9 @@ struct CategoryInputView: View {
                         .frame(maxWidth: .infinity, minHeight: 50)
                         .background(
                             RoundedRectangle(cornerRadius: 14)
-                                .fill(.gray.opacity(0.6))
+                                .fill(.gray.opacity(0.15))
                         )
-                        .foregroundStyle(.black)
+                        .foregroundStyle(.primary)
                 }
 
                 Button {
@@ -109,7 +113,7 @@ struct CategoryInputView: View {
         .padding(20)
         .background(
             RoundedRectangle(cornerRadius: 20)
-                .fill(.ultraThinMaterial)
+                .fill(Color(.systemBackground))
         )
         .padding(.horizontal, 24)
         .alert("エラー", isPresented: .constant(categoryInputViewModel.errorMessage != nil)) {
