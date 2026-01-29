@@ -101,6 +101,8 @@ struct CategoryListView: View {
                     }
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(Color(.systemGroupedBackground))
         }
         .background(Color(.systemGroupedBackground))
     }
