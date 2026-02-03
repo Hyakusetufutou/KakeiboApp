@@ -18,15 +18,13 @@ struct TransactionInputView: View {
     var body: some View {
         NavigationStack {
             ScrollView(.vertical) {
-                VStack(alignment: .leading, spacing: 12) {
-                    titleField
-                    memoField
-                    typeAndCategorySection
-                    amountField
-                    datePickerSection
-                }
-                .padding(15)
+                titleField
+                memoField
+                typeAndCategorySection
+                amountField
+                datePickerSection
             }
+            .padding(8)
             .scrollIndicators(.hidden)
             .background(.gray.opacity(0.15))
             .toolbar {
@@ -140,22 +138,14 @@ struct TransactionInputView: View {
         VStack(alignment: .leading, spacing: 6) {
             sectionHeader("日付")
 
-            HStack {
-                Spacer()
-
-                DatePicker(
-                    "日付",
-                    selection: $viewModel.date,
-                    displayedComponents: [.date]
-                )
-                .environment(\.locale, Locale(identifier: "ja_JP"))
-                .datePickerStyle(.graphical)
-                .clipped()
-                .frame(maxWidth: .infinity)
-
-                Spacer()
-            }
+            DatePicker(
+                "日付",
+                selection: $viewModel.date,
+                displayedComponents: [.date]
+            )
             .background(.background, in: .rect(cornerRadius: 10))
+            .environment(\.locale, Locale(identifier: "ja_JP"))
+            .datePickerStyle(.graphical)
         }
     }
 
