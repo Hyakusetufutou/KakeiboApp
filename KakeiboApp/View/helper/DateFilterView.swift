@@ -22,24 +22,28 @@ struct DateFilterView: View {
                 .environment(\.locale, Locale(identifier: "ja_JP"))
 
             HStack(spacing: 15) {
-                Button("中止") {
+                Button("キャンセル") {
                     onClose()
                 }
                 .buttonStyle(.borderedProminent)
-                .buttonBorderShape(.roundedRectangle(radius: 5))
+                .frame(maxWidth: .infinity)
                 .tint(.red)
 
-                Button("確定") {
+                Button("適用") {
                     onSubmit(start, end)
                 }
                 .buttonStyle(.borderedProminent)
-                .buttonBorderShape(.roundedRectangle(radius: 5))
-                .tint(.blue)  //@@@
+                .frame(maxWidth: .infinity)
+                .tint(.blue)
             }
             .padding(.top, 10)
         }
         .padding(15)
-        .background(.bar, in: .rect(cornerRadius: 10))
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(.background)
+                .shadow(radius: 10)
+        )
         .padding(.horizontal, 30)
     }
 }

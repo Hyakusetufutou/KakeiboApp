@@ -12,7 +12,7 @@ import Combine
 @MainActor
 final class HomeViewModel: ObservableObject {
     @Published private(set) var isLoading = false
-    @Published private(set) var errorMessage: String?
+    @Published var errorMessage: String?
 
     @Published var filteredTransactions: [TransactionModel] = []
     @Published var startDate: Date = Date().startOfMonth
