@@ -18,13 +18,15 @@ struct TransactionInputView: View {
     var body: some View {
         NavigationStack {
             ScrollView(.vertical) {
-                titleField
-                memoField
-                typeAndCategorySection
-                amountField
-                datePickerSection
+                VStack(spacing: 16) {
+                    titleField
+                    memoField
+                    typeAndCategorySection
+                    amountField
+                    datePickerSection
+                }
+                .padding(16)
             }
-            .padding(8)
             .scrollIndicators(.hidden)
             .background(.gray.opacity(0.15))
             .toolbar {
@@ -75,14 +77,16 @@ struct TransactionInputView: View {
     // MARK: - Type and Category Section
 
     private var typeAndCategorySection: some View {
-        HStack(alignment: .top, spacing: 15) {
+        HStack(alignment: .top, spacing: 12) {
             TransactionTypeSelector(
                 transactionType: $viewModel.type,
                 onChange: { viewModel.resetSelectedCategory() }
             )
+            .frame(maxWidth: .infinity)
+
             categorySelector
+                .frame(maxWidth: .infinity)
         }
-        .frame(maxWidth: .infinity)
     }
 
     private var categorySelector: some View {
@@ -116,6 +120,7 @@ struct TransactionInputView: View {
             Text(viewModel.selectedCategory?.name ?? "選択してください")
                 .font(.callout)
                 .padding(.leading, 12)
+                .lineLimit(1)
 
             Spacer()
 
@@ -128,7 +133,7 @@ struct TransactionInputView: View {
             .opacity(0.5)
         }
         .foregroundStyle(colorScheme == .dark ? .white : .black)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .frame(height: 44)
         .background(.background, in: .rect(cornerRadius: 10))
     }
 
@@ -143,9 +148,11 @@ struct TransactionInputView: View {
                 selection: $viewModel.date,
                 displayedComponents: [.date]
             )
-            .background(.background, in: .rect(cornerRadius: 10))
+            .datePickerStyle(.compact)
             .environment(\.locale, Locale(identifier: "ja_JP"))
-            .datePickerStyle(.graphical)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(.background, in: .rect(cornerRadius: 10))
         }
     }
 
@@ -159,13 +166,7 @@ struct TransactionInputView: View {
                 .font(.headline)
                 .foregroundStyle(.primary)
                 .frame(width: 44, height: 44)
-            //                .background(
-            //                    Circle()
-            //                        .fill(Color(.systemBackground))
-            //                        .shadow(color: .black.opacity(0.1), radius: 4, y: 2)
-            //                )
         }
-        //        .buttonStyle(.borderless)
     }
 
     private var saveButton: some View {
@@ -178,13 +179,7 @@ struct TransactionInputView: View {
                 .font(.headline)
                 .foregroundStyle(.primary)
                 .frame(width: 44, height: 44)
-            //                .background(
-            //                    Circle()
-            //                        .fill(Color(.systemBackground))
-            //                        .shadow(color: .black.opacity(0.1), radius: 4, y: 2)
-            //                )
         }
-        //        .buttonStyle(.borderless)
         .disabled(!viewModel.isValid())
         .opacity(viewModel.isValid() ? 1.0 : 0.2)
     }
