@@ -9,7 +9,7 @@
 import SwiftUI
 
 struct TransactionInputView: View {
-    @ObservedObject var viewModel: TransactionInputViewModel
+    @ObservedObject var transactionInputViewModel: TransactionInputViewModel
 
     @Namespace private var animation
     @FocusState private var isNumberPadActive
@@ -37,10 +37,10 @@ struct TransactionInputView: View {
                     saveButton
                 }
             }
-            .alert("エラー", isPresented: .constant(viewModel.errorMessage != nil)) {
+            .alert("エラー", isPresented: .constant(transactionInputViewModel.errorMessage != nil)) {
                 Button("OK") {}
             } message: {
-                if let errorMessage = viewModel.errorMessage {
+                if let errorMessage = transactionInputViewModel.errorMessage {
                     Text(errorMessage)
                 }
             }
@@ -53,7 +53,7 @@ struct TransactionInputView: View {
         customTextField(
             "タイトル",
             hint: "タイトル",
-            value: $viewModel.title
+            value: $transactionInputViewModel.title
         )
     }
 
@@ -61,7 +61,7 @@ struct TransactionInputView: View {
         customTextField(
             "メモ",
             hint: "メモ",
-            value: $viewModel.memo
+            value: $transactionInputViewModel.memo
         )
     }
 
@@ -69,7 +69,7 @@ struct TransactionInputView: View {
         customTextField(
             "金額",
             hint: "金額",
-            value: $viewModel.amount,
+            value: $transactionInputViewModel.amount,
             keyboardType: .numberPad
         )
     }
@@ -79,8 +79,8 @@ struct TransactionInputView: View {
     private var typeAndCategorySection: some View {
         HStack(alignment: .top, spacing: 12) {
             TransactionTypeSelector(
-                transactionType: $viewModel.type,
-                onChange: { viewModel.resetSelectedCategory() }
+                transactionType: $transactionInputViewModel.type,
+                onChange: { transactionInputViewModel.resetSelectedCategory() }
             )
             .frame(maxWidth: .infinity)
 
@@ -103,12 +103,16 @@ struct TransactionInputView: View {
 
     private var categoryMenuContent: some View {
         Group {
-            if viewModel.availableCategories.isEmpty {
-                Text("カテゴリなし")
-            } else {
-                ForEach(viewModel.availableCategories) { item in
+            Button {
+
+            } label: {
+                Label("カテゴリを追加", systemImage: "plus.circle.fill")
+            }
+
+            if !transactionInputViewModel.availableCategories.isEmpty {
+                ForEach(transactionInputViewModel.availableCategories) { item in
                     Button(item.name) {
-                        viewModel.selectedCategoryId = item.id
+                        transactionInputViewModel.selectedCategoryId = item.id
                     }
                 }
             }
@@ -117,7 +121,7 @@ struct TransactionInputView: View {
 
     private var categoryMenuLabel: some View {
         HStack {
-            Text(viewModel.selectedCategory?.name ?? "選択してください")
+            Text(transactionInputViewModel.selectedCategory?.name ?? "選択してください")
                 .font(.callout)
                 .padding(.leading, 12)
                 .lineLimit(1)
@@ -145,7 +149,7 @@ struct TransactionInputView: View {
 
             DatePicker(
                 "日付",
-                selection: $viewModel.date,
+                selection: $transactionInputViewModel.date,
                 displayedComponents: [.date]
             )
             .datePickerStyle(.compact)
@@ -160,7 +164,7 @@ struct TransactionInputView: View {
 
     private var cancelButton: some View {
         Button {
-            viewModel.cancel()
+            transactionInputViewModel.cancel()
         } label: {
             Image(systemName: "xmark")
                 .font(.headline)
@@ -172,7 +176,7 @@ struct TransactionInputView: View {
     private var saveButton: some View {
         Button {
             Task {
-                await viewModel.save()
+                await transactionInputViewModel.save()
             }
         } label: {
             Image(systemName: "checkmark")
@@ -180,8 +184,8 @@ struct TransactionInputView: View {
                 .foregroundStyle(.primary)
                 .frame(width: 44, height: 44)
         }
-        .disabled(!viewModel.isValid())
-        .opacity(viewModel.isValid() ? 1.0 : 0.2)
+        .disabled(!transactionInputViewModel.isValid())
+        .opacity(transactionInputViewModel.isValid() ? 1.0 : 0.2)
     }
 
     // MARK: - Helper Views
