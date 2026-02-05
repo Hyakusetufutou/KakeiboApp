@@ -10,6 +10,7 @@ import SwiftUI
 
 struct TransactionInputView: View {
     @ObservedObject var transactionInputViewModel: TransactionInputViewModel
+    @ObservedObject var categoryInputViewModel: CategoryInputViewModel
 
     @Namespace private var animation
     @FocusState private var isNumberPadActive
@@ -37,11 +38,29 @@ struct TransactionInputView: View {
                     saveButton
                 }
             }
+            .interactiveDismissDisabled(true)
             .alert("エラー", isPresented: .constant(transactionInputViewModel.errorMessage != nil)) {
                 Button("OK") {}
             } message: {
                 if let errorMessage = transactionInputViewModel.errorMessage {
                     Text(errorMessage)
+                }
+            }
+        }
+        .overlay {
+            ZStack {
+                if categoryInputViewModel.isPresentInputView {
+                    Color.gray.opacity(0.5)
+                        .ignoresSafeArea()
+                }
+
+                VStack {
+                    Spacer()
+
+                    if categoryInputViewModel.isPresentInputView {
+                        CategoryInputView(categoryInputViewModel: categoryInputViewModel)
+                            .padding(.bottom, 8)
+                    }
                 }
             }
         }
@@ -104,7 +123,9 @@ struct TransactionInputView: View {
     private var categoryMenuContent: some View {
         Group {
             Button {
-
+                withAnimation(.snappy) {
+                    categoryInputViewModel.presentInputView(type: transactionInputViewModel.type)
+                }
             } label: {
                 Label("カテゴリを追加", systemImage: "plus.circle.fill")
             }
@@ -171,10 +192,13 @@ struct TransactionInputView: View {
                 .foregroundStyle(.primary)
                 .frame(width: 44, height: 44)
         }
+        .disabled(categoryInputViewModel.isPresentInputView)
     }
 
     private var saveButton: some View {
-        Button {
+        let disable =
+            !transactionInputViewModel.isValid() || categoryInputViewModel.isPresentInputView
+        return Button {
             Task {
                 await transactionInputViewModel.save()
             }
@@ -184,7 +208,7 @@ struct TransactionInputView: View {
                 .foregroundStyle(.primary)
                 .frame(width: 44, height: 44)
         }
-        .disabled(!transactionInputViewModel.isValid())
+        .disabled(disable)
         .opacity(transactionInputViewModel.isValid() ? 1.0 : 0.2)
     }
 

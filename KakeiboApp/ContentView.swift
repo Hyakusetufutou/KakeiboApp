@@ -47,7 +47,10 @@ struct ContentView: View {
         .fullScreenCover(
             isPresented: $transactionInputViewModel.isPresentInputView
         ) {
-            TransactionInputView(transactionInputViewModel: transactionInputViewModel)
+            TransactionInputView(
+                transactionInputViewModel: transactionInputViewModel,
+                categoryInputViewModel: categoryInputViewModel
+            )
         }
         .onAppear {
             if isAppLockEnabled {
