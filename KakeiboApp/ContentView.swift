@@ -47,7 +47,10 @@ struct ContentView: View {
         .fullScreenCover(
             isPresented: $transactionInputViewModel.isPresentInputView
         ) {
-            TransactionInputView(viewModel: transactionInputViewModel)
+            TransactionInputView(
+                transactionInputViewModel: transactionInputViewModel,
+                categoryInputViewModel: categoryInputViewModel
+            )
         }
         .onAppear {
             if isAppLockEnabled {
@@ -68,7 +71,6 @@ struct ContentView: View {
 extension ContentView {
     fileprivate var mainTabView: some View {
         TabView(selection: $selectedTab) {
-
             HomeView(
                 homeViewModel: homeViewModel,
                 transactionInputViewModel: transactionInputViewModel
