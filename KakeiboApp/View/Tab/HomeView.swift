@@ -42,8 +42,7 @@ struct HomeView: View {
                     start: homeViewModel.startDate,
                     end: homeViewModel.endDate,
                     onSubmit: { start, end in
-                        homeViewModel.startDate = start
-                        homeViewModel.endDate = end
+                        homeViewModel.dateRange = DateRange(start: start, end: end)
                         homeViewModel.showFilterView = false
                     },
                     onClose: {
@@ -72,7 +71,7 @@ struct HomeView: View {
     func sectionView() -> some View {
         VStack(spacing: 12) {
             Text(
-                "\(format(date: homeViewModel.startDate, format: "yyyy年MM月dd日")) 〜 \(format(date: homeViewModel.endDate, format: "yyyy年MM月dd日"))"
+                "\(format(date: homeViewModel.dateRange.start, format: "yyyy年MM月dd日")) 〜 \(format(date: homeViewModel.dateRange.end, format: "yyyy年MM月dd日"))"
             )
             .font(.caption)
             .foregroundStyle(.secondary)

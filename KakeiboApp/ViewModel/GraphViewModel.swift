@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import SwiftUI
 import Combine
 
 @MainActor
@@ -16,9 +17,29 @@ final class GraphViewModel: ObservableObject {
     @Published private(set) var errorMessage: String?
 
     @Published var categories: [CategoryModel] = []
-    @Published var startDate: Date = Date().startOfMonth
-    @Published var endDate: Date = Date().endOfMonth
+    @Published var dateRange: DateRange = DateRange(
+        start: Date().startOfMonth,
+        end: Date().endOfMonth
+    )
     @Published var selectedType: TransactionType = .expense
+
+    var startDate: Binding<Date> {
+        Binding(
+            get: { self.dateRange.start },
+            set: { newValue in
+                self.dateRange = self.dateRange.withStart(newValue)
+            }
+        )
+    }
+
+    var endDate: Binding<Date> {
+        Binding(
+            get: { self.dateRange.end },
+            set: { newValue in
+                self.dateRange = self.dateRange.withEnd(newValue)
+            }
+        )
+    }
 
     var totalAmount: Double {
         categorySummaries.reduce(0) { $0 + $1.totalAmount }
@@ -54,10 +75,10 @@ final class GraphViewModel: ObservableObject {
     }
 
     func changeMonth(by value: Int) {
-        guard let newDate = Calendar.current.date(byAdding: .month, value: value, to: startDate)
+        guard
+            let newDate = Calendar.current.date(byAdding: .month, value: value, to: dateRange.start)
         else { return }
-        startDate = newDate.startOfMonth
-        endDate = newDate.endOfMonth
+        dateRange = DateRange(start: newDate.startOfMonth, end: newDate.endOfMonth)
     }
 
     private func bindCategories() {
@@ -77,16 +98,16 @@ final class GraphViewModel: ObservableObject {
             transactionStore.transactions,
             categoryStore.categories,
             $selectedType,
-            Publishers.CombineLatest($startDate, $endDate)
+            $dateRange
         )
-        .map { [weak self] transactions, categories, selectedType, period in
+        .map { [weak self] transactions, categories, selectedType, range in
             self?
                 .makeCategorySummaries(
                     transactions: transactions,
                     categories: categories,
                     type: selectedType,
-                    startDate: period.0,
-                    endDate: period.1
+                    startDate: range.start,
+                    endDate: range.end
                 ) ?? []
         }
         .receive(on: DispatchQueue.main)

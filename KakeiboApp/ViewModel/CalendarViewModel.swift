@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import SwiftUI
 import Combine
 
 // MARK: - Calendar ViewModel
@@ -18,8 +19,28 @@ final class CalendarViewModel: ObservableObject {
 
     @Published var selectedDate: Date?
     @Published var currentDate: Date = Date()
-    @Published var startDate: Date = Date().startOfMonth
-    @Published var endDate: Date = Date().endOfMonth
+    @Published var dateRange: DateRange = DateRange(
+        start: Date().startOfMonth,
+        end: Date().endOfMonth
+    )
+
+    var startDate: Binding<Date> {
+        Binding(
+            get: { self.dateRange.start },
+            set: { newValue in
+                self.dateRange = self.dateRange.withStart(newValue)
+            }
+        )
+    }
+
+    var endDate: Binding<Date> {
+        Binding(
+            get: { self.dateRange.end },
+            set: { newValue in
+                self.dateRange = self.dateRange.withEnd(newValue)
+            }
+        )
+    }
 
     private var cancellables = Set<AnyCancellable>()
 
@@ -33,10 +54,10 @@ final class CalendarViewModel: ObservableObject {
     }
 
     func changeMonth(by value: Int) {
-        guard let newDate = Calendar.current.date(byAdding: .month, value: value, to: startDate)
+        guard
+            let newDate = Calendar.current.date(byAdding: .month, value: value, to: dateRange.start)
         else { return }
-        startDate = newDate.startOfMonth
-        endDate = newDate.endOfMonth
+        dateRange = DateRange(start: newDate.startOfMonth, end: newDate.endOfMonth)
     }
 
     func delete(_ transaction: TransactionModel) async {
@@ -50,18 +71,17 @@ final class CalendarViewModel: ObservableObject {
     }
 
     private func bindDailySummaries() {
-        Publishers.CombineLatest4(
+        Publishers.CombineLatest3(
             transactionStore.transactions,
             categoryStore.categories,
-            $startDate,
-            $endDate
+            $dateRange
         )
-        .map { [weak self] transactions, _, startDate, endDate in
+        .map { [weak self] transactions, _, range in
             self?
                 .makeDailySummaries(
                     transactions: transactions,
-                    startDate: startDate,
-                    endDate: endDate
+                    startDate: range.start,
+                    endDate: range.end
                 ) ?? [:]
         }
         .receive(on: DispatchQueue.main)
