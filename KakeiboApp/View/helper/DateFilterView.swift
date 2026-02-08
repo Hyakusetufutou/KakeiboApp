@@ -15,10 +15,10 @@ struct DateFilterView: View {
     var onClose: () -> Void
     var body: some View {
         VStack(spacing: 15) {
-            DatePicker("開始日", selection: $start, displayedComponents: [.date])
+            DatePicker("開始日", selection: $start, in: ...end, displayedComponents: [.date])
                 .environment(\.locale, Locale(identifier: "ja_JP"))
 
-            DatePicker("終了日", selection: $end, displayedComponents: [.date])
+            DatePicker("終了日", selection: $end, in: start..., displayedComponents: [.date])
                 .environment(\.locale, Locale(identifier: "ja_JP"))
 
             HStack(spacing: 15) {
