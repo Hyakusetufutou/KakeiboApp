@@ -53,7 +53,7 @@ struct GraphView: View {
         Section {
             VStack(spacing: 12) {
                 ChangeMonthView(
-                    date: $graphViewModel.startDate,
+                    date: graphViewModel.startDate,
                     onPreviousMonth: { graphViewModel.changeMonth(by: -1) },
                     onNextMonth: { graphViewModel.changeMonth(by: 1) }
                 )

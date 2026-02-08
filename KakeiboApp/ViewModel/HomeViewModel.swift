@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import SwiftUI
 import Combine
 
 @MainActor
@@ -15,10 +16,30 @@ final class HomeViewModel: ObservableObject {
     @Published var errorMessage: String?
 
     @Published var filteredTransactions: [TransactionModel] = []
-    @Published var startDate: Date = Date().startOfMonth
-    @Published var endDate: Date = Date().endOfMonth
+    @Published var dateRange: DateRange = DateRange(
+        start: Date().startOfMonth,
+        end: Date().endOfMonth
+    )
     @Published var selectedType: TransactionType = .expense
     @Published var showFilterView = false
+
+    var startDate: Binding<Date> {
+        Binding(
+            get: { self.dateRange.start },
+            set: { newValue in
+                self.dateRange = self.dateRange.withStart(newValue)
+            }
+        )
+    }
+
+    var endDate: Binding<Date> {
+        Binding(
+            get: { self.dateRange.end },
+            set: { newValue in
+                self.dateRange = self.dateRange.withEnd(newValue)
+            }
+        )
+    }
 
     private let categoryStore: CategoryStoreProtocol
     private let transactionStore: TransactionStoreProtocol
@@ -41,16 +62,15 @@ final class HomeViewModel: ObservableObject {
     }
 
     private func bindTransactions() {
-        Publishers.CombineLatest4(
+        Publishers.CombineLatest3(
             transactionStore.transactions,
-            $startDate,
-            $endDate,
+            $dateRange,
             $selectedType
         )
-        .map { transactions, startDate, endDate, selectedType in
+        .map { transactions, range, selectedType in
             transactions
                 .filter { transaction in
-                    startDate <= transaction.date && transaction.date <= endDate
+                    range.start <= transaction.date && transaction.date <= range.end
                         && transaction.type == selectedType
                 }
                 .sorted { $0.date > $1.date }

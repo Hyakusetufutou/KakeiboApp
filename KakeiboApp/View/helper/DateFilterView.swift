@@ -9,16 +9,16 @@
 import SwiftUI
 
 struct DateFilterView: View {
-    @State var start: Date
-    @State var end: Date
+    @Binding var start: Date
+    @Binding var end: Date
     var onSubmit: (Date, Date) -> Void
     var onClose: () -> Void
     var body: some View {
         VStack(spacing: 15) {
-            DatePicker("開始日", selection: $start, displayedComponents: [.date])
+            DatePicker("開始日", selection: $start, in: ...end, displayedComponents: [.date])
                 .environment(\.locale, Locale(identifier: "ja_JP"))
 
-            DatePicker("終了日", selection: $end, displayedComponents: [.date])
+            DatePicker("終了日", selection: $end, in: start..., displayedComponents: [.date])
                 .environment(\.locale, Locale(identifier: "ja_JP"))
 
             HStack(spacing: 15) {
@@ -49,5 +49,10 @@ struct DateFilterView: View {
 }
 
 #Preview {
-    DateFilterView(start: Date(), end: Date(), onSubmit: { _, _ in }, onClose: {})
+    DateFilterView(
+        start: .constant(Date()),
+        end: .constant(Date()),
+        onSubmit: { _, _ in },
+        onClose: {}
+    )
 }
