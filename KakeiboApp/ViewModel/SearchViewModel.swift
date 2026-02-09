@@ -11,6 +11,7 @@ import Combine
 
 @MainActor
 final class SearchViewModel: ObservableObject {
+    @Published var isPresented = false
     @Published var searchText = ""
     @Published private(set) var resultTransactions: [TransactionModel] = []
     @Published private(set) var errorMessage: String?
