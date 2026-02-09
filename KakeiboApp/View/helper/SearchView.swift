@@ -19,7 +19,12 @@ struct SearchView: View {
                     .isEmpty || searchViewModel.searchText.isEmpty
                 {
                     Spacer()
-                    Text("該当する取引がありません")
+
+                    if searchViewModel.searchText.isEmpty {
+                        Text("キーワードを入力してください")
+                    } else {
+                        Text("該当する取引がありません")
+                    }
                     Spacer()
                 } else {
                     ScrollView {
@@ -51,8 +56,26 @@ struct SearchView: View {
             }
             .frame(maxWidth: .infinity)
             .background(Color(.systemGroupedBackground))
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        searchViewModel.isPresented = false
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.headline)
+                            .foregroundStyle(.primary)
+                            .frame(width: 44, height: 44)
+                    }
+                }
+            }
             .navigationTitle("検索")
             .navigationBarTitleDisplayMode(.large)
+            .searchable(
+                text: $searchViewModel.searchText,
+                placement: .navigationBarDrawer(displayMode: .always),
+                prompt: "取引を検索"
+            )
         }
     }
+
 }

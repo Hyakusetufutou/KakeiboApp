@@ -11,10 +11,18 @@ import SwiftUI
 struct HomeView: View {
     @AppStorage("userName") private var userName: String = ""
     @ObservedObject var homeViewModel: HomeViewModel
+    @ObservedObject var searchViewModel: SearchViewModel
     @ObservedObject var transactionInputViewModel: TransactionInputViewModel
 
-    init(homeViewModel: HomeViewModel, transactionInputViewModel: TransactionInputViewModel) {
+    @State private var isSearchFocused: Bool = false
+
+    init(
+        homeViewModel: HomeViewModel,
+        searchViewModel: SearchViewModel,
+        transactionInputViewModel: TransactionInputViewModel
+    ) {
         self.homeViewModel = homeViewModel
+        self.searchViewModel = searchViewModel
         self.transactionInputViewModel = transactionInputViewModel
     }
 
@@ -82,7 +90,13 @@ struct HomeView: View {
                 expense: total(homeViewModel.filteredTransactions, type: .expense)
             )
 
-            CustomSegmentedControl(selectedType: $homeViewModel.selectedType)
+            HStack(spacing: 16) {
+                CustomSegmentedControl(selectedType: $homeViewModel.selectedType)
+
+                ActionButton(imageName: "calendar") {
+                    homeViewModel.showFilterView = true
+                }
+            }
 
             if homeViewModel.filteredTransactions.isEmpty {
                 NoTransactionView()
@@ -131,14 +145,14 @@ struct HomeView: View {
                         .hSpacing(.leading)
                 }
 
-                Spacer(minLength: 0)
+                HStack(spacing: 12) {
+                    ActionButton(imageName: "magnifyingglass") {
+                        searchViewModel.isPresented = true
+                    }
 
-                ActionButton(imageName: "calendar") {
-                    homeViewModel.showFilterView = true
-                }
-
-                ActionButton(imageName: "plus") {
-                    transactionInputViewModel.presentInputView()
+                    ActionButton(imageName: "plus") {
+                        transactionInputViewModel.presentInputView()
+                    }
                 }
             }
             .padding(.horizontal, 16)
@@ -155,6 +169,7 @@ struct HomeView: View {
     let viewModelFactory = ViewModelFactory()
     HomeView(
         homeViewModel: viewModelFactory.homeViewModel,
+        searchViewModel: viewModelFactory.searchViewModel,
         transactionInputViewModel: viewModelFactory.transactionInputViewModel
     )
 }

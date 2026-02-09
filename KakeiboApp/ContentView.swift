@@ -52,6 +52,12 @@ struct ContentView: View {
                 categoryInputViewModel: categoryInputViewModel
             )
         }
+        .fullScreenCover(isPresented: $searchViewModel.isPresented) {
+            SearchView(
+                searchViewModel: searchViewModel,
+                transactionInputViewModel: transactionInputViewModel
+            )
+        }
         .onAppear {
             if isAppLockEnabled {
                 isUnlocked = false
@@ -73,6 +79,7 @@ extension ContentView {
         TabView(selection: $selectedTab) {
             HomeView(
                 homeViewModel: homeViewModel,
+                searchViewModel: searchViewModel,
                 transactionInputViewModel: transactionInputViewModel
             )
             .tabItem {
