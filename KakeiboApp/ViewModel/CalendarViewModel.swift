@@ -62,7 +62,11 @@ final class CalendarViewModel: ObservableObject {
 
     func delete(_ transaction: TransactionModel) async {
         isLoading = true
-        await transactionStore.delete(transaction)
+        do {
+            try await transactionStore.delete(transaction)
+        } catch {
+            errorMessage = "保存に失敗しました: \(error.localizedDescription)"
+        }
         isLoading = false
     }
 
@@ -86,14 +90,6 @@ final class CalendarViewModel: ObservableObject {
         }
         .receive(on: DispatchQueue.main)
         .assign(to: &$dailySummaries)
-
-        // エラーメッセージのバインディング
-        Publishers.Merge(
-            transactionStore.errorMessage,
-            categoryStore.errorMessage
-        )
-        .receive(on: DispatchQueue.main)
-        .assign(to: &$errorMessage)
     }
 
     private func makeDailySummaries(

@@ -94,7 +94,7 @@ struct TransactionListByCategory: View {
                         onDelete: onDeleteTransaction
                     )
                     .onTapGesture {
-                        transactionInputViewModel.presentInputView(transaction)
+                        transactionInputViewModel.presentInputView(for: transaction)
                     }
                 }
                 .buttonStyle(.plain)

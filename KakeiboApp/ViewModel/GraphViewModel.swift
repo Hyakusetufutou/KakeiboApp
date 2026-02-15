@@ -59,7 +59,6 @@ final class GraphViewModel: ObservableObject {
         bindCategories()
         bindCategorySummaries()
         bindLoadingState()
-        bindErrorMessages()
     }
 
     func findCategory(id: UUID) -> CategoryModel? {
@@ -67,7 +66,11 @@ final class GraphViewModel: ObservableObject {
     }
 
     func deleteTransaction(_ transaction: TransactionModel) async {
-        await transactionStore.delete(transaction)
+        do {
+            try await transactionStore.delete(transaction)
+        } catch {
+            errorMessage = "保存に失敗しました: \(error.localizedDescription)"
+        }
     }
 
     func deleteCategory(_ category: CategoryModel) async {
@@ -122,15 +125,6 @@ final class GraphViewModel: ObservableObject {
         .map { $0 || $1 }
         .receive(on: DispatchQueue.main)
         .assign(to: &$isLoading)
-    }
-
-    private func bindErrorMessages() {
-        Publishers.Merge(
-            transactionStore.errorMessage,
-            categoryStore.errorMessage
-        )
-        .receive(on: DispatchQueue.main)
-        .assign(to: &$errorMessage)
     }
 
     private func makeCategorySummaries(

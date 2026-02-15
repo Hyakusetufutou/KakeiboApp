@@ -114,7 +114,7 @@ struct HomeView: View {
                                 }
                             )
                             .onTapGesture {
-                                transactionInputViewModel.presentInputView(transaction)
+                                transactionInputViewModel.presentInputView(for: transaction)
                             }
                         }
                         .buttonStyle(.plain)

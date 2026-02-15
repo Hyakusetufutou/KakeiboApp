@@ -50,7 +50,6 @@ final class HomeViewModel: ObservableObject {
         self.transactionStore = transactionStore
         bindTransactions()
         bindLoadingState()
-        bindErrorMessages()
     }
 
     func categoryFind(id: UUID) -> CategoryModel? {
@@ -58,7 +57,11 @@ final class HomeViewModel: ObservableObject {
     }
 
     func deleteTransaction(_ transaction: TransactionModel) async {
-        await transactionStore.delete(transaction)
+        do {
+            try await transactionStore.delete(transaction)
+        } catch {
+            errorMessage = "保存に失敗しました: \(error.localizedDescription)"
+        }
     }
 
     private func bindTransactions() {
@@ -87,14 +90,5 @@ final class HomeViewModel: ObservableObject {
         .map { $0 || $1 }
         .receive(on: DispatchQueue.main)
         .assign(to: &$isLoading)
-    }
-
-    private func bindErrorMessages() {
-        Publishers.Merge(
-            transactionStore.errorMessage,
-            categoryStore.errorMessage
-        )
-        .receive(on: DispatchQueue.main)
-        .assign(to: &$errorMessage)
     }
 }

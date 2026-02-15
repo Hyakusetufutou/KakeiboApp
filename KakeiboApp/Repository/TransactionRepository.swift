@@ -92,6 +92,7 @@ actor TransactionRepository: TransactionRepositoryProtocol {
         try await container.performBackgroundTask { context in
             let category = try self.fetchCategory(by: model.categoryId, in: context)
 
+            throw CustomError.saveError
             let entity = TransactionEntity(context: context)
             entity.id = model.id
             entity.amount = model.amount

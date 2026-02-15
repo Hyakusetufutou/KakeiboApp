@@ -13,7 +13,7 @@ struct TransactionInputView: View {
     @ObservedObject var categoryInputViewModel: CategoryInputViewModel
 
     @Namespace private var animation
-    @FocusState private var isNumberPadActive
+    @FocusState private var isNumberPadActive: Bool
     @Environment(\.colorScheme) var colorScheme
 
     var body: some View {
@@ -39,8 +39,10 @@ struct TransactionInputView: View {
                 }
             }
             .interactiveDismissDisabled(true)
-            .alert("エラー", isPresented: .constant(transactionInputViewModel.errorMessage != nil)) {
-                Button("OK") {}
+            .alert("エラー", isPresented: errorAlertBinding) {
+                Button("OK") {
+                    transactionInputViewModel.clearError()
+                }
             } message: {
                 if let errorMessage = transactionInputViewModel.errorMessage {
                     Text(errorMessage)
@@ -48,21 +50,7 @@ struct TransactionInputView: View {
             }
         }
         .overlay {
-            ZStack {
-                if categoryInputViewModel.isPresentInputView {
-                    Color.gray.opacity(0.5)
-                        .ignoresSafeArea()
-                }
-
-                VStack {
-                    Spacer()
-
-                    if categoryInputViewModel.isPresentInputView {
-                        CategoryInputView(categoryInputViewModel: categoryInputViewModel)
-                            .padding(.bottom, 8)
-                    }
-                }
-            }
+            categoryInputOverlay
         }
     }
 
@@ -196,9 +184,7 @@ struct TransactionInputView: View {
     }
 
     private var saveButton: some View {
-        let disable =
-            !transactionInputViewModel.isValid() || categoryInputViewModel.isPresentInputView
-        return Button {
+        Button {
             Task {
                 await transactionInputViewModel.save()
             }
@@ -208,8 +194,31 @@ struct TransactionInputView: View {
                 .foregroundStyle(.primary)
                 .frame(width: 44, height: 44)
         }
-        .disabled(disable)
-        .opacity(transactionInputViewModel.isValid() ? 1.0 : 0.2)
+        .disabled(isSaveButtonDisabled)
+        .opacity(transactionInputViewModel.isFormValid ? 1.0 : 0.2)
+    }
+
+    // MARK: - Overlay
+
+    private var categoryInputOverlay: some View {
+        ZStack {
+            if categoryInputViewModel.isPresentInputView {
+                Color.gray.opacity(0.5)
+                    .ignoresSafeArea()
+                    .transition(.opacity)
+            }
+
+            VStack {
+                Spacer()
+
+                if categoryInputViewModel.isPresentInputView {
+                    CategoryInputView(categoryInputViewModel: categoryInputViewModel)
+                        .padding(.bottom, 8)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+            }
+        }
+        .animation(.snappy, value: categoryInputViewModel.isPresentInputView)
     }
 
     // MARK: - Helper Views
@@ -237,5 +246,20 @@ struct TransactionInputView: View {
                 .keyboardType(keyboardType)
                 .focused($isNumberPadActive)
         }
+    }
+
+    // MARK: - Computed Properties
+
+    private var isSaveButtonDisabled: Bool {
+        !transactionInputViewModel.isFormValid
+            || categoryInputViewModel.isPresentInputView
+            || transactionInputViewModel.isLoading
+    }
+
+    private var errorAlertBinding: Binding<Bool> {
+        Binding(
+            get: { transactionInputViewModel.errorMessage != nil },
+            set: { if !$0 { transactionInputViewModel.clearError() } }
+        )
     }
 }

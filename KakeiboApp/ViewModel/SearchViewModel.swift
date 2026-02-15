@@ -25,11 +25,14 @@ final class SearchViewModel: ObservableObject {
         self.categoryStore = categoryStore
         self.transactionStore = transactionStore
         setupSearchPipeline()
-        bindErrorMessages()
     }
 
     func deleteTransaction(_ transaction: TransactionModel) async {
-        await transactionStore.delete(transaction)
+        do {
+            try await transactionStore.delete(transaction)
+        } catch {
+            errorMessage = "保存に失敗しました: \(error.localizedDescription)"
+        }
     }
 
     func findCategory(id: UUID) -> CategoryModel? {
@@ -61,14 +64,5 @@ final class SearchViewModel: ObservableObject {
                 resultTransactions = results.sorted { $0.date > $1.date }
             }
         }
-    }
-
-    private func bindErrorMessages() {
-        Publishers.Merge(
-            transactionStore.errorMessage,
-            categoryStore.errorMessage
-        )
-        .receive(on: DispatchQueue.main)
-        .assign(to: &$errorMessage)
     }
 }
