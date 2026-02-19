@@ -22,6 +22,7 @@ final class HomeViewModel: ObservableObject {
     )
     @Published var selectedType: TransactionType = .expense
     @Published var showFilterView = false
+    @Published private(set) var hasMoreData = true
 
     var startDate: Binding<Date> {
         Binding(
@@ -45,6 +46,7 @@ final class HomeViewModel: ObservableObject {
         self.categoryStore = categoryStore
         self.transactionStore = transactionStore
         bindTransactions()
+        bindHasMoreData()
     }
 
     // MARK: - Public Methods
@@ -62,6 +64,22 @@ final class HomeViewModel: ObservableObject {
         } catch {
             errorMessage = "削除に失敗しました: \(error.localizedDescription)"
         }
+    }
+
+    func loadMore() async {
+        guard hasMoreData else { return }
+
+        isLoading = true
+        defer { isLoading = false }
+
+        await transactionStore.loadMore()
+    }
+
+    func reload() async {
+        isLoading = true
+        defer { isLoading = false }
+
+        await transactionStore.reload()
     }
 
     func clearError() {
@@ -86,5 +104,11 @@ final class HomeViewModel: ObservableObject {
         }
         .receive(on: DispatchQueue.main)
         .assign(to: &$filteredTransactions)
+    }
+
+    private func bindHasMoreData() {
+        transactionStore.hasMoreData
+            .receive(on: DispatchQueue.main)
+            .assign(to: &$hasMoreData)
     }
 }

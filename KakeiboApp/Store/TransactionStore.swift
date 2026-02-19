@@ -6,17 +6,13 @@
 //
 //
 
-//
-//  TransactionStore.swift
-//  KakeiboApp
-//
-
 import Foundation
 import Combine
 
 @MainActor
 protocol TransactionStoreProtocol {
     var transactions: AnyPublisher<[TransactionModel], Never> { get }
+    var hasMoreData: AnyPublisher<Bool, Never> { get }
 
     func add(_ transaction: TransactionModel) async throws
     func update(_ transaction: TransactionModel) async throws
@@ -30,17 +26,21 @@ protocol TransactionStoreProtocol {
 final class TransactionStore: TransactionStoreProtocol {
     // MARK: - State
     @Published private var _transactions: [TransactionModel] = []
+    @Published private var _hasMoreData = true
 
     var transactions: AnyPublisher<[TransactionModel], Never> {
         $_transactions.eraseToAnyPublisher()
+    }
+
+    var hasMoreData: AnyPublisher<Bool, Never> {
+        $_hasMoreData.eraseToAnyPublisher()
     }
 
     // MARK: - Dependencies
     private let repository: TransactionRepositoryProtocol
     private let initialLimit = 100
     private let loadMoreLimit = 50
-    private var hasMoreData = true
-    private var isLoadingMore = false  // loadMoreの多重実行防止用（内部のみ）
+    private var isLoadingMore = false  // loadMoreの多重実行防止用
 
     // MARK: - Init
     init(repository: TransactionRepositoryProtocol) {
@@ -68,13 +68,12 @@ final class TransactionStore: TransactionStoreProtocol {
         do {
             return try await repository.search(text: text)
         } catch {
-            // エラー時は空配列を返す
             return []
         }
     }
 
     func loadMore() async {
-        guard hasMoreData, !isLoadingMore else { return }
+        guard _hasMoreData, !isLoadingMore else { return }
 
         isLoadingMore = true
         defer { isLoadingMore = false }
@@ -89,20 +88,26 @@ final class TransactionStore: TransactionStoreProtocol {
             )
 
             if newItems.isEmpty {
-                hasMoreData = false
+                _hasMoreData = false
                 return
             }
 
+            // 重複を除いて追加
             let existingIds = Set(_transactions.map { $0.id })
             let uniqueItems = newItems.filter { !existingIds.contains($0.id) }
             _transactions.append(contentsOf: uniqueItems)
+
+            // 取得件数がlimitより少なければ、これ以上データはない
+            if newItems.count < loadMoreLimit {
+                _hasMoreData = false
+            }
         } catch {
             // エラー時は何もしない
         }
     }
 
     func reload() async {
-        hasMoreData = true
+        _hasMoreData = true
 
         do {
             let items = try await repository.fetch(
@@ -112,7 +117,9 @@ final class TransactionStore: TransactionStoreProtocol {
                 offset: 0
             )
             _transactions = items
-            hasMoreData = items.count == initialLimit
+
+            // 初回読み込みでlimit件未満なら、これ以上データはない
+            _hasMoreData = items.count == initialLimit
         } catch {
             // エラー時は現在のデータを保持
         }
