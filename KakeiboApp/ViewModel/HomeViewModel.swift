@@ -26,18 +26,14 @@ final class HomeViewModel: ObservableObject {
     var startDate: Binding<Date> {
         Binding(
             get: { self.dateRange.start },
-            set: { newValue in
-                self.dateRange = self.dateRange.withStart(newValue)
-            }
+            set: { self.dateRange = self.dateRange.withStart($0) }
         )
     }
 
     var endDate: Binding<Date> {
         Binding(
             get: { self.dateRange.end },
-            set: { newValue in
-                self.dateRange = self.dateRange.withEnd(newValue)
-            }
+            set: { self.dateRange = self.dateRange.withEnd($0) }
         )
     }
 
@@ -49,20 +45,30 @@ final class HomeViewModel: ObservableObject {
         self.categoryStore = categoryStore
         self.transactionStore = transactionStore
         bindTransactions()
-        bindLoadingState()
     }
+
+    // MARK: - Public Methods
 
     func categoryFind(id: UUID) -> CategoryModel? {
         categoryStore.find(id: id)
     }
 
     func deleteTransaction(_ transaction: TransactionModel) async {
+        isLoading = true
+        defer { isLoading = false }
+
         do {
             try await transactionStore.delete(transaction)
         } catch {
-            errorMessage = "保存に失敗しました: \(error.localizedDescription)"
+            errorMessage = "削除に失敗しました: \(error.localizedDescription)"
         }
     }
+
+    func clearError() {
+        errorMessage = nil
+    }
+
+    // MARK: - Private Methods
 
     private func bindTransactions() {
         Publishers.CombineLatest3(
@@ -72,23 +78,13 @@ final class HomeViewModel: ObservableObject {
         )
         .map { transactions, range, selectedType in
             transactions
-                .filter { transaction in
-                    range.start <= transaction.date && transaction.date <= range.end
-                        && transaction.type == selectedType
+                .filter {
+                    range.start <= $0.date && $0.date <= range.end
+                        && $0.type == selectedType
                 }
                 .sorted { $0.date > $1.date }
         }
         .receive(on: DispatchQueue.main)
         .assign(to: &$filteredTransactions)
-    }
-
-    private func bindLoadingState() {
-        Publishers.CombineLatest(
-            transactionStore.isLoading,
-            categoryStore.isLoading
-        )
-        .map { $0 || $1 }
-        .receive(on: DispatchQueue.main)
-        .assign(to: &$isLoading)
     }
 }

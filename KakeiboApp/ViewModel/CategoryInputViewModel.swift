@@ -26,23 +26,24 @@ final class CategoryInputViewModel: ObservableObject {
 
     init(categoryStore: CategoryStoreProtocol) {
         self.categoryStore = categoryStore
-        bindErrorMessage()
     }
+
+    // MARK: - Public Methods
 
     func presentInputView(type: TransactionType, categoryItem: CategoryModel? = nil) {
         self.type = type
         if let category = categoryItem {
-            restore(category)
+            restoreForm(from: category)
             isEdit = true
         } else {
-            reset()
+            resetForm()
             isEdit = false
         }
         isPresentInputView = true
     }
 
     func save() async {
-        guard isValid() else {
+        guard isFormValid else {
             errorMessage = "カテゴリ名を入力してください"
             return
         }
@@ -56,43 +57,53 @@ final class CategoryInputViewModel: ObservableObject {
         )
 
         isLoading = true
-        if isEdit {
-            await categoryStore.update(category)
-        } else {
-            await categoryStore.add(category)
-        }
-        isLoading = false
+        defer { isLoading = false }
 
-        reset()
-        isPresentInputView = false
+        do {
+            if isEdit {
+                try await categoryStore.update(category)
+            } else {
+                try await categoryStore.add(category)
+            }
+            // 成功時のみ閉じる
+            closeInputView()
+        } catch {
+            errorMessage = "保存に失敗しました: \(error.localizedDescription)"
+        }
     }
 
     func cancel() {
-        reset()
-        isPresentInputView = false
+        closeInputView()
+    }
+
+    func clearError() {
         errorMessage = nil
     }
 
-    private func reset() {
+    // MARK: - Private Methods
+
+    private var isFormValid: Bool {
+        !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    private func resetForm() {
         id = UUID()
         name = ""
         color = .blue
+        errorMessage = nil
     }
 
-    private func restore(_ category: CategoryModel) {
+    private func restoreForm(from category: CategoryModel) {
         id = category.id
         name = category.name
         color = category.color
         type = category.type
+        errorMessage = nil
     }
 
-    private func isValid() -> Bool {
-        !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-    }
-
-    private func bindErrorMessage() {
-        categoryStore.errorMessage
-            .receive(on: DispatchQueue.main)
-            .assign(to: &$errorMessage)
+    private func closeInputView() {
+        isPresentInputView = false
+        errorMessage = nil
+        resetForm()
     }
 }

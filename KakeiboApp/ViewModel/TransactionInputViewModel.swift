@@ -130,7 +130,6 @@ final class TransactionInputViewModel: ObservableObject {
     // MARK: - Private Methods
     private func setupBindings() {
         bindCategories()
-        bindLoadingState()
         observeTypeChange()
     }
 
@@ -141,16 +140,6 @@ final class TransactionInputViewModel: ObservableObject {
                 self?.categories = categories
             }
             .store(in: &cancellables)
-    }
-
-    private func bindLoadingState() {
-        Publishers.CombineLatest(
-            transactionStore.isLoading,
-            categoryStore.isLoading
-        )
-        .map { $0 || $1 }
-        .receive(on: DispatchQueue.main)
-        .assign(to: &$isLoading)
     }
 
     private func observeTypeChange() {

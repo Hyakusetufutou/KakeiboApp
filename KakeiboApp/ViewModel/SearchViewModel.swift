@@ -13,6 +13,7 @@ import Combine
 final class SearchViewModel: ObservableObject {
     @Published var isPresented = false
     @Published var searchText = ""
+    @Published private(set) var isLoading = false
     @Published private(set) var resultTransactions: [TransactionModel] = []
     @Published private(set) var errorMessage: String?
 
@@ -27,17 +28,28 @@ final class SearchViewModel: ObservableObject {
         setupSearchPipeline()
     }
 
+    // MARK: - Public Methods
+
     func deleteTransaction(_ transaction: TransactionModel) async {
+        isLoading = true
+        defer { isLoading = false }
+
         do {
             try await transactionStore.delete(transaction)
         } catch {
-            errorMessage = "保存に失敗しました: \(error.localizedDescription)"
+            errorMessage = "削除に失敗しました: \(error.localizedDescription)"
         }
     }
 
     func findCategory(id: UUID) -> CategoryModel? {
         categoryStore.find(id: id)
     }
+
+    func clearError() {
+        errorMessage = nil
+    }
+
+    // MARK: - Private Methods
 
     private func setupSearchPipeline() {
         $searchText
@@ -60,9 +72,8 @@ final class SearchViewModel: ObservableObject {
         searchTask = Task { @MainActor in
             let results = await transactionStore.search(text: text)
 
-            if !Task.isCancelled {
-                resultTransactions = results.sorted { $0.date > $1.date }
-            }
+            guard !Task.isCancelled else { return }
+            resultTransactions = results.sorted { $0.date > $1.date }
         }
     }
 }
