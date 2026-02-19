@@ -22,22 +22,19 @@ final class HomeViewModel: ObservableObject {
     )
     @Published var selectedType: TransactionType = .expense
     @Published var showFilterView = false
+    @Published private(set) var hasMoreData = true
 
     var startDate: Binding<Date> {
         Binding(
             get: { self.dateRange.start },
-            set: { newValue in
-                self.dateRange = self.dateRange.withStart(newValue)
-            }
+            set: { self.dateRange = self.dateRange.withStart($0) }
         )
     }
 
     var endDate: Binding<Date> {
         Binding(
             get: { self.dateRange.end },
-            set: { newValue in
-                self.dateRange = self.dateRange.withEnd(newValue)
-            }
+            set: { self.dateRange = self.dateRange.withEnd($0) }
         )
     }
 
@@ -49,17 +46,47 @@ final class HomeViewModel: ObservableObject {
         self.categoryStore = categoryStore
         self.transactionStore = transactionStore
         bindTransactions()
-        bindLoadingState()
-        bindErrorMessages()
+        bindHasMoreData()
     }
+
+    // MARK: - Public Methods
 
     func categoryFind(id: UUID) -> CategoryModel? {
         categoryStore.find(id: id)
     }
 
     func deleteTransaction(_ transaction: TransactionModel) async {
-        await transactionStore.delete(transaction)
+        isLoading = true
+        defer { isLoading = false }
+
+        do {
+            try await transactionStore.delete(transaction)
+        } catch {
+            errorMessage = "削除に失敗しました: \(error.localizedDescription)"
+        }
     }
+
+    func loadMore() async {
+        guard hasMoreData else { return }
+
+        isLoading = true
+        defer { isLoading = false }
+
+        await transactionStore.loadMore()
+    }
+
+    func reload() async {
+        isLoading = true
+        defer { isLoading = false }
+
+        await transactionStore.reload()
+    }
+
+    func clearError() {
+        errorMessage = nil
+    }
+
+    // MARK: - Private Methods
 
     private func bindTransactions() {
         Publishers.CombineLatest3(
@@ -69,9 +96,9 @@ final class HomeViewModel: ObservableObject {
         )
         .map { transactions, range, selectedType in
             transactions
-                .filter { transaction in
-                    range.start <= transaction.date && transaction.date <= range.end
-                        && transaction.type == selectedType
+                .filter {
+                    range.start <= $0.date && $0.date <= range.end
+                        && $0.type == selectedType
                 }
                 .sorted { $0.date > $1.date }
         }
@@ -79,22 +106,9 @@ final class HomeViewModel: ObservableObject {
         .assign(to: &$filteredTransactions)
     }
 
-    private func bindLoadingState() {
-        Publishers.CombineLatest(
-            transactionStore.isLoading,
-            categoryStore.isLoading
-        )
-        .map { $0 || $1 }
-        .receive(on: DispatchQueue.main)
-        .assign(to: &$isLoading)
-    }
-
-    private func bindErrorMessages() {
-        Publishers.Merge(
-            transactionStore.errorMessage,
-            categoryStore.errorMessage
-        )
-        .receive(on: DispatchQueue.main)
-        .assign(to: &$errorMessage)
+    private func bindHasMoreData() {
+        transactionStore.hasMoreData
+            .receive(on: DispatchQueue.main)
+            .assign(to: &$hasMoreData)
     }
 }

@@ -12,12 +12,11 @@ import Combine
 @MainActor
 protocol TransactionStoreProtocol {
     var transactions: AnyPublisher<[TransactionModel], Never> { get }
-    var errorMessage: AnyPublisher<String?, Never> { get }
-    var isLoading: AnyPublisher<Bool, Never> { get }
+    var hasMoreData: AnyPublisher<Bool, Never> { get }
 
-    func add(_ transaction: TransactionModel) async
-    func update(_ transaction: TransactionModel) async
-    func delete(_ transaction: TransactionModel) async
+    func add(_ transaction: TransactionModel) async throws
+    func update(_ transaction: TransactionModel) async throws
+    func delete(_ transaction: TransactionModel) async throws
     func search(text: String?) async -> [TransactionModel]
     func loadMore() async
     func reload() async
@@ -25,29 +24,23 @@ protocol TransactionStoreProtocol {
 
 @MainActor
 final class TransactionStore: TransactionStoreProtocol {
-
     // MARK: - State
     @Published private var _transactions: [TransactionModel] = []
-    @Published private var _errorMessage: String?
-    @Published private var _isLoading = false
+    @Published private var _hasMoreData = true
 
     var transactions: AnyPublisher<[TransactionModel], Never> {
         $_transactions.eraseToAnyPublisher()
     }
 
-    var errorMessage: AnyPublisher<String?, Never> {
-        $_errorMessage.eraseToAnyPublisher()
-    }
-
-    var isLoading: AnyPublisher<Bool, Never> {
-        $_isLoading.eraseToAnyPublisher()
+    var hasMoreData: AnyPublisher<Bool, Never> {
+        $_hasMoreData.eraseToAnyPublisher()
     }
 
     // MARK: - Dependencies
     private let repository: TransactionRepositoryProtocol
     private let initialLimit = 100
     private let loadMoreLimit = 50
-    private var hasMoreData = true
+    private var isLoadingMore = false  // loadMoreの多重実行防止用
 
     // MARK: - Init
     init(repository: TransactionRepositoryProtocol) {
@@ -56,61 +49,34 @@ final class TransactionStore: TransactionStoreProtocol {
     }
 
     // MARK: - Actions
-    func add(_ transaction: TransactionModel) async {
-        _isLoading = true
-        defer { _isLoading = false }
-
-        do {
-            try await repository.add(transaction)
-            await reloadInternal()
-        } catch {
-            handleError(error)
-        }
+    func add(_ transaction: TransactionModel) async throws {
+        try await repository.add(transaction)
+        await reload()
     }
 
-    func update(_ transaction: TransactionModel) async {
-        _isLoading = true
-        defer { _isLoading = false }
-
-        do {
-            try await repository.update(transaction)
-            await reloadInternal()
-        } catch {
-            handleError(error)
-        }
+    func update(_ transaction: TransactionModel) async throws {
+        try await repository.update(transaction)
+        await reload()
     }
 
-    func delete(_ transaction: TransactionModel) async {
-        _isLoading = true
-        defer { _isLoading = false }
-
-        do {
-            try await repository.delete(transaction)
-            await reloadInternal()
-        } catch {
-            handleError(error)
-        }
+    func delete(_ transaction: TransactionModel) async throws {
+        try await repository.delete(transaction)
+        await reload()
     }
 
     func search(text: String?) async -> [TransactionModel] {
-        _isLoading = true
-        defer { _isLoading = false }
-
         do {
-            let result = try await repository.search(text: text)
-            _errorMessage = nil
-            return result
+            return try await repository.search(text: text)
         } catch {
-            handleError(error)
             return []
         }
     }
 
     func loadMore() async {
-        guard hasMoreData, !_isLoading else { return }
+        guard _hasMoreData, !isLoadingMore else { return }
 
-        _isLoading = true
-        defer { _isLoading = false }
+        isLoadingMore = true
+        defer { isLoadingMore = false }
 
         do {
             let offset = _transactions.count
@@ -122,28 +88,27 @@ final class TransactionStore: TransactionStoreProtocol {
             )
 
             if newItems.isEmpty {
-                hasMoreData = false
+                _hasMoreData = false
                 return
             }
 
+            // 重複を除いて追加
             let existingIds = Set(_transactions.map { $0.id })
             let uniqueItems = newItems.filter { !existingIds.contains($0.id) }
             _transactions.append(contentsOf: uniqueItems)
+
+            // 取得件数がlimitより少なければ、これ以上データはない
+            if newItems.count < loadMoreLimit {
+                _hasMoreData = false
+            }
         } catch {
-            handleError(error)
+            // エラー時は何もしない
         }
     }
 
     func reload() async {
-        _isLoading = true
-        defer { _isLoading = false }
+        _hasMoreData = true
 
-        hasMoreData = true
-        await reloadInternal()
-    }
-
-    // MARK: - Private
-    private func reloadInternal() async {
         do {
             let items = try await repository.fetch(
                 from: nil,
@@ -152,16 +117,11 @@ final class TransactionStore: TransactionStoreProtocol {
                 offset: 0
             )
             _transactions = items
-            _errorMessage = nil
-            hasMoreData = items.count == initialLimit
-        } catch {
-            handleError(error)
-        }
-    }
 
-    private func handleError(_ error: Error) {
-        _errorMessage =
-            (error as? CustomError)?.description
-            ?? error.localizedDescription
+            // 初回読み込みでlimit件未満なら、これ以上データはない
+            _hasMoreData = items.count == initialLimit
+        } catch {
+            // エラー時は現在のデータを保持
+        }
     }
 }

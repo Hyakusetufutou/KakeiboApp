@@ -15,6 +15,7 @@ final class GraphViewModel: ObservableObject {
     @Published private(set) var categorySummaries: [CategorySummary] = []
     @Published private(set) var isLoading = false
     @Published private(set) var errorMessage: String?
+    @Published private(set) var hasMoreData = true
 
     @Published var categories: [CategoryModel] = []
     @Published var dateRange: DateRange = DateRange(
@@ -26,18 +27,14 @@ final class GraphViewModel: ObservableObject {
     var startDate: Binding<Date> {
         Binding(
             get: { self.dateRange.start },
-            set: { newValue in
-                self.dateRange = self.dateRange.withStart(newValue)
-            }
+            set: { self.dateRange = self.dateRange.withStart($0) }
         )
     }
 
     var endDate: Binding<Date> {
         Binding(
             get: { self.dateRange.end },
-            set: { newValue in
-                self.dateRange = self.dateRange.withEnd(newValue)
-            }
+            set: { self.dateRange = self.dateRange.withEnd($0) }
         )
     }
 
@@ -58,20 +55,35 @@ final class GraphViewModel: ObservableObject {
         self.transactionStore = transactionStore
         bindCategories()
         bindCategorySummaries()
-        bindLoadingState()
-        bindErrorMessages()
+        bindHasMoreData()
     }
+
+    // MARK: - Public Methods
 
     func findCategory(id: UUID) -> CategoryModel? {
         categoryStore.find(id: id)
     }
 
     func deleteTransaction(_ transaction: TransactionModel) async {
-        await transactionStore.delete(transaction)
+        isLoading = true
+        defer { isLoading = false }
+
+        do {
+            try await transactionStore.delete(transaction)
+        } catch {
+            errorMessage = "削除に失敗しました: \(error.localizedDescription)"
+        }
     }
 
     func deleteCategory(_ category: CategoryModel) async {
-        await categoryStore.delete(category)
+        isLoading = true
+        defer { isLoading = false }
+
+        do {
+            try await categoryStore.delete(category)
+        } catch {
+            errorMessage = "削除に失敗しました: \(error.localizedDescription)"
+        }
     }
 
     func changeMonth(by value: Int) {
@@ -80,6 +92,28 @@ final class GraphViewModel: ObservableObject {
         else { return }
         dateRange = DateRange(start: newDate.startOfMonth, end: newDate.endOfMonth)
     }
+
+    func loadMore() async {
+        guard hasMoreData else { return }
+
+        isLoading = true
+        defer { isLoading = false }
+
+        await transactionStore.loadMore()
+    }
+
+    func reload() async {
+        isLoading = true
+        defer { isLoading = false }
+
+        await transactionStore.reload()
+    }
+
+    func clearError() {
+        errorMessage = nil
+    }
+
+    // MARK: - Private Methods
 
     private func bindCategories() {
         Publishers.CombineLatest(
@@ -114,23 +148,10 @@ final class GraphViewModel: ObservableObject {
         .assign(to: &$categorySummaries)
     }
 
-    private func bindLoadingState() {
-        Publishers.CombineLatest(
-            transactionStore.isLoading,
-            categoryStore.isLoading
-        )
-        .map { $0 || $1 }
-        .receive(on: DispatchQueue.main)
-        .assign(to: &$isLoading)
-    }
-
-    private func bindErrorMessages() {
-        Publishers.Merge(
-            transactionStore.errorMessage,
-            categoryStore.errorMessage
-        )
-        .receive(on: DispatchQueue.main)
-        .assign(to: &$errorMessage)
+    private func bindHasMoreData() {
+        transactionStore.hasMoreData
+            .receive(on: DispatchQueue.main)
+            .assign(to: &$hasMoreData)
     }
 
     private func makeCategorySummaries(
@@ -140,15 +161,15 @@ final class GraphViewModel: ObservableObject {
         startDate: Date,
         endDate: Date
     ) -> [CategorySummary] {
-        let filteredTransactions = transactions.filter {
+        let filtered = transactions.filter {
             startDate <= $0.date && $0.date <= endDate && $0.type == type
         }
 
-        let summaries =
+        return
             categories
             .filter { $0.type == type }
             .compactMap { category -> CategorySummary? in
-                let related = filteredTransactions.filter { $0.categoryId == category.id }
+                let related = filtered.filter { $0.categoryId == category.id }
                 let total =
                     related
                     .map(\.amount)
@@ -166,7 +187,6 @@ final class GraphViewModel: ObservableObject {
                     transactions: related
                 )
             }
-
-        return summaries.sorted { $0.totalAmount > $1.totalAmount }
+            .sorted { $0.totalAmount > $1.totalAmount }
     }
 }

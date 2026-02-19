@@ -10,12 +10,12 @@ import Foundation
 import SwiftUI
 import Combine
 
-// MARK: - Calendar ViewModel
 @MainActor
 final class CalendarViewModel: ObservableObject {
     @Published private(set) var dailySummaries: [Date: DailySummary] = [:]
     @Published private(set) var isLoading = false
     @Published private(set) var errorMessage: String?
+    @Published private(set) var hasMoreData = true
 
     @Published var selectedDate: Date?
     @Published var currentDate: Date = Date()
@@ -27,31 +27,29 @@ final class CalendarViewModel: ObservableObject {
     var startDate: Binding<Date> {
         Binding(
             get: { self.dateRange.start },
-            set: { newValue in
-                self.dateRange = self.dateRange.withStart(newValue)
-            }
+            set: { self.dateRange = self.dateRange.withStart($0) }
         )
     }
 
     var endDate: Binding<Date> {
         Binding(
             get: { self.dateRange.end },
-            set: { newValue in
-                self.dateRange = self.dateRange.withEnd(newValue)
-            }
+            set: { self.dateRange = self.dateRange.withEnd($0) }
         )
     }
 
-    private var cancellables = Set<AnyCancellable>()
-
     private let categoryStore: CategoryStoreProtocol
     private let transactionStore: TransactionStoreProtocol
+    private var cancellables = Set<AnyCancellable>()
 
     init(categoryStore: CategoryStoreProtocol, transactionStore: TransactionStoreProtocol) {
         self.categoryStore = categoryStore
         self.transactionStore = transactionStore
         bindDailySummaries()
+        bindHasMoreData()
     }
+
+    // MARK: - Public Methods
 
     func changeMonth(by value: Int) {
         guard
@@ -62,13 +60,40 @@ final class CalendarViewModel: ObservableObject {
 
     func delete(_ transaction: TransactionModel) async {
         isLoading = true
-        await transactionStore.delete(transaction)
-        isLoading = false
+        defer { isLoading = false }
+
+        do {
+            try await transactionStore.delete(transaction)
+        } catch {
+            errorMessage = "削除に失敗しました: \(error.localizedDescription)"
+        }
     }
 
     func category(for id: UUID) -> CategoryModel? {
         categoryStore.find(id: id)
     }
+
+    func loadMore() async {
+        guard hasMoreData else { return }
+
+        isLoading = true
+        defer { isLoading = false }
+
+        await transactionStore.loadMore()
+    }
+
+    func reload() async {
+        isLoading = true
+        defer { isLoading = false }
+
+        await transactionStore.reload()
+    }
+
+    func clearError() {
+        errorMessage = nil
+    }
+
+    // MARK: - Private Methods
 
     private func bindDailySummaries() {
         Publishers.CombineLatest3(
@@ -86,14 +111,12 @@ final class CalendarViewModel: ObservableObject {
         }
         .receive(on: DispatchQueue.main)
         .assign(to: &$dailySummaries)
+    }
 
-        // エラーメッセージのバインディング
-        Publishers.Merge(
-            transactionStore.errorMessage,
-            categoryStore.errorMessage
-        )
-        .receive(on: DispatchQueue.main)
-        .assign(to: &$errorMessage)
+    private func bindHasMoreData() {
+        transactionStore.hasMoreData
+            .receive(on: DispatchQueue.main)
+            .assign(to: &$hasMoreData)
     }
 
     private func makeDailySummaries(
@@ -101,14 +124,14 @@ final class CalendarViewModel: ObservableObject {
         startDate: Date,
         endDate: Date
     ) -> [Date: DailySummary] {
-        let filteredTransactions = transactions.filter {
+        let filtered = transactions.filter {
             startDate <= $0.date && $0.date <= endDate
         }
 
-        return Dictionary(grouping: filteredTransactions) {
+        return Dictionary(grouping: filtered) {
             Calendar.current.startOfDay(for: $0.date)
         }
-        .mapValues { dailyTransactions -> DailySummary in
+        .mapValues { dailyTransactions in
             let income =
                 dailyTransactions
                 .filter { $0.type == .income }
@@ -119,10 +142,8 @@ final class CalendarViewModel: ObservableObject {
                 .filter { $0.type == .expense }
                 .reduce(0) { $0 + $1.amount }
 
-            let date = Calendar.current.startOfDay(for: dailyTransactions[0].date)
-
             return DailySummary(
-                date: date,
+                date: Calendar.current.startOfDay(for: dailyTransactions[0].date),
                 income: income,
                 expense: expense,
                 transactions: dailyTransactions

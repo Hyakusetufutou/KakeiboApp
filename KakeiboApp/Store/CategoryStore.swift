@@ -6,43 +6,35 @@
 //
 //
 
+//
+//  CategoryStore.swift
+//  KakeiboApp
+//
+
 import Foundation
 import Combine
+import SwiftUI
 
 @MainActor
 protocol CategoryStoreProtocol {
     var categories: AnyPublisher<[CategoryModel], Never> { get }
-    var errorMessage: AnyPublisher<String?, Never> { get }
-    var isLoading: AnyPublisher<Bool, Never> { get }
 
-    func add(_ category: CategoryModel) async
-    func update(_ category: CategoryModel) async
-    func delete(_ category: CategoryModel) async
     func find(id: UUID) -> CategoryModel?
-    func reload() async
+    func add(_ category: CategoryModel) async throws
+    func update(_ category: CategoryModel) async throws
+    func delete(_ category: CategoryModel) async throws
 }
 
 @MainActor
 final class CategoryStore: CategoryStoreProtocol {
-
     // MARK: - State
     @Published private var _categories: [CategoryModel] = []
-    @Published private var _errorMessage: String?
-    @Published private var _isLoading = false
 
     var categories: AnyPublisher<[CategoryModel], Never> {
         $_categories.eraseToAnyPublisher()
     }
 
-    var errorMessage: AnyPublisher<String?, Never> {
-        $_errorMessage.eraseToAnyPublisher()
-    }
-
-    var isLoading: AnyPublisher<Bool, Never> {
-        $_isLoading.eraseToAnyPublisher()
-    }
-
-    // MARK: - Dependency
+    // MARK: - Dependencies
     private let repository: CategoryRepositoryProtocol
 
     // MARK: - Init
@@ -52,66 +44,31 @@ final class CategoryStore: CategoryStoreProtocol {
     }
 
     // MARK: - Actions
-    func add(_ category: CategoryModel) async {
-        _isLoading = true
-        defer { _isLoading = false }
-
-        do {
-            try await repository.add(category)
-            await reloadInternal()
-        } catch {
-            handleError(error)
-        }
-    }
-
-    func update(_ category: CategoryModel) async {
-        _isLoading = true
-        defer { _isLoading = false }
-
-        do {
-            try await repository.update(category)
-            await reloadInternal()
-        } catch {
-            handleError(error)
-        }
-    }
-
-    func delete(_ category: CategoryModel) async {
-        _isLoading = true
-        defer { _isLoading = false }
-
-        do {
-            try await repository.delete(category)
-            await reloadInternal()
-        } catch {
-            handleError(error)
-        }
-    }
-
     func find(id: UUID) -> CategoryModel? {
         _categories.first { $0.id == id }
     }
 
-    func reload() async {
-        _isLoading = true
-        defer { _isLoading = false }
-        await reloadInternal()
+    func add(_ category: CategoryModel) async throws {
+        try await repository.add(category)
+        await reload()
+    }
+
+    func update(_ category: CategoryModel) async throws {
+        try await repository.update(category)
+        await reload()
+    }
+
+    func delete(_ category: CategoryModel) async throws {
+        try await repository.delete(category)
+        await reload()
     }
 
     // MARK: - Private
-    private func reloadInternal() async {
+    private func reload() async {
         do {
-            let categories = try await repository.fetchAll()
-            _categories = categories
-            _errorMessage = nil
+            _categories = try await repository.fetchAll()
         } catch {
-            handleError(error)
+            // エラー時は現在のデータを保持
         }
-    }
-
-    private func handleError(_ error: Error) {
-        _errorMessage =
-            (error as? CustomError)?.description
-            ?? error.localizedDescription
     }
 }
