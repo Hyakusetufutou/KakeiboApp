@@ -27,23 +27,45 @@ struct GraphView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView(.vertical) {
-                LazyVStack(spacing: 8, pinnedViews: [.sectionHeaders]) {
-                    controlSection
+            ZStack {
+                Color(.systemGroupedBackground)
+                    .ignoresSafeArea()
 
-                    if !graphViewModel.categorySummaries.isEmpty {
-                        categorySection
-                    } else {
-                        emptySection
+                ScrollView(.vertical, showsIndicators: false) {
+                    LazyVStack(spacing: 8, pinnedViews: [.sectionHeaders]) {
+                        controlSection
+
+                        if !graphViewModel.categorySummaries.isEmpty {
+                            categorySection
+                        } else {
+                            emptySection
+                        }
                     }
                 }
+                .refreshable {
+                    await graphViewModel.reload()
+                }
+
+                if graphViewModel.isLoading && graphViewModel.categorySummaries.isEmpty {
+                    ProgressView("読み込み中...")
+                        .padding()
+                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+                }
             }
-            .background(Color(.systemGroupedBackground))
         }
         .animation(.snappy, value: graphViewModel.selectedType)
         .disabled(categoryInputViewModel.isPresentInputView)
         .sheet(isPresented: $isPresentCategoryList) {
             categoryListSheet
+        }
+        .alert("エラー", isPresented: errorAlertBinding) {
+            Button("OK") {
+                graphViewModel.clearError()
+            }
+        } message: {
+            if let errorMessage = graphViewModel.errorMessage {
+                Text(errorMessage)
+            }
         }
     }
 
@@ -121,7 +143,7 @@ struct GraphView: View {
             }
         }
         .background(Color(.systemBackground))
-        .cornerRadius(10)
+        .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 
     private func categoryRow(summary: CategorySummary) -> some View {
@@ -143,10 +165,12 @@ struct GraphView: View {
                     .foregroundStyle(summary.color)
 
                 Text(summary.categoryName)
+                    .foregroundStyle(.primary)
 
                 Spacer()
 
                 Text(currencyString(summary.totalAmount, allowedDigits: 2))
+                    .foregroundStyle(.primary)
             }
             .padding(.vertical, 12)
             .padding(.horizontal, 16)
@@ -163,18 +187,6 @@ struct GraphView: View {
                 .padding(.horizontal, 16)
                 .padding(.top, 4)
         }
-    }
-
-    // MARK: - Helper Views
-
-    private func sectionHeader(title: String) -> some View {
-        Text(title)
-            .font(.headline)
-            .foregroundColor(.secondary)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 4)
-            .background(Color(.systemGroupedBackground))
     }
 
     // MARK: - Sheet
@@ -201,8 +213,9 @@ struct GraphView: View {
     private var categoryInputOverlay: some View {
         ZStack {
             if categoryInputViewModel.isPresentInputView {
-                Color.gray.opacity(0.5)
+                Color.black.opacity(0.3)
                     .ignoresSafeArea()
+                    .transition(.opacity)
             }
 
             VStack {
@@ -211,11 +224,22 @@ struct GraphView: View {
                 if categoryInputViewModel.isPresentInputView {
                     CategoryInputView(categoryInputViewModel: categoryInputViewModel)
                         .padding(.bottom, 8)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
         }
     }
+
+    // MARK: - Helper
+
+    private var errorAlertBinding: Binding<Bool> {
+        Binding(
+            get: { graphViewModel.errorMessage != nil },
+            set: { if !$0 { graphViewModel.clearError() } }
+        )
+    }
 }
+
 #Preview {
     let viewModelFactory = ViewModelFactory()
     GraphView(
