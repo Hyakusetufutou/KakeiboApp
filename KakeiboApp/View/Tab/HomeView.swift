@@ -46,7 +46,6 @@ struct HomeView: View {
                     await homeViewModel.reload()
                 }
 
-                // ローディングオーバーレイ（初回のみ）
                 if homeViewModel.isLoading && homeViewModel.filteredTransactions.isEmpty {
                     ProgressView("読み込み中...")
                         .padding()
@@ -58,6 +57,11 @@ struct HomeView: View {
         }
         .overlay {
             if homeViewModel.showFilterView {
+                Color(.label)
+                    .opacity(0.15)
+                    .ignoresSafeArea()
+                    .transition(.opacity)
+
                 dateFilterOverlay
             }
         }
@@ -112,7 +116,7 @@ struct HomeView: View {
             .padding(.vertical, 12)
             .background {
                 Color(.systemGroupedBackground)
-                    .shadow(color: .black.opacity(0.05), radius: 2, y: 1)
+                    .shadow(color: Color(.label).opacity(0.08), radius: 2, y: 1)
             }
         }
     }
@@ -121,7 +125,6 @@ struct HomeView: View {
 
     private var contentSection: some View {
         VStack(spacing: 12) {
-            // 期間表示
             Text(
                 "\(format(date: homeViewModel.dateRange.start, format: "yyyy年MM月dd日")) 〜 \(format(date: homeViewModel.dateRange.end, format: "yyyy年MM月dd日"))"
             )
@@ -129,13 +132,11 @@ struct HomeView: View {
             .foregroundStyle(.secondary)
             .hSpacing(.leading)
 
-            // 収支カード
             CardView(
                 income: total(homeViewModel.filteredTransactions, type: .income),
                 expense: total(homeViewModel.filteredTransactions, type: .expense)
             )
 
-            // フィルター
             HStack(spacing: 16) {
                 CustomSegmentedControl(selectedType: $homeViewModel.selectedType)
 
@@ -144,7 +145,6 @@ struct HomeView: View {
                 }
             }
 
-            // トランザクションリスト
             if homeViewModel.filteredTransactions.isEmpty {
                 NoTransactionView()
             } else {
@@ -171,8 +171,7 @@ struct HomeView: View {
                     transactionInputViewModel.presentInputView(for: transaction)
                 }
                 .onAppear {
-                    // 無限スクロール: 最後の要素が表示されたらloadMore
-                    if shouldLoadMore(transaction: transaction) {
+                    if isLastTransaction(transaction) {
                         Task {
                             await homeViewModel.loadMore()
                         }
@@ -180,7 +179,6 @@ struct HomeView: View {
                 }
             }
 
-            // ローディングインジケーター（追加読み込み中）
             if homeViewModel.isLoading && !homeViewModel.filteredTransactions.isEmpty {
                 loadingIndicator
             }
@@ -210,16 +208,19 @@ struct HomeView: View {
                 homeViewModel.showFilterView = false
             }
         )
-        .transition(.scale.combined(with: .opacity))
+        .transition(
+            .asymmetric(
+                insertion: .scale(scale: 0.95).combined(with: .opacity),
+                removal: .scale(scale: 0.95).combined(with: .opacity)
+            )
+        )
     }
 
     // MARK: - Helper Methods
 
-    private func shouldLoadMore(transaction: TransactionModel) -> Bool {
-        guard let lastTransaction = homeViewModel.filteredTransactions.last else {
-            return false
-        }
-        return transaction.id == lastTransaction.id && homeViewModel.hasMoreData
+    private func isLastTransaction(_ transaction: TransactionModel) -> Bool {
+        homeViewModel.filteredTransactions.last?.id == transaction.id
+            && homeViewModel.hasMoreData
     }
 
     private var errorAlertBinding: Binding<Bool> {

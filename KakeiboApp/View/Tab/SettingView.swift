@@ -14,16 +14,20 @@ struct SettingView: View {
     /// App Lock Properties
     @AppStorage("isAppLockEnabled") private var isAppLockEnabled: Bool = false
     @AppStorage("lockWhenAppGoesBackground") private var lockWhenAppGoesBackground: Bool = false
+
     var body: some View {
         NavigationStack {
             List {
                 Section("ユーザー名") {
                     TextField("山田太郎", text: $userName)
                         .submitLabel(.done)
+                        .autocorrectionDisabled(true)
+                        .textInputAutocapitalization(.never)
                 }
 
                 Section("ロック") {
                     Toggle("アプリのロックを許可", isOn: $isAppLockEnabled)
+                        .animation(.snappy, value: isAppLockEnabled)
 
                     if isAppLockEnabled {
                         Toggle("バックグラウンド時のロックを許可", isOn: $lockWhenAppGoesBackground)
@@ -32,7 +36,6 @@ struct SettingView: View {
             }
             .navigationTitle("設定")
         }
-        .background(Color(.systemGroupedBackground))
     }
 }
 

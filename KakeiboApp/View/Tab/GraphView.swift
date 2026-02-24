@@ -53,7 +53,6 @@ struct GraphView: View {
                 }
             }
         }
-        .animation(.snappy, value: graphViewModel.selectedType)
         .disabled(categoryInputViewModel.isPresentInputView)
         .sheet(isPresented: $isPresentCategoryList) {
             categoryListSheet
@@ -81,6 +80,7 @@ struct GraphView: View {
                 )
 
                 CustomSegmentedControl(selectedType: $graphViewModel.selectedType)
+                    .animation(.snappy, value: graphViewModel.selectedType)
             }
             .padding(.horizontal, 16)
             .padding(.top, 4)
@@ -116,6 +116,7 @@ struct GraphView: View {
             }
             .padding(.horizontal, 16)
             .padding(.top, 4)
+            .animation(.snappy, value: graphViewModel.categorySummaries.map(\.id))
         }
     }
 
@@ -132,11 +133,13 @@ struct GraphView: View {
     }
 
     private var categoryListView: some View {
-        VStack(spacing: 0) {
-            ForEach(graphViewModel.categorySummaries) { summary in
-                categoryRow(summary: summary)
+        let summaries = graphViewModel.categorySummaries
 
-                if summary.id != graphViewModel.categorySummaries.last?.id {
+        return VStack(spacing: 0) {
+            ForEach(summaries.indices, id: \.self) { index in
+                categoryRow(summary: summaries[index])
+
+                if index < summaries.count - 1 {
                     Divider()
                         .padding(.leading, 44)
                 }
@@ -175,6 +178,7 @@ struct GraphView: View {
             .padding(.vertical, 12)
             .padding(.horizontal, 16)
             .background(Color(.systemBackground))
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
@@ -213,7 +217,7 @@ struct GraphView: View {
     private var categoryInputOverlay: some View {
         ZStack {
             if categoryInputViewModel.isPresentInputView {
-                Color.black.opacity(0.3)
+                Color(.label).opacity(0.4)
                     .ignoresSafeArea()
                     .transition(.opacity)
             }
