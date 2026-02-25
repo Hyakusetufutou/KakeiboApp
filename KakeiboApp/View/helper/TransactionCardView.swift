@@ -13,20 +13,12 @@ struct TransactionCardView: View {
     var category: CategoryModel?
     var onDelete: (TransactionModel) -> Void
 
-    @Environment(\.colorScheme) var colorScheme
-
     var body: some View {
         SwipeAction(cornerRadius: 10) {
             HStack(spacing: 12) {
-                // カテゴリアイコン
                 categoryIcon
-
-                // トランザクション情報
                 transactionInfo
-
                 Spacer()
-
-                // 金額
                 amountText
             }
             .padding(.horizontal, 15)
@@ -40,7 +32,7 @@ struct TransactionCardView: View {
     // MARK: - Components
 
     private var categoryIcon: some View {
-        Text("\(category?.name.prefix(1) ?? "?")")
+        Text(category?.name.prefix(1).description ?? "?")
             .font(.title)
             .fontWeight(.semibold)
             .foregroundStyle(.white)
@@ -66,7 +58,7 @@ struct TransactionCardView: View {
                     .font(.caption2)
                     .foregroundStyle(.secondary)
 
-                if let category = category {
+                if let category {
                     Text(category.name)
                         .font(.caption2)
                         .padding(.horizontal, 6)
@@ -82,32 +74,20 @@ struct TransactionCardView: View {
         Text(currencyString(transaction.amount, allowedDigits: 0))
             .font(.callout)
             .fontWeight(.semibold)
-            .foregroundStyle(transaction.type == .income ? .green : .red)
+            .foregroundStyle(transaction.type == .income ? Color.income : Color.expense)
     }
 
     private var cardBackground: some View {
         RoundedRectangle(cornerRadius: 10, style: .continuous)
             .fill(Color(.systemBackground))
-            .shadow(
-                color: colorScheme == .dark ? .clear : .black.opacity(0.05),
-                radius: 2,
-                y: 1
-            )
+            .shadow(color: Color(.label).opacity(0.06), radius: 2, y: 1)
     }
 }
 
 #Preview("Light Mode") {
     VStack(spacing: 8) {
-        TransactionCardView(
-            transaction: .mock1,
-            category: .mock1,
-            onDelete: { _ in }
-        )
-        TransactionCardView(
-            transaction: .mock2,
-            category: .mock2,
-            onDelete: { _ in }
-        )
+        TransactionCardView(transaction: .mock1, category: .mock1, onDelete: { _ in })
+        TransactionCardView(transaction: .mock2, category: .mock2, onDelete: { _ in })
     }
     .padding()
     .background(Color(.systemGroupedBackground))
@@ -116,16 +96,8 @@ struct TransactionCardView: View {
 
 #Preview("Dark Mode") {
     VStack(spacing: 8) {
-        TransactionCardView(
-            transaction: .mock1,
-            category: .mock1,
-            onDelete: { _ in }
-        )
-        TransactionCardView(
-            transaction: .mock2,
-            category: .mock2,
-            onDelete: { _ in }
-        )
+        TransactionCardView(transaction: .mock1, category: .mock1, onDelete: { _ in })
+        TransactionCardView(transaction: .mock2, category: .mock2, onDelete: { _ in })
     }
     .padding()
     .background(Color(.systemGroupedBackground))

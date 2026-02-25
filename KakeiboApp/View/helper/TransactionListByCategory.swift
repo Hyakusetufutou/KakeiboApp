@@ -15,58 +15,41 @@ struct TransactionListByCategory: View {
     let categoryID: UUID
     let onDeleteTransaction: (TransactionModel) -> Void
 
-    var categorySummary: CategorySummary? {
-        graphViewModel.categorySummaries.first {
-            $0.categoryID == categoryID
-        }
+    private var categorySummary: CategorySummary? {
+        graphViewModel.categorySummaries.first { $0.categoryID == categoryID }
     }
 
     var body: some View {
-        NavigationStack {
-
-            VStack {
-                if let summary = categorySummary {
-                    VStack {
-                        header(summary)
-                        transactionList(summary.transactions)
-                    }
-                } else {
-                    ZStack {
-                        Color(.systemGroupedBackground)
-                            .ignoresSafeArea()
-
-                        VStack {
-                            Text("取引なし")
-                                .font(.subheadline)
-                                .foregroundStyle(.gray)
-                            Image(systemName: "xmark.seal.fill")
-                                .font(.custom("", size: 100))
-                        }
-                    }
+        Group {
+            if let summary = categorySummary {
+                VStack(spacing: 0) {
+                    header(summary)
+                        .padding(.horizontal, 16)
+                    transactionList(summary.transactions)
                 }
+            } else {
+                EmptyStateView(icon: "tray", message: "取引がありません")
             }
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Text(graphViewModel.findCategory(id: categoryID)?.name ?? "")
-                        .font(.title2)
-                        .fontWeight(.bold)
-                }
+        }
+        .background(Color(.systemGroupedBackground))
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                Text(graphViewModel.findCategory(id: categoryID)?.name ?? "")
+                    .font(.title2)
+                    .fontWeight(.bold)
             }
-            //            .toolbarBackground(categorySummary.color, for: .navigationBar)
-            //            .toolbarBackground(.visible, for: .navigationBar)
-            .padding(.horizontal, 16)
-            .background(Color(.systemGroupedBackground))
-            .alert("エラー", isPresented: .constant(graphViewModel.errorMessage != nil)) {
-                Button("OK") {}
-            } message: {
-                if let errorMessage = graphViewModel.errorMessage {
-                    Text(errorMessage)
-                }
+        }
+        .alert("エラー", isPresented: errorAlertBinding) {
+            Button("OK") { graphViewModel.clearError() }
+        } message: {
+            if let errorMessage = graphViewModel.errorMessage {
+                Text(errorMessage)
             }
         }
     }
 
-    @ViewBuilder
+    // MARK: - Components
+
     private func header(_ summary: CategorySummary) -> some View {
         HStack {
             Text("合計金額")
@@ -82,12 +65,10 @@ struct TransactionListByCategory: View {
         .padding(.vertical, 12)
     }
 
-    @ViewBuilder
     private func transactionList(_ transactions: [TransactionModel]) -> some View {
         ScrollView {
-            ForEach(transactions) {
-                transaction in
-                NavigationLink(value: transaction) {
+            LazyVStack(spacing: 8) {
+                ForEach(transactions) { transaction in
                     TransactionCardView(
                         transaction: transaction,
                         category: graphViewModel.findCategory(id: transaction.categoryId),
@@ -97,8 +78,18 @@ struct TransactionListByCategory: View {
                         transactionInputViewModel.presentInputView(for: transaction)
                     }
                 }
-                .buttonStyle(.plain)
             }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
         }
+    }
+
+    // MARK: - Helper
+
+    private var errorAlertBinding: Binding<Bool> {
+        Binding(
+            get: { graphViewModel.errorMessage != nil },
+            set: { if !$0 { graphViewModel.clearError() } }
+        )
     }
 }

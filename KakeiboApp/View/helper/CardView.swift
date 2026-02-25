@@ -11,55 +11,53 @@ import SwiftUI
 struct CardView: View {
     var income: Double
     var expense: Double
+
+    private var balance: Double { income - expense }
+
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 15)
                 .fill(.background)
 
             VStack(spacing: 0) {
+                // 収支合計
                 HStack(spacing: 12) {
-                    Text("\(currencyString(income - expense))")
+                    Text(currencyString(balance))
                         .font(.title.bold())
-                        .foregroundStyle(Color.primary)
+                        .foregroundStyle(.primary)
 
                     Image(
-                        systemName: expense > income
-                            ? "chart.line.downtrend.xyaxis" : "chart.line.uptrend.xyaxis"
+                        systemName: balance >= 0
+                            ? "chart.line.uptrend.xyaxis"
+                            : "chart.line.downtrend.xyaxis"
                     )
                     .font(.title3)
-                    .foregroundStyle(expense > income ? .red : .green)
+                    .foregroundStyle(balance >= 0 ? Color.income : Color.expense)
                 }
                 .padding(.bottom, 25)
 
+                // 収入・支出の内訳
                 HStack(spacing: 0) {
                     ForEach(TransactionType.allCases, id: \.rawValue) { type in
-                        let symbolImage = type == .income ? "arrow.up" : "arrow.down"
-                        let tint = type == .income ? Color.green : Color.red
-
                         HStack(spacing: 10) {
-                            Image(systemName: symbolImage)
+                            Image(systemName: type == .income ? "arrow.up" : "arrow.down")
                                 .font(.callout.bold())
-                                .foregroundStyle(tint)
+                                .foregroundStyle(tint(for: type))
                                 .frame(width: 35, height: 35)
                                 .background {
                                     Circle()
-                                        .fill(tint.opacity(0.25).gradient)
+                                        .fill(tint(for: type).opacity(0.25).gradient)
                                 }
 
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(type.rawValue)
                                     .font(.caption2)
-                                    .foregroundStyle(.gray)
+                                    .foregroundStyle(.secondary)
 
-                                Text(
-                                    currencyString(
-                                        type == .income ? income : expense,
-                                        allowedDigits: 0
-                                    )
-                                )
-                                .font(.callout)
-                                .fontWeight(.semibold)
-                                .foregroundStyle(Color.primary)
+                                Text(currencyString(amount(for: type), allowedDigits: 0))
+                                    .font(.callout)
+                                    .fontWeight(.semibold)
+                                    .foregroundStyle(.primary)
                             }
 
                             if type == .income {
@@ -72,6 +70,16 @@ struct CardView: View {
             .padding([.horizontal, .bottom], 25)
             .padding(.top, 15)
         }
+    }
+
+    // MARK: - Helpers
+
+    private func tint(for type: TransactionType) -> Color {
+        type == .income ? .income : .expense
+    }
+
+    private func amount(for type: TransactionType) -> Double {
+        type == .income ? income : expense
     }
 }
 

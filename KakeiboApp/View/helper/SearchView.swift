@@ -33,9 +33,7 @@ struct SearchView: View {
                 prompt: "取引を検索"
             )
             .alert("エラー", isPresented: errorAlertBinding) {
-                Button("OK") {
-                    searchViewModel.clearError()
-                }
+                Button("OK") { searchViewModel.clearError() }
             } message: {
                 if let errorMessage = searchViewModel.errorMessage {
                     Text(errorMessage)
@@ -49,11 +47,11 @@ struct SearchView: View {
     @ViewBuilder
     private var contentView: some View {
         if searchViewModel.searchText.isEmpty {
-            emptySearchView
+            EmptyStateView(icon: "magnifyingglass", message: "キーワードを入力してください")
         } else if searchViewModel.isLoading {
             loadingView
         } else if searchViewModel.resultTransactions.isEmpty {
-            noResultsView
+            EmptyStateView(icon: "doc.text.magnifyingglass", message: "該当する取引がありません")
         } else {
             searchResults
         }
@@ -69,9 +67,7 @@ struct SearchView: View {
                         transaction: transaction,
                         category: searchViewModel.findCategory(id: transaction.categoryId),
                         onDelete: { transaction in
-                            Task {
-                                await searchViewModel.deleteTransaction(transaction)
-                            }
+                            Task { await searchViewModel.deleteTransaction(transaction) }
                         }
                     )
                     .onTapGesture {
@@ -83,39 +79,12 @@ struct SearchView: View {
         }
     }
 
-    // MARK: - Empty States
-
-    private var emptySearchView: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "magnifyingglass")
-                .font(.system(size: 50))
-                .foregroundStyle(.secondary.opacity(0.5))
-
-            Text("キーワードを入力してください")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
+    // MARK: - Loading View
 
     private var loadingView: some View {
         VStack(spacing: 12) {
             ProgressView()
-
             Text("検索中...")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-
-    private var noResultsView: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "doc.text.magnifyingglass")
-                .font(.system(size: 50))
-                .foregroundStyle(.secondary.opacity(0.5))
-
-            Text("該当する取引がありません")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }

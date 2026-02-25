@@ -12,44 +12,47 @@ struct DaySummaryView: View {
     let income: Double
     let expense: Double
 
-    var balance: Double {
-        income - expense
-    }
+    private var balance: Double { income - expense }
 
     var body: some View {
         HStack(spacing: 8) {
-            VStack {
-                Text("収入")
-                    .font(.caption)
-                Text(currencyString(income, allowedDigits: 0))
-                    .fontWeight(.semibold)
-                    .foregroundStyle(.green)
-            }
+            summaryColumn(
+                title: "収入",
+                value: currencyString(income, allowedDigits: 0),
+                color: .income
+            )
 
             Spacer()
 
-            VStack {
-                Text("支出")
-                    .font(.caption)
-                Text(currencyString(expense, allowedDigits: 0))
-                    .fontWeight(.semibold)
-                    .foregroundStyle(.red)
-            }
+            summaryColumn(
+                title: "支出",
+                value: currencyString(expense, allowedDigits: 0),
+                color: .expense
+            )
 
             Spacer()
 
-            VStack {
-                Text("合計")
-                    .font(.caption)
-                Text(currencyString(balance, allowedDigits: 0))
-                    .fontWeight(.semibold)
-                    .foregroundStyle(balance >= 0 ? .green : .red)
-            }
+            summaryColumn(
+                title: "合計",
+                value: currencyString(balance, allowedDigits: 0),
+                color: balance >= 0 ? .income : .expense
+            )
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
         .background(Color(.secondarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+
+    private func summaryColumn(title: String, value: String, color: Color) -> some View {
+        VStack(spacing: 2) {
+            Text(title)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Text(value)
+                .fontWeight(.semibold)
+                .foregroundStyle(color)
+        }
     }
 }
 

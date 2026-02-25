@@ -13,7 +13,7 @@ struct NoTransactionView: View {
         VStack(spacing: 8) {
             Image(systemName: "tray")
                 .font(.system(size: 56))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.tertiary)
 
             Text("取引がありません")
                 .font(.subheadline)

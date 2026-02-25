@@ -92,9 +92,21 @@ struct CalendarView: View {
             date: $calendarViewModel.currentDate,
             onPreviousMonth: {
                 calendarViewModel.changeMonth(by: -1)
+                calendarViewModel.currentDate =
+                    Calendar.current.date(
+                        byAdding: .month,
+                        value: -1,
+                        to: calendarViewModel.currentDate
+                    ) ?? calendarViewModel.currentDate
             },
             onNextMonth: {
                 calendarViewModel.changeMonth(by: 1)
+                calendarViewModel.currentDate =
+                    Calendar.current.date(
+                        byAdding: .month,
+                        value: 1,
+                        to: calendarViewModel.currentDate
+                    ) ?? calendarViewModel.currentDate
             }
         )
     }

@@ -12,7 +12,7 @@ struct ExpensesCardView: View {
     let income: Double
     let expense: Double
 
-    var balance: Double { income - expense }
+    private var balance: Double { income - expense }
 
     var body: some View {
         VStack(spacing: 12) {
@@ -20,33 +20,42 @@ struct ExpensesCardView: View {
                 .font(.headline)
 
             HStack {
-                VStack {
+                VStack(spacing: 4) {
                     Text("収入")
-                    Text("\(Int(income))円")
-                        .foregroundStyle(.green)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text(currencyString(income, allowedDigits: 0))
+                        .foregroundStyle(Color.income)
                 }
 
                 Spacer()
 
-                VStack {
+                VStack(spacing: 4) {
                     Text("支出")
-                    Text("\(Int(expense))円")
-                        .foregroundStyle(.red)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text(currencyString(expense, allowedDigits: 0))
+                        .foregroundStyle(Color.expense)
                 }
 
                 Spacer()
 
-                VStack {
+                VStack(spacing: 4) {
                     Text("残高")
-                    Text("\(Int(balance))円")
-                        .foregroundStyle(balance >= 0 ? .primary : Color.red)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text(currencyString(balance, allowedDigits: 0))
+                        .foregroundStyle(balance >= 0 ? Color.income : Color.expense)
                 }
             }
         }
         .padding()
         .frame(maxWidth: .infinity)
-        .background(RoundedRectangle(cornerRadius: 16).fill(Color(.systemBackground)))
-        .shadow(radius: 4)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(.systemBackground))
+                .shadow(color: Color(.label).opacity(0.08), radius: 4, y: 2)
+        )
         .padding(.horizontal)
     }
 }

@@ -8,8 +8,6 @@
 
 import SwiftUI
 
-import SwiftUI
-
 struct SwipeAction<Content: View>: View {
     @State private var offset: CGFloat = 0
     @State private var isSwiped = false

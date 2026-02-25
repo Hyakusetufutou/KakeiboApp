@@ -11,31 +11,19 @@ import SwiftUI
 struct CategoryInputView: View {
     @ObservedObject var categoryInputViewModel: CategoryInputViewModel
     @FocusState private var isFocused: Bool
-    @Environment(\.colorScheme) var colorScheme
 
     var body: some View {
         VStack(spacing: 16) {
-            // Header
             headerView
-
-            // Name Input
             nameInputSection
-
-            // Color Picker
             colorPickerSection
-
-            // Actions
             actionButtons
         }
         .padding(20)
         .background(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .fill(Color(.systemBackground))
-                .shadow(
-                    color: colorScheme == .dark ? .clear : .black.opacity(0.1),
-                    radius: 20,
-                    y: 10
-                )
+                .shadow(color: Color(.label).opacity(0.10), radius: 20, y: 10)
         )
         .padding(.horizontal, 24)
         .alert("エラー", isPresented: errorAlertBinding) {
@@ -114,6 +102,7 @@ struct CategoryInputView: View {
 
     private var actionButtons: some View {
         HStack(spacing: 12) {
+            // キャンセル
             Button {
                 isFocused = false
                 categoryInputViewModel.cancel()
@@ -128,6 +117,7 @@ struct CategoryInputView: View {
                     .foregroundStyle(.primary)
             }
 
+            // 保存・更新
             Button {
                 Task {
                     isFocused = false
@@ -139,12 +129,10 @@ struct CategoryInputView: View {
                     .frame(maxWidth: .infinity, minHeight: 50)
                     .background(
                         RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .fill(
-                                categoryInputViewModel.name.isEmpty
-                                    ? Color.blue.opacity(0.5) : Color.blue
-                            )
+                            .fill(Color.accentColor)
                     )
                     .foregroundStyle(.white)
+                    .opacity(categoryInputViewModel.name.isEmpty ? 0.5 : 1)
             }
             .disabled(categoryInputViewModel.name.isEmpty)
         }
@@ -160,14 +148,10 @@ struct CategoryInputView: View {
 
 #Preview("Light Mode") {
     ZStack {
-        Color(.systemGroupedBackground)
-            .ignoresSafeArea()
-
+        Color(.systemGroupedBackground).ignoresSafeArea()
         CategoryInputView(
             categoryInputViewModel: CategoryInputViewModel(
-                categoryStore: CategoryStore(
-                    repository: CategoryRepository()
-                )
+                categoryStore: CategoryStore(repository: CategoryRepository())
             )
         )
     }
@@ -176,14 +160,10 @@ struct CategoryInputView: View {
 
 #Preview("Dark Mode") {
     ZStack {
-        Color(.systemGroupedBackground)
-            .ignoresSafeArea()
-
+        Color(.systemGroupedBackground).ignoresSafeArea()
         CategoryInputView(
             categoryInputViewModel: CategoryInputViewModel(
-                categoryStore: CategoryStore(
-                    repository: CategoryRepository()
-                )
+                categoryStore: CategoryStore(repository: CategoryRepository())
             )
         )
     }
