@@ -11,6 +11,7 @@ import SwiftUI
 struct CustomSegmentedControl: View {
     @Namespace private var animation
     @Binding var selectedType: TransactionType
+
     var body: some View {
         HStack(spacing: 0) {
             ForEach(TransactionType.allCases, id: \.self) { type in

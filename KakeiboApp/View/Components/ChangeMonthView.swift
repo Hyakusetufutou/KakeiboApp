@@ -12,16 +12,15 @@ struct ChangeMonthView: View {
     @Binding var date: Date
     var onPreviousMonth: () -> Void
     var onNextMonth: () -> Void
+
     var body: some View {
-        // MARK: - 月切り替え
         HStack {
-            Button {
-                onPreviousMonth()
-            } label: {
+            Button(action: onPreviousMonth) {
                 Image(systemName: "chevron.left")
                     .font(.title3)
                     .foregroundStyle(.primary)
             }
+            .buttonStyle(.plain)
 
             Spacer()
 
@@ -30,13 +29,12 @@ struct ChangeMonthView: View {
 
             Spacer()
 
-            Button {
-                onNextMonth()
-            } label: {
+            Button(action: onNextMonth) {
                 Image(systemName: "chevron.right")
                     .font(.title3)
                     .foregroundStyle(.primary)
             }
+            .buttonStyle(.plain)
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 8)

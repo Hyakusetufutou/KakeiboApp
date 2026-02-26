@@ -110,7 +110,7 @@ actor TransactionRepository: TransactionRepositoryProtocol {
     func update(_ model: TransactionModel) async throws {
         try await container.performBackgroundTask { context in
             // Fetch existing transaction
-            var entity = try self.fetchEntity(by: model.id, in: context)
+            let entity = try self.fetchEntity(by: model.id, in: context)
 
             // Fetch new category
             let category = try self.fetchCategory(by: model.categoryId, in: context)

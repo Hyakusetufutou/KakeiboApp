@@ -11,32 +11,18 @@ import SwiftUI
 struct PieChartView: View {
     let data: [CategorySummary]
 
-    var total: Double {
-        data.reduce(0) { $0 + $1.totalAmount }
-    }
-
-    var angles: [Angle] {
-        var angles: [Angle] = []
-        var currentAngle: Double = 0
-        for item in data {
-            let ratio = item.totalAmount / total
-            let angle = ratio * 360
-            angles.append(.degrees(currentAngle))
-            currentAngle += angle
-        }
-        return angles
-    }
-
     var body: some View {
         GeometryReader { proxy in
             let size = proxy.size
             let center = CGPoint(x: size.width / 2, y: size.height / 2)
             let radius = min(size.width, size.height) / 2
+            let angles = makeAngles()
+
             ZStack {
-                ForEach(Array(zip(data.indices, data)), id: \.1.id) { (index, item) in
+                ForEach(Array(data.enumerated()), id: \.element.id) { index, item in
                     let startAngle = angles[index]
                     let endAngle = index < data.count - 1 ? angles[index + 1] : .degrees(360)
-                    let midAngle = (startAngle + endAngle) / 2
+                    let midAngle = Angle(degrees: (startAngle.degrees + endAngle.degrees) / 2)
                     let adjustedAngle = midAngle - .degrees(90)
                     let labelRadius = radius * 0.6
 
@@ -46,6 +32,7 @@ struct PieChartView: View {
                     if endAngle - startAngle > .degrees(18) {
                         Text(item.categoryName)
                             .font(.callout)
+                            .foregroundStyle(.primary)
                             .position(
                                 x: center.x + CGFloat(cos(adjustedAngle.radians)) * labelRadius,
                                 y: center.y + CGFloat(sin(adjustedAngle.radians)) * labelRadius
@@ -55,7 +42,22 @@ struct PieChartView: View {
             }
         }
     }
+
+    private func makeAngles() -> [Angle] {
+        let total = data.reduce(0) { $0 + $1.totalAmount }
+        guard total > 0 else { return Array(repeating: .zero, count: data.count) }
+
+        var angles: [Angle] = []
+        var current: Double = 0
+        for item in data {
+            angles.append(.degrees(current))
+            current += (item.totalAmount / total) * 360
+        }
+        return angles
+    }
 }
+
+// MARK: - PieSlice
 
 struct PieSlice: Shape {
     let startAngle: Angle
