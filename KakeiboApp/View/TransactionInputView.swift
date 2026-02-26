@@ -14,7 +14,6 @@ struct TransactionInputView: View {
 
     @Namespace private var animation
     @FocusState private var isNumberPadActive: Bool
-    @Environment(\.colorScheme) var colorScheme
 
     var body: some View {
         NavigationStack {
@@ -57,19 +56,11 @@ struct TransactionInputView: View {
     // MARK: - Input Fields
 
     private var titleField: some View {
-        customTextField(
-            "タイトル",
-            hint: "タイトル",
-            value: $transactionInputViewModel.title
-        )
+        customTextField("タイトル", hint: "タイトル", value: $transactionInputViewModel.title)
     }
 
     private var memoField: some View {
-        customTextField(
-            "メモ",
-            hint: "メモ",
-            value: $transactionInputViewModel.memo
-        )
+        customTextField("メモ", hint: "メモ", value: $transactionInputViewModel.memo)
     }
 
     private var amountField: some View {
@@ -137,15 +128,12 @@ struct TransactionInputView: View {
 
             Spacer()
 
-            VStack(spacing: 2) {
-                Image(systemName: "arrowtriangle.up.fill")
-                Image(systemName: "arrowtriangle.down.fill")
-            }
-            .font(.system(size: 8))
-            .padding(.trailing, 12)
-            .opacity(0.5)
+            Image(systemName: "chevron.up.chevron.down")
+                .font(.system(size: 10))
+                .padding(.trailing, 12)
+                .opacity(0.5)
         }
-        .foregroundStyle(colorScheme == .dark ? .white : .black)
+        .foregroundStyle(.primary)
         .frame(height: 44)
         .background(.background, in: .rect(cornerRadius: 10))
     }
@@ -185,9 +173,7 @@ struct TransactionInputView: View {
 
     private var saveButton: some View {
         Button {
-            Task {
-                await transactionInputViewModel.save()
-            }
+            Task { await transactionInputViewModel.save() }
         } label: {
             Image(systemName: "checkmark")
                 .font(.headline)
@@ -195,7 +181,7 @@ struct TransactionInputView: View {
                 .frame(width: 44, height: 44)
         }
         .disabled(isSaveButtonDisabled)
-        .opacity(transactionInputViewModel.isFormValid ? 1.0 : 0.2)
+        .opacity(isSaveButtonDisabled ? 0.2 : 1.0)
     }
 
     // MARK: - Overlay
@@ -203,7 +189,7 @@ struct TransactionInputView: View {
     private var categoryInputOverlay: some View {
         ZStack {
             if categoryInputViewModel.isPresentInputView {
-                Color.gray.opacity(0.5)
+                Color(.label).opacity(0.4)
                     .ignoresSafeArea()
                     .transition(.opacity)
             }
@@ -226,7 +212,7 @@ struct TransactionInputView: View {
     private func sectionHeader(_ text: String) -> some View {
         Text(text)
             .font(.caption)
-            .foregroundStyle(.gray)
+            .foregroundStyle(.secondary)
             .hSpacing(.leading)
     }
 

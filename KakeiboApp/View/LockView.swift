@@ -1,6 +1,6 @@
 //
 //  LockView.swift
-//  LockSwiftUIView
+//  KakeiboApp
 //
 //  Created by Hyakusetufutou on 2025/12/10
 //
@@ -17,46 +17,30 @@ struct LockView: View {
 
     var body: some View {
         ZStack {
-            Color.black.opacity(0.9)
+            Rectangle()
+                .fill(.ultraThinMaterial)
+                .ignoresSafeArea()
+
+            Color(.label).opacity(0.55)
                 .ignoresSafeArea()
 
             VStack(spacing: 30) {
                 Image(systemName: "lock.fill")
                     .font(.system(size: 80))
-                    .foregroundColor(.white)
+                    .foregroundStyle(Color(.systemBackground))
 
                 Text("アプリがロックされています")
                     .font(.title2)
-                    .foregroundColor(.white)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(Color(.systemBackground))
 
-                Button(action: {
-                    if !isAuthenticating {
-                        authenticate()
-                    }
-                }) {
-                    HStack {
-                        if isAuthenticating {
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                        } else {
-                            Image(systemName: "faceid")
-                            Text("ロックを解除")
-                        }
-                    }
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .padding()
-                    .frame(minWidth: 180)
-                    .background(isAuthenticating ? Color.gray : Color.blue)
-                    .cornerRadius(10)
-                }
-                .disabled(isAuthenticating)
+                unlockButton
 
                 if showError {
                     Text(errorMessage)
-                        .foregroundColor(.red)
+                        .foregroundStyle(.red)
                         .multilineTextAlignment(.center)
-                        .padding()
+                        .padding(.horizontal)
                 }
             }
         }
@@ -67,8 +51,37 @@ struct LockView: View {
         }
     }
 
+    // MARK: - Unlock Button
+
+    private var unlockButton: some View {
+        Button {
+            if !isAuthenticating { authenticate() }
+        } label: {
+            HStack(spacing: 8) {
+                if isAuthenticating {
+                    ProgressView()
+                        .progressViewStyle(.circular)
+                        .tint(Color(.systemBackground))
+                } else {
+                    Image(systemName: "faceid")
+                    Text("ロックを解除")
+                }
+            }
+            .font(.headline)
+            .foregroundStyle(Color(.systemBackground))
+            .padding()
+            .frame(minWidth: 180)
+            .background(
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(isAuthenticating ? Color(.systemGray) : Color.accentColor)
+            )
+        }
+        .disabled(isAuthenticating)
+    }
+
+    // MARK: - Authentication
+
     private func authenticate() {
-        // 既に認証中の場合は処理しない(念のため入れる)
         guard !isAuthenticating else { return }
 
         isAuthenticating = true
@@ -78,36 +91,27 @@ struct LockView: View {
         let context = LAContext()
         var error: NSError?
 
-        // 生体認証が利用可能かチェック
-        if context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) {
-            let reason = "アプリのロックを解除するために認証が必要です"
-
-            context.evaluatePolicy(
+        let policy: LAPolicy =
+            context.canEvaluatePolicy(
                 .deviceOwnerAuthenticationWithBiometrics,
-                localizedReason: reason
-            ) { success, authenticationError in
-                DispatchQueue.main.async {
-                    handleAuthenticationResult(success: success, error: authenticationError)
-                }
-            }
-        } else {
-            // 生体認証が利用できない場合はパスコードで認証
-            if context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) {
-                let reason = "アプリのロックを解除するために認証が必要です"
+                error: &error
+            ) ? .deviceOwnerAuthenticationWithBiometrics : .deviceOwnerAuthentication
 
-                context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: reason) {
-                    success,
-                    authenticationError in
-                    DispatchQueue.main.async {
-                        handleAuthenticationResult(success: success, error: authenticationError)
-                    }
-                }
-            } else {
-                DispatchQueue.main.async {
-                    isAuthenticating = false
-                    showError = true
-                    errorMessage = "デバイスで認証が利用できません"
-                }
+        guard context.canEvaluatePolicy(policy, error: &error) else {
+            DispatchQueue.main.async {
+                isAuthenticating = false
+                showError = true
+                errorMessage = "デバイスで認証が利用できません"
+            }
+            return
+        }
+
+        context.evaluatePolicy(
+            policy,
+            localizedReason: "アプリのロックを解除するために認証が必要です"
+        ) { success, authError in
+            DispatchQueue.main.async {
+                handleAuthenticationResult(success: success, error: authError)
             }
         }
     }
@@ -116,52 +120,36 @@ struct LockView: View {
         isAuthenticating = false
 
         if success {
-            withAnimation {
-                isUnlocked = true
-            }
-        } else {
-            if let error = error as? LAError {
-                // ユーザーがキャンセルした場合はエラーメッセージを表示しない
-                if error.code == .userCancel {
-                    showError = false
-                    return
-                }
-
-                // システムキャンセル（アプリ切り替えなど）の場合も無視
-                if error.code == .systemCancel {
-                    showError = false
-                    return
-                }
-
-                showError = true
-                errorMessage = getErrorMessage(error)
-            } else {
-                showError = true
-                errorMessage = "認証に失敗しました"
-            }
+            withAnimation { isUnlocked = true }
+            return
         }
+
+        guard let laError = error as? LAError else {
+            showError = true
+            errorMessage = "認証に失敗しました"
+            return
+        }
+
+        if laError.code == .userCancel || laError.code == .systemCancel {
+            showError = false
+            return
+        }
+
+        showError = true
+        errorMessage = errorMessage(for: laError)
     }
 
-    private func getErrorMessage(_ error: LAError) -> String {
+    private func errorMessage(for error: LAError) -> String {
         switch error.code {
-        case .authenticationFailed:
-            return "認証に失敗しました"
-        case .userCancel:
-            return "認証がキャンセルされました"
-        case .userFallback:
-            return "パスコードを使用してください"
-        case .biometryNotAvailable:
-            return "生体認証が利用できません"
-        case .biometryNotEnrolled:
-            return "生体認証が設定されていません"
-        case .biometryLockout:
-            return "試行回数が多すぎます。パスコードで解除してください"
-        case .passcodeNotSet:
-            return "デバイスにパスコードが設定されていません"
-        case .systemCancel:
-            return ""  // システムキャンセルは通常表示しない
-        default:
-            return "認証エラーが発生しました（コード: \(error.code.rawValue)）"
+        case .authenticationFailed: return "認証に失敗しました"
+        case .userCancel: return "認証がキャンセルされました"
+        case .userFallback: return "パスコードを使用してください"
+        case .biometryNotAvailable: return "生体認証が利用できません"
+        case .biometryNotEnrolled: return "生体認証が設定されていません"
+        case .biometryLockout: return "試行回数が多すぎます。パスコードで解除してください"
+        case .passcodeNotSet: return "デバイスにパスコードが設定されていません"
+        case .systemCancel: return ""
+        default: return "認証エラーが発生しました（コード: \(error.code.rawValue)）"
         }
     }
 }
