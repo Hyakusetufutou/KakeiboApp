@@ -97,7 +97,7 @@ struct SearchView: View {
         Button {
             searchViewModel.isPresented = false
         } label: {
-            Image(systemName: "xmark.circle.fill")
+            Image(systemName: "xmark")
                 .font(.title3)
                 .foregroundStyle(.secondary)
                 .symbolRenderingMode(.hierarchical)
