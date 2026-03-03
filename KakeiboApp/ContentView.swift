@@ -25,8 +25,7 @@ struct ContentView: View {
     @StateObject private var categoryInputViewModel: CategoryInputViewModel
     @StateObject private var searchViewModel: SearchViewModel
 
-    init() {
-        let factory = ViewModelFactory()
+    init(factory: ViewModelFactory) {
         _homeViewModel = StateObject(wrappedValue: factory.homeViewModel)
         _calendarViewModel = StateObject(wrappedValue: factory.calendarViewModel)
         _graphViewModel = StateObject(wrappedValue: factory.graphViewModel)
@@ -136,7 +135,7 @@ extension ContentView {
 }
 
 #Preview {
-    ContentView()
+    ContentView(factory: ViewModelFactory())
         .environmentObject(ViewModelFactory())
         .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
 }
