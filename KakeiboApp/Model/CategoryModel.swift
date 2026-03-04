@@ -24,6 +24,62 @@ struct CategoryModel: Identifiable, Hashable {
     }
 }
 
+extension CategoryModel {
+    static let defaults: [CategoryModel] = [
+        // 支出
+        CategoryModel(
+            id: UUID(uuidString: "A0000001-0000-0000-0000-000000000000")!,
+            name: "食費",
+            color: .orange,
+            type: .expense,
+            isDefault: true
+        ),
+        CategoryModel(
+            id: UUID(uuidString: "A0000002-0000-0000-0000-000000000000")!,
+            name: "交通費",
+            color: .blue,
+            type: .expense,
+            isDefault: true
+        ),
+        CategoryModel(
+            id: UUID(uuidString: "A0000003-0000-0000-0000-000000000000")!,
+            name: "日用品",
+            color: .green,
+            type: .expense,
+            isDefault: true
+        ),
+        CategoryModel(
+            id: UUID(uuidString: "A0000004-0000-0000-0000-000000000000")!,
+            name: "趣味",
+            color: .purple,
+            type: .expense,
+            isDefault: true
+        ),
+        CategoryModel(
+            id: UUID(uuidString: "A0000005-0000-0000-0000-000000000000")!,
+            name: "その他",
+            color: .red,
+            type: .expense,
+            isDefault: true
+        ),
+        // 収入
+        CategoryModel(
+            id: UUID(uuidString: "B0000001-0000-0000-0000-000000000000")!,
+            name: "給与",
+            color: .teal,
+            type: .income,
+            isDefault: true
+        ),
+        CategoryModel(
+            id: UUID(uuidString: "B0000002-0000-0000-0000-000000000000")!,
+            name: "副業",
+            color: .indigo,
+            type: .income,
+            isDefault: true
+        ),
+    ]
+}
+
 struct CategorySummary: Identifiable {
     var id: UUID { categoryID }
     let categoryID: UUID
@@ -41,7 +97,7 @@ extension CategoryEntity {
             name: self.name ?? "",
             color: AppTheme.stringToColor(self.color ?? "white"),
             type: TransactionType(rawValue: self.type ?? "支出") ?? .expense,
-            isDefault: false
+            isDefault: self.isDefault
         )
     }
 }

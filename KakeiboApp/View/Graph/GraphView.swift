@@ -9,20 +9,23 @@
 import SwiftUI
 
 struct GraphView: View {
-    @State private var isPresentCategoryList: Bool = false
+    @State private var isPresentCategoryList = false
 
     @ObservedObject private var graphViewModel: GraphViewModel
     @ObservedObject private var transactionInputViewModel: TransactionInputViewModel
     @ObservedObject private var categoryInputViewModel: CategoryInputViewModel
+    @ObservedObject private var categoryListViewModel: CategoryListViewModel
 
     init(
         graphViewModel: GraphViewModel,
         transactionInputViewModel: TransactionInputViewModel,
-        categoryInputViewModel: CategoryInputViewModel
+        categoryInputViewModel: CategoryInputViewModel,
+        categoryListViewModel: CategoryListViewModel
     ) {
         self.graphViewModel = graphViewModel
         self.transactionInputViewModel = transactionInputViewModel
         self.categoryInputViewModel = categoryInputViewModel
+        self.categoryListViewModel = categoryListViewModel
     }
 
     var body: some View {
@@ -57,13 +60,11 @@ struct GraphView: View {
         .sheet(isPresented: $isPresentCategoryList) {
             categoryListSheet
         }
-        .alert("エラー", isPresented: errorAlertBinding) {
-            Button("OK") {
-                graphViewModel.clearError()
-            }
+        .alert("エラー", isPresented: graphErrorAlertBinding) {
+            Button("OK") { graphViewModel.clearError() }
         } message: {
-            if let errorMessage = graphViewModel.errorMessage {
-                Text(errorMessage)
+            if let message = graphViewModel.errorMessage {
+                Text(message)
             }
         }
     }
@@ -156,9 +157,7 @@ struct GraphView: View {
                 transactionInputViewModel: transactionInputViewModel,
                 categoryID: summary.categoryID,
                 onDeleteTransaction: { transaction in
-                    Task {
-                        await graphViewModel.deleteTransaction(transaction)
-                    }
+                    Task { await graphViewModel.deleteTransaction(transaction) }
                 }
             )
         ) {
@@ -198,19 +197,19 @@ struct GraphView: View {
     private var categoryListSheet: some View {
         CategoryListView(
             categoryInputViewModel: categoryInputViewModel,
+            categoryListViewModel: categoryListViewModel,
             isPresentCategoryList: $isPresentCategoryList,
-            categories: $graphViewModel.categories,
-            onDeleteCategory: { category in
-                Task {
-                    await graphViewModel.deleteCategory(category)
-                }
-            },
             type: graphViewModel.selectedType
         )
         .interactiveDismissDisabled(true)
-        .overlay {
-            categoryInputOverlay
+        .alert("エラー", isPresented: categoryListErrorAlertBinding) {
+            Button("OK") { categoryListViewModel.clearError() }
+        } message: {
+            if let message = categoryListViewModel.errorMessage {
+                Text(message)
+            }
         }
+        .overlay { categoryInputOverlay }
         .animation(.snappy, value: categoryInputViewModel.isPresentInputView)
     }
 
@@ -234,12 +233,19 @@ struct GraphView: View {
         }
     }
 
-    // MARK: - Helper
+    // MARK: - Helpers
 
-    private var errorAlertBinding: Binding<Bool> {
+    private var graphErrorAlertBinding: Binding<Bool> {
         Binding(
             get: { graphViewModel.errorMessage != nil },
             set: { if !$0 { graphViewModel.clearError() } }
+        )
+    }
+
+    private var categoryListErrorAlertBinding: Binding<Bool> {
+        Binding(
+            get: { categoryListViewModel.errorMessage != nil },
+            set: { if !$0 { categoryListViewModel.clearError() } }
         )
     }
 }
@@ -249,6 +255,7 @@ struct GraphView: View {
     GraphView(
         graphViewModel: viewModelFactory.graphViewModel,
         transactionInputViewModel: viewModelFactory.transactionInputViewModel,
-        categoryInputViewModel: viewModelFactory.categoryInputViewModel
+        categoryInputViewModel: viewModelFactory.categoryInputViewModel,
+        categoryListViewModel: viewModelFactory.categoryListViewModel
     )
 }

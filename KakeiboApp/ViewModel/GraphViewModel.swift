@@ -12,17 +12,19 @@ import Combine
 
 @MainActor
 final class GraphViewModel: ObservableObject {
+    // MARK: - State
     @Published private(set) var categorySummaries: [CategorySummary] = []
     @Published private(set) var isLoading = false
     @Published private(set) var errorMessage: String?
     @Published private(set) var hasMoreData = true
 
-    @Published var categories: [CategoryModel] = []
+    @Published var selectedType: TransactionType = .expense
     @Published var dateRange: DateRange = DateRange(
         start: Date().startOfMonth,
         end: Date().endOfMonth
     )
-    @Published var selectedType: TransactionType = .expense
+
+    // MARK: - Computed Properties
 
     var startDate: Binding<Date> {
         Binding(
@@ -46,14 +48,15 @@ final class GraphViewModel: ObservableObject {
         selectedType == .income ? "収入合計" : "支出合計"
     }
 
+    // MARK: - Dependencies
     private let categoryStore: CategoryStoreProtocol
     private let transactionStore: TransactionStoreProtocol
     private var cancellables = Set<AnyCancellable>()
 
+    // MARK: - Init
     init(categoryStore: CategoryStoreProtocol, transactionStore: TransactionStoreProtocol) {
         self.categoryStore = categoryStore
         self.transactionStore = transactionStore
-        bindCategories()
         bindCategorySummaries()
         bindHasMoreData()
     }
@@ -70,17 +73,6 @@ final class GraphViewModel: ObservableObject {
 
         do {
             try await transactionStore.delete(transaction)
-        } catch {
-            errorMessage = "削除に失敗しました: \(error.localizedDescription)"
-        }
-    }
-
-    func deleteCategory(_ category: CategoryModel) async {
-        isLoading = true
-        defer { isLoading = false }
-
-        do {
-            try await categoryStore.delete(category)
         } catch {
             errorMessage = "削除に失敗しました: \(error.localizedDescription)"
         }
@@ -114,18 +106,6 @@ final class GraphViewModel: ObservableObject {
     }
 
     // MARK: - Private Methods
-
-    private func bindCategories() {
-        Publishers.CombineLatest(
-            categoryStore.categories,
-            $selectedType
-        )
-        .map { categories, selectedType in
-            categories.filter { $0.type == selectedType }
-        }
-        .receive(on: DispatchQueue.main)
-        .assign(to: &$categories)
-    }
 
     private func bindCategorySummaries() {
         Publishers.CombineLatest4(

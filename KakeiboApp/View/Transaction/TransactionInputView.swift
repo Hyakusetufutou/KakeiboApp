@@ -96,6 +96,8 @@ struct TransactionInputView: View {
             } label: {
                 categoryMenuLabel
             }
+            .buttonStyle(.plain)
+            .tint(.primary)
         }
     }
 

@@ -29,6 +29,7 @@ protocol CategoryStoreProtocol {
 final class CategoryStore: CategoryStoreProtocol {
     // MARK: - State
     @Published private var _categories: [CategoryModel] = []
+    @AppStorage("defaultCategoriesSeeded") private var isSeeded = false
 
     var categories: AnyPublisher<[CategoryModel], Never> {
         $_categories.eraseToAnyPublisher()
@@ -40,7 +41,10 @@ final class CategoryStore: CategoryStoreProtocol {
     // MARK: - Init
     init(repository: CategoryRepositoryProtocol) {
         self.repository = repository
-        Task { await reload() }
+        Task {
+            await seedDefaultsIfNeeded()
+            await reload()
+        }
     }
 
     // MARK: - Actions
@@ -59,11 +63,25 @@ final class CategoryStore: CategoryStoreProtocol {
     }
 
     func delete(_ category: CategoryModel) async throws {
+        guard !category.isDefault else { throw CustomError.cannotDeletedefaultCategory }
         try await repository.delete(category)
         await reload()
     }
 
     // MARK: - Private
+    private func seedDefaultsIfNeeded() async {
+        guard !isSeeded else { return }
+
+        do {
+            for category in CategoryModel.defaults {
+                try await repository.add(category)
+                isSeeded = true
+            }
+        } catch {
+
+        }
+    }
+
     private func reload() async {
         do {
             _categories = try await repository.fetchAll()
