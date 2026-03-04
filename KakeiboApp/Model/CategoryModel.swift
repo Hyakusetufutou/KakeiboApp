@@ -97,7 +97,7 @@ extension CategoryEntity {
             name: self.name ?? "",
             color: AppTheme.stringToColor(self.color ?? "white"),
             type: TransactionType(rawValue: self.type ?? "支出") ?? .expense,
-            isDefault: false
+            isDefault: self.isDefault
         )
     }
 }

@@ -16,6 +16,7 @@ final class ViewModelFactory: ObservableObject {
     @Published var searchViewModel: SearchViewModel
     @Published var transactionInputViewModel: TransactionInputViewModel
     @Published var categoryInputViewModel: CategoryInputViewModel
+    @Published var categoryListViewModel: CategoryListViewModel
 
     init() {
         let categoryRepository = CategoryRepository()
@@ -47,5 +48,6 @@ final class ViewModelFactory: ObservableObject {
             transactionStore: transactionStore
         )
         self.categoryInputViewModel = CategoryInputViewModel(categoryStore: categoryStore)
+        self.categoryListViewModel = CategoryListViewModel(categoryStore: categoryStore)
     }
 }

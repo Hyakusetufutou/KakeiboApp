@@ -10,11 +10,12 @@ import SwiftUI
 
 struct CategoryListView: View {
     @ObservedObject var categoryInputViewModel: CategoryInputViewModel
+    @ObservedObject var categoryListViewModel: CategoryListViewModel
     @Binding var isPresentCategoryList: Bool
-    @Binding var categories: [CategoryModel]
 
-    let onDeleteCategory: (CategoryModel) -> Void
     let type: TransactionType
+
+    // MARK: - Body
 
     var body: some View {
         VStack {
@@ -68,7 +69,9 @@ struct CategoryListView: View {
     // MARK: - Category List
 
     private var categoryList: some View {
-        List {
+        let categories = categoryListViewModel.categories.filter { $0.type == type }
+
+        return List {
             ForEach(categories) { category in
                 HStack {
                     Circle()
@@ -85,7 +88,7 @@ struct CategoryListView: View {
                 }
                 .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                     Button {
-                        onDeleteCategory(category)
+                        Task { await categoryListViewModel.delete(category) }
                     } label: {
                         Image(systemName: "trash")
                     }

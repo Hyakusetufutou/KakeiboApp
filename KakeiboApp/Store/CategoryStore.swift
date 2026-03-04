@@ -63,6 +63,7 @@ final class CategoryStore: CategoryStoreProtocol {
     }
 
     func delete(_ category: CategoryModel) async throws {
+        guard !category.isDefault else { throw CustomError.cannotDeletedefaultCategory }
         try await repository.delete(category)
         await reload()
     }

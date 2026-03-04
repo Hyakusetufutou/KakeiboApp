@@ -24,6 +24,7 @@ struct ContentView: View {
     @StateObject private var transactionInputViewModel: TransactionInputViewModel
     @StateObject private var categoryInputViewModel: CategoryInputViewModel
     @StateObject private var searchViewModel: SearchViewModel
+    @StateObject private var categoryListViewModel: CategoryListViewModel
 
     init(factory: ViewModelFactory) {
         _homeViewModel = StateObject(wrappedValue: factory.homeViewModel)
@@ -32,6 +33,7 @@ struct ContentView: View {
         _transactionInputViewModel = StateObject(wrappedValue: factory.transactionInputViewModel)
         _categoryInputViewModel = StateObject(wrappedValue: factory.categoryInputViewModel)
         _searchViewModel = StateObject(wrappedValue: factory.searchViewModel)
+        _categoryListViewModel = StateObject(wrappedValue: factory.categoryListViewModel)
     }
 
     var body: some View {
@@ -98,7 +100,8 @@ extension ContentView {
             GraphView(
                 graphViewModel: graphViewModel,
                 transactionInputViewModel: transactionInputViewModel,
-                categoryInputViewModel: categoryInputViewModel
+                categoryInputViewModel: categoryInputViewModel,
+                categoryListViewModel: categoryListViewModel
             )
             .tabItem {
                 Label(TabModel.graph.title, systemImage: TabModel.graph.rawValue)

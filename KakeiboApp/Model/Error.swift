@@ -14,6 +14,7 @@ enum CustomError: Error {
     case saveError
     case fetchError(String)
     case invalidData
+    case cannotDeletedefaultCategory
 
     var description: String {
         switch self {
@@ -27,6 +28,8 @@ enum CustomError: Error {
             return "取得に失敗しました: \(message)"
         case .invalidData:
             return "不正なデータです"
+        case .cannotDeletedefaultCategory:
+            return "デフォルトカテゴリのため削除できません"
         }
     }
 }
