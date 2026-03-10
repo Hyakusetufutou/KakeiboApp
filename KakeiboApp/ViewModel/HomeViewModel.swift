@@ -16,10 +16,7 @@ final class HomeViewModel: ObservableObject {
     @Published var errorMessage: String?
 
     @Published var filteredTransactions: [TransactionModel] = []
-    @Published var dateRange: DateRange = DateRange(
-        start: Date().startOfMonth,
-        end: Date().endOfMonth
-    )
+    @Published var dateRange: DateRange = DateRange()
     @Published var selectedType: TransactionType = .expense
     @Published var showFilterView = false
     @Published private(set) var hasMoreData = true
@@ -41,6 +38,14 @@ final class HomeViewModel: ObservableObject {
     private let categoryStore: CategoryStoreProtocol
     private let transactionStore: TransactionStoreProtocol
     private var cancellables = Set<AnyCancellable>()
+    private var isDefaultDateRange: Bool {
+        let today = Date()
+        return Calendar.current.isDate(
+            dateRange.start,
+            equalTo: today.startOfMonth,
+            toGranularity: .day
+        ) && Calendar.current.isDate(dateRange.end, equalTo: today.endOfMonth, toGranularity: .day)
+    }
 
     init(categoryStore: CategoryStoreProtocol, transactionStore: TransactionStoreProtocol) {
         self.categoryStore = categoryStore
@@ -84,6 +89,15 @@ final class HomeViewModel: ObservableObject {
 
     func clearError() {
         errorMessage = nil
+    }
+
+    func resetDateRangeIfNeeded() {
+        guard isDefaultDateRange else { return }
+        let today = Date()
+
+        guard !Calendar.current.isDate(today, equalTo: dateRange.start, toGranularity: .month)
+        else { return }
+        dateRange = DateRange()
     }
 
     // MARK: - Private Methods

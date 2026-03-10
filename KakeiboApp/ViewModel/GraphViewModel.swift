@@ -19,10 +19,7 @@ final class GraphViewModel: ObservableObject {
     @Published private(set) var hasMoreData = true
 
     @Published var selectedType: TransactionType = .expense
-    @Published var dateRange: DateRange = DateRange(
-        start: Date().startOfMonth,
-        end: Date().endOfMonth
-    )
+    @Published var dateRange: DateRange = DateRange()
 
     // MARK: - Computed Properties
 

@@ -12,7 +12,7 @@ struct DateRange {
     let start: Date
     let end: Date
 
-    init(start: Date, end: Date) {
+    init(start: Date = Date().startOfMonth, end: Date = Date().endOfMonth) {
         if start <= end {
             self.start = start
             self.end = end

@@ -19,10 +19,7 @@ final class CalendarViewModel: ObservableObject {
 
     @Published var selectedDate: Date?
     @Published var currentDate: Date = Date()
-    @Published var dateRange: DateRange = DateRange(
-        start: Date().startOfMonth,
-        end: Date().endOfMonth
-    )
+    @Published var dateRange: DateRange = DateRange()
 
     var startDate: Binding<Date> {
         Binding(
@@ -91,6 +88,14 @@ final class CalendarViewModel: ObservableObject {
 
     func clearError() {
         errorMessage = nil
+    }
+
+    func resetDateRangeIfNeeded() {
+        let today = Date()
+
+        guard !Calendar.current.isDate(today, equalTo: dateRange.start, toGranularity: .month)
+        else { return }
+        dateRange = DateRange()
     }
 
     // MARK: - Private Methods
