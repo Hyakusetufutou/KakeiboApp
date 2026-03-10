@@ -70,6 +70,9 @@ struct ContentView: View {
                 lockWhenAppGoesBackground
             {
                 isUnlocked = false
+            } else if phase == .active {
+                calendarViewModel.resetDateRangeIfNeeded()
+                homeViewModel.resetDateRangeIfNeeded()
             }
         }
     }
