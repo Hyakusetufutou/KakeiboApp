@@ -91,11 +91,10 @@ final class HomeViewModel: ObservableObject {
         errorMessage = nil
     }
 
-    func resetDateRangeIfNeeded() {
+    func resetDateRangeIfNeeded(now: Date = Date()) {
         guard isDefaultDateRange else { return }
-        let today = Date()
 
-        guard !Calendar.current.isDate(today, equalTo: dateRange.start, toGranularity: .month)
+        guard !Calendar.current.isDate(now, equalTo: dateRange.start, toGranularity: .month)
         else { return }
         dateRange = DateRange()
     }
