@@ -82,6 +82,7 @@ final class MockTransactionStore: TransactionStoreProtocol, @unchecked Sendable 
         didSet { _hasMoreDataSubject.send(stubbedHasMoreData) }
     }
     var deleteError: Error?
+    var addError: Error?
 
     private let _transactionsSubject: CurrentValueSubject<[TransactionModel], Never>
     private let _hasMoreDataSubject: CurrentValueSubject<Bool, Never>
@@ -103,6 +104,7 @@ final class MockTransactionStore: TransactionStoreProtocol, @unchecked Sendable 
 
     func add(_ transaction: TransactionModel) async throws {
         addCallCount += 1
+        if let error = addError { throw error }  // ← 追加
         stubbedTransactions.append(transaction)
     }
 
