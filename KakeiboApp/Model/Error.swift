@@ -8,7 +8,7 @@
 
 import Foundation
 
-enum CustomError: Error {
+enum CustomError: Error, Equatable {
     case categoryNotFoundError
     case transactionNotFoundError
     case saveError
