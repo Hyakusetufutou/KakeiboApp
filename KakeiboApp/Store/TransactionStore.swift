@@ -113,7 +113,7 @@ final class TransactionStore: TransactionStoreProtocol {
             let items = try await repository.fetch(
                 from: nil,
                 to: nil,
-                limit: initialLimit,
+                limit: nil,
                 offset: 0
             )
             _transactions = items

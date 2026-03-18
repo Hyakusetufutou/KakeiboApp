@@ -170,13 +170,6 @@ struct HomeView: View {
                 .onTapGesture {
                     transactionInputViewModel.presentInputView(for: transaction)
                 }
-                .onAppear {
-                    if isLastTransaction(transaction) {
-                        Task {
-                            await homeViewModel.loadMore()
-                        }
-                    }
-                }
             }
 
             if homeViewModel.isLoading && !homeViewModel.filteredTransactions.isEmpty {
