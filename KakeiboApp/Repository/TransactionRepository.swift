@@ -64,7 +64,7 @@ actor TransactionRepository: TransactionRepositoryProtocol {
                 request.fetchOffset = offset
             }
 
-            return try context.fetch(request).map { $0.toModel() }
+            return try context.fetch(request).map { try $0.toModel() }
         }
     }
 
@@ -84,7 +84,7 @@ actor TransactionRepository: TransactionRepositoryProtocol {
                 NSSortDescriptor(keyPath: \TransactionEntity.date, ascending: false)
             ]
 
-            return try context.fetch(request).map { $0.toModel() }
+            return try context.fetch(request).map { try $0.toModel() }
         }
     }
 

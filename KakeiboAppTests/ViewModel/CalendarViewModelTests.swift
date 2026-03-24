@@ -48,7 +48,7 @@ final class CalendarViewModelTests: XCTestCase {
             memo: "",
             amount: amount,
             date: date,
-            createAt: Date(),
+            createdAt: Date(),
             updatedAt: Date(),
             type: type,
             categoryId: categoryId

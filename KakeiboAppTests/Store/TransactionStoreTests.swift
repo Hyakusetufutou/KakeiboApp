@@ -94,7 +94,7 @@ extension TransactionModel {
             memo: memo ?? "",
             amount: amount,
             date: date,
-            createAt: Date(),
+            createdAt: Date(),
             updatedAt: Date(),
             type: type,
             categoryId: UUID()
@@ -171,7 +171,7 @@ final class TransactionStoreTests: XCTestCase {
             memo: "",
             amount: 2000,
             date: original.date,
-            createAt: original.createdAt,
+            createdAt: original.createdAt,
             updatedAt: Date(),
             type: original.type,
             categoryId: original.categoryId

@@ -31,14 +31,14 @@ actor CategoryRepository: CategoryRepositoryProtocol {
             request.sortDescriptors = [
                 NSSortDescriptor(keyPath: \CategoryEntity.name, ascending: true)
             ]
-            return try context.fetch(request).map { $0.toModel() }
+            return try context.fetch(request).map { try $0.toModel() }
         }
     }
 
     func fetch(by id: UUID) async throws -> CategoryModel {
         return try await container.performBackgroundTask { context in
             let entity = try self.fetchEntity(by: id, in: context)
-            return entity.toModel()
+            return try entity.toModel()
         }
     }
 

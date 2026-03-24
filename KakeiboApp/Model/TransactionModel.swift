@@ -25,7 +25,7 @@ struct TransactionModel: Identifiable, Hashable {
         memo: String,
         amount: Double,
         date: Date,
-        createAt: Date,
+        createdAt: Date,
         updatedAt: Date,
         type: TransactionType,
         categoryId: UUID
@@ -35,7 +35,7 @@ struct TransactionModel: Identifiable, Hashable {
         self.memo = memo
         self.amount = amount
         self.date = date
-        self.createdAt = createAt
+        self.createdAt = createdAt
         self.updatedAt = updatedAt
         self.type = type
         self.categoryId = categoryId
@@ -57,17 +57,27 @@ enum TransactionType: String, CaseIterable {
 }
 
 extension TransactionEntity {
-    func toModel() -> TransactionModel {
-        TransactionModel(
-            id: self.id ?? UUID(),
-            title: self.title ?? "",
-            memo: self.memo ?? "",
+    func toModel() throws -> TransactionModel {
+        guard let id = self.id,
+            let title = self.title,
+            let memo = self.memo,
+            let date = self.date,
+            let createdAt = self.createdAt,
+            let updatedAt = self.updatedAt,
+            let categoryId = self.category?.id
+        else {
+            throw CustomError.invalidData
+        }
+        return TransactionModel(
+            id: id,
+            title: title,
+            memo: memo,
             amount: self.amount,
-            date: self.date ?? Date(),
-            createAt: self.createdAt ?? Date(),
-            updatedAt: self.updatedAt ?? Date(),
-            type: TransactionType(rawValue: self.type ?? "expense") ?? .expense,
-            categoryId: self.category?.id ?? UUID()
+            date: date,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            type: TransactionType(rawValue: self.type ?? "支出") ?? .expense,
+            categoryId: categoryId
         )
     }
 }

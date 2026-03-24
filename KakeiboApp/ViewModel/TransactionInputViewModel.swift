@@ -186,7 +186,7 @@ final class TransactionInputViewModel: ObservableObject {
             memo: memo.trimmingCharacters(in: .whitespacesAndNewlines),
             amount: amountValue,
             date: date,
-            createAt: isEdit ? Date() : Date(),
+            createdAt: isEdit ? Date() : Date(),
             updatedAt: Date(),
             type: type,
             categoryId: categoryId

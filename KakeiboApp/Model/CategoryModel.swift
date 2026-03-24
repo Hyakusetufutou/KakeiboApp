@@ -91,10 +91,16 @@ struct CategorySummary: Identifiable {
 }
 
 extension CategoryEntity {
-    func toModel() -> CategoryModel {
+    func toModel() throws -> CategoryModel {
+        guard let id = self.id,
+            let name = self.name
+        else {
+            throw CustomError.invalidData
+        }
+
         return CategoryModel(
-            id: self.id ?? UUID(),
-            name: self.name ?? "",
+            id: id,
+            name: name,
             color: AppTheme.stringToColor(self.color ?? "white"),
             type: TransactionType(rawValue: self.type ?? "支出") ?? .expense,
             isDefault: self.isDefault

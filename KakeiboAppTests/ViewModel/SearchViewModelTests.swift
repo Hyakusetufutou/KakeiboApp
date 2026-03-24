@@ -47,7 +47,7 @@ final class SearchViewModelTests: XCTestCase {
             memo: memo ?? "",
             amount: 1000,
             date: date,
-            createAt: Date(),
+            createdAt: Date(),
             updatedAt: Date(),
             type: .expense,
             categoryId: UUID()

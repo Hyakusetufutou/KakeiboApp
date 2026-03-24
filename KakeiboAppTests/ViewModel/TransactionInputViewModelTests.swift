@@ -48,7 +48,7 @@ final class TransactionInputViewModelTests: XCTestCase {
             memo: "",
             amount: amount,
             date: Date(),
-            createAt: Date(),
+            createdAt: Date(),
             updatedAt: Date(),
             type: type,
             categoryId: categoryId

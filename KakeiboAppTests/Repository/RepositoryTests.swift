@@ -261,7 +261,7 @@ final class TransactionRepositoryTests: XCTestCase {
             memo: memo ?? "",
             amount: amount,
             date: date,
-            createAt: Date(),
+            createdAt: Date(),
             updatedAt: Date(),
             type: type,
             categoryId: categoryId ?? defaultCategory.id
@@ -366,7 +366,7 @@ final class TransactionRepositoryTests: XCTestCase {
             memo: "友人と",
             amount: 2000,
             date: original.date,
-            createAt: original.createdAt,
+            createdAt: original.createdAt,
             updatedAt: Date(),
             type: original.type,
             categoryId: original.categoryId
