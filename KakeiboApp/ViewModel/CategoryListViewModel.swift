@@ -30,8 +30,6 @@ final class CategoryListViewModel: ObservableObject {
     func delete(_ category: CategoryModel) async {
         do {
             try await categoryStore.delete(category)
-        } catch let error as CustomError {
-            errorMessage = error.description
         } catch {
             errorMessage = "削除に失敗しました: \(error.localizedDescription)"
         }

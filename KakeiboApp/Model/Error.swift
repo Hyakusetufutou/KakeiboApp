@@ -8,7 +8,7 @@
 
 import Foundation
 
-enum CustomError: Error, Equatable {
+enum CustomError: Equatable, LocalizedError {
     case categoryNotFoundError
     case transactionNotFoundError
     case saveError
@@ -16,7 +16,7 @@ enum CustomError: Error, Equatable {
     case invalidData
     case cannotDeletedefaultCategory
 
-    var description: String {
+    var errorDescription: String? {
         switch self {
         case .categoryNotFoundError:
             return "カテゴリが見つかりません"
