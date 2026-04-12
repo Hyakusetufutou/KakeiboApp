@@ -47,7 +47,7 @@ actor CategoryRepository: CategoryRepositoryProtocol {
             let entity = CategoryEntity(context: context)
             entity.id = categoryModel.id
             entity.name = categoryModel.name
-            entity.color = AppTheme.colorToString(categoryModel.color)
+            entity.color = categoryModel.color.rawValue
             entity.type = categoryModel.type.rawValue
             entity.isDefault = categoryModel.isDefault
             try context.save()
@@ -58,7 +58,7 @@ actor CategoryRepository: CategoryRepositoryProtocol {
         try await container.performBackgroundTask { context in
             let entity = try self.fetchEntity(by: categoryModel.id, in: context)
             entity.name = categoryModel.name
-            entity.color = AppTheme.colorToString(categoryModel.color)
+            entity.color = categoryModel.color.rawValue
             entity.type = categoryModel.type.rawValue
             entity.isDefault = categoryModel.isDefault
             try context.save()

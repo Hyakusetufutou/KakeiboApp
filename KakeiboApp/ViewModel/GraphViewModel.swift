@@ -160,7 +160,7 @@ final class GraphViewModel: ObservableObject {
                     categoryName: category.name,
                     type: category.type,
                     totalAmount: total,
-                    color: category.color,
+                    color: category.color.color,
                     transactions: related
                 )
             }

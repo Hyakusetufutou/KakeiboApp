@@ -8,14 +8,70 @@
 
 import SwiftUI
 
+enum CategoryColor: String, CaseIterable {
+    case red
+    case orange
+    case yellow
+    case green
+    case mint
+    case teal
+    case blue
+    case indigo
+    case purple
+    case pink
+    case brown
+    case gray
+
+    init(color: Color) {
+        switch color {
+        case .red: self = .red
+        case .orange: self = .orange
+        case .yellow: self = .yellow
+        case .green: self = .green
+        case .mint: self = .mint
+        case .teal: self = .teal
+        case .blue: self = .blue
+        case .indigo: self = .indigo
+        case .purple: self = .purple
+        case .pink: self = .pink
+        case .brown: self = .brown
+        case .gray: self = .gray
+        default: self = .blue
+        }
+    }
+
+    var color: Color {
+        switch self {
+        case .red: .red
+        case .orange: .orange
+        case .yellow: .yellow
+        case .green: .green
+        case .mint: .mint
+        case .teal: .teal
+        case .blue: .blue
+        case .indigo: .indigo
+        case .purple: .purple
+        case .pink: .pink
+        case .brown: .brown
+        case .gray: .gray
+        }
+    }
+}
+
 struct CategoryModel: Identifiable, Hashable {
     let id: UUID
     let name: String
-    let color: Color
+    let color: CategoryColor
     let type: TransactionType
     let isDefault: Bool
 
-    init(id: UUID = UUID(), name: String, color: Color, type: TransactionType, isDefault: Bool) {
+    init(
+        id: UUID = UUID(),
+        name: String,
+        color: CategoryColor,
+        type: TransactionType,
+        isDefault: Bool
+    ) {
         self.id = id
         self.name = name
         self.color = color
@@ -98,11 +154,23 @@ extension CategoryEntity {
             throw CustomError.invalidData
         }
 
+        guard let rawColor = self.color,
+            let color = CategoryColor(rawValue: rawColor)
+        else {
+            throw CustomError.invalidData
+        }
+
+        guard let rawType = self.type,
+            let type = TransactionType(rawValue: rawType)
+        else {
+            throw CustomError.invalidData
+        }
+
         return CategoryModel(
             id: id,
             name: name,
-            color: AppTheme.stringToColor(self.color ?? "white"),
-            type: TransactionType(rawValue: self.type ?? "支出") ?? .expense,
+            color: color,
+            type: type,
             isDefault: self.isDefault
         )
     }

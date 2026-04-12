@@ -76,7 +76,7 @@ struct CategoryListView: View {
                 HStack {
                     Circle()
                         .frame(width: 12)
-                        .foregroundStyle(category.color)
+                        .foregroundStyle(category.color.color)
 
                     Text(category.name)
 

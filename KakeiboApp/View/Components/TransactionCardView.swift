@@ -37,7 +37,7 @@ struct TransactionCardView: View {
             .fontWeight(.semibold)
             .foregroundStyle(.white)
             .frame(width: 45, height: 45)
-            .background((category?.color ?? .blue).gradient, in: .circle)
+            .background((category?.color.color ?? .blue).gradient, in: .circle)
     }
 
     private var transactionInfo: some View {
@@ -64,7 +64,7 @@ struct TransactionCardView: View {
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
                         .foregroundStyle(.white)
-                        .background(category.color.gradient, in: .capsule)
+                        .background(category.color.color.gradient, in: .capsule)
                 }
             }
         }

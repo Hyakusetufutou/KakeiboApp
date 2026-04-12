@@ -51,7 +51,7 @@ final class CategoryInputViewModel: ObservableObject {
         let category = CategoryModel(
             id: id,
             name: name,
-            color: color,
+            color: CategoryColor(color: color),
             type: type,
             isDefault: false
         )
@@ -96,7 +96,7 @@ final class CategoryInputViewModel: ObservableObject {
     private func restoreForm(from category: CategoryModel) {
         id = category.id
         name = category.name
-        color = category.color
+        color = category.color.color
         type = category.type
         errorMessage = nil
     }
