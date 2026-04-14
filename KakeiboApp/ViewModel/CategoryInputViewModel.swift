@@ -18,7 +18,7 @@ final class CategoryInputViewModel: ObservableObject {
 
     @Published var id = UUID()
     @Published var name = ""
-    @Published var color: Color = .blue
+    @Published var color: CategoryColor = .blue
     @Published var type: TransactionType = .expense
 
     private let categoryStore: CategoryStoreProtocol
@@ -51,7 +51,7 @@ final class CategoryInputViewModel: ObservableObject {
         let category = CategoryModel(
             id: id,
             name: name,
-            color: CategoryColor(color: color),
+            color: color,
             type: type,
             isDefault: false
         )
@@ -96,7 +96,7 @@ final class CategoryInputViewModel: ObservableObject {
     private func restoreForm(from category: CategoryModel) {
         id = category.id
         name = category.name
-        color = category.color.color
+        color = category.color
         type = category.type
         errorMessage = nil
     }

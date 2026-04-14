@@ -84,19 +84,19 @@ struct CategoryInputView: View {
             .fill(color)
             .frame(width: 34, height: 34)
             .overlay {
-                if color == categoryInputViewModel.color {
+                if color == categoryInputViewModel.color.color {
                     Image(systemName: "checkmark")
                         .font(.caption.bold())
                         .foregroundStyle(.white)
                 }
             }
-            .scaleEffect(color == categoryInputViewModel.color ? 1.15 : 1)
+            .scaleEffect(color == categoryInputViewModel.color.color ? 1.15 : 1)
             .animation(
                 .spring(response: 0.35, dampingFraction: 0.7),
                 value: categoryInputViewModel.color
             )
             .onTapGesture {
-                categoryInputViewModel.color = color
+                categoryInputViewModel.color = CategoryColor(color: color)
             }
     }
 
