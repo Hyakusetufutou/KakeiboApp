@@ -1,5 +1,5 @@
 //
-//  ClalendarModel.swift
+//  CalendarModel.swift
 //  KakeiboApp
 //
 //  Created by Hyakusetufutou on 2025/11/06

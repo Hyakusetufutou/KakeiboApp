@@ -37,7 +37,7 @@ actor TransactionRepository: TransactionRepositoryProtocol {
         offset: Int?
     ) async throws -> [TransactionModel] {
         return try await container.performBackgroundTask { context in
-            let request = TransactionEntity.fetchRequest()
+            let request: NSFetchRequest<TransactionEntity> = TransactionEntity.fetchRequest()
 
             // Build predicates
             var predicates: [NSPredicate] = []
@@ -70,7 +70,7 @@ actor TransactionRepository: TransactionRepositoryProtocol {
 
     func search(text: String?) async throws -> [TransactionModel] {
         return try await container.performBackgroundTask { context in
-            let request = TransactionEntity.fetchRequest()
+            let request: NSFetchRequest<TransactionEntity> = TransactionEntity.fetchRequest()
 
             if let text = text, !text.isEmpty {
                 request.predicate = NSPredicate(
@@ -142,7 +142,7 @@ actor TransactionRepository: TransactionRepositoryProtocol {
         by id: UUID,
         in context: NSManagedObjectContext
     ) throws -> TransactionEntity {
-        let request = TransactionEntity.fetchRequest()
+        let request: NSFetchRequest<TransactionEntity> = TransactionEntity.fetchRequest()
         request.predicate = NSPredicate(format: "id == %@", id as NSUUID)
         request.fetchLimit = 1
 
@@ -156,7 +156,7 @@ actor TransactionRepository: TransactionRepositoryProtocol {
         by id: UUID,
         in context: NSManagedObjectContext
     ) throws -> CategoryEntity {
-        let request = CategoryEntity.fetchRequest()
+        let request: NSFetchRequest<CategoryEntity> = CategoryEntity.fetchRequest()
         request.predicate = NSPredicate(format: "id == %@", id as NSUUID)
         request.fetchLimit = 1
 

@@ -6,11 +6,6 @@
 //
 //
 
-//
-//  CategoryStore.swift
-//  KakeiboApp
-//
-
 import Foundation
 import Combine
 import SwiftUI

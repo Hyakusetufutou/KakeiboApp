@@ -27,7 +27,7 @@ actor CategoryRepository: CategoryRepositoryProtocol {
 
     func fetchAll() async throws -> [CategoryModel] {
         return try await container.performBackgroundTask { context in
-            let request = CategoryEntity.fetchRequest()
+            let request: NSFetchRequest<CategoryEntity> = CategoryEntity.fetchRequest()
             request.sortDescriptors = [
                 NSSortDescriptor(keyPath: \CategoryEntity.name, ascending: true)
             ]
@@ -78,7 +78,7 @@ actor CategoryRepository: CategoryRepositoryProtocol {
         by id: UUID,
         in context: NSManagedObjectContext
     ) throws -> CategoryEntity {
-        let request = CategoryEntity.fetchRequest()
+        let request: NSFetchRequest<CategoryEntity> = CategoryEntity.fetchRequest()
         request.predicate = NSPredicate(format: "id == %@", id as NSUUID)
         request.fetchLimit = 1
 
