@@ -25,9 +25,12 @@ protocol TransactionRepositoryProtocol: Sendable {
 // MARK: - Transaction Repository Implementation
 actor TransactionRepository: TransactionRepositoryProtocol {
     private let container: NSPersistentContainer
+    private let context: NSManagedObjectContext
 
     init(container: NSPersistentContainer = PersistenceController.shared.container) {
         self.container = container
+        self.context = container.newBackgroundContext()
+        self.context.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
     }
 
     func fetch(
@@ -36,10 +39,12 @@ actor TransactionRepository: TransactionRepositoryProtocol {
         limit: Int?,
         offset: Int?
     ) async throws -> [TransactionModel] {
-        return try await container.performBackgroundTask { context in
+        let context = self.context
+        return try await context.perform {
             let request: NSFetchRequest<TransactionEntity> = TransactionEntity.fetchRequest()
 
-            // Build predicates
+            request.relationshipKeyPathsForPrefetching = ["category"]
+
             var predicates: [NSPredicate] = []
             if let start = start {
                 predicates.append(NSPredicate(format: "date >= %@", start as NSDate))
@@ -51,34 +56,31 @@ actor TransactionRepository: TransactionRepositoryProtocol {
                 request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
             }
 
-            // Sort by date descending
             request.sortDescriptors = [
                 NSSortDescriptor(keyPath: \TransactionEntity.date, ascending: false)
             ]
 
-            // Apply pagination
-            if let limit = limit {
-                request.fetchLimit = limit
-            }
-            if let offset = offset {
-                request.fetchOffset = offset
-            }
+            if let limit = limit { request.fetchLimit = limit }
+            if let offset = offset { request.fetchOffset = offset }
 
             return try context.fetch(request).map { try $0.toModel() }
         }
     }
 
     func search(text: String?) async throws -> [TransactionModel] {
-        return try await container.performBackgroundTask { context in
+        let context = self.context
+        return try await context.perform {
             let request: NSFetchRequest<TransactionEntity> = TransactionEntity.fetchRequest()
+            request.relationshipKeyPathsForPrefetching = ["category"]
 
-            if let text = text, !text.isEmpty {
-                request.predicate = NSPredicate(
-                    format: "title CONTAINS[c] %@ OR memo CONTAINS[c] %@",
-                    text,
-                    text
-                )
+            guard let text = text, !text.isEmpty else {
+                return []
             }
+            request.predicate = NSPredicate(
+                format: "title CONTAINS[c] %@ OR memo CONTAINS[c] %@",
+                text,
+                text
+            )
 
             request.sortDescriptors = [
                 NSSortDescriptor(keyPath: \TransactionEntity.date, ascending: false)
@@ -89,56 +91,58 @@ actor TransactionRepository: TransactionRepositoryProtocol {
     }
 
     func add(_ model: TransactionModel) async throws {
-        try await container.performBackgroundTask { context in
+        let context = self.context
+        try await context.perform {
             let category = try self.fetchCategory(by: model.categoryId, in: context)
 
             let entity = TransactionEntity(context: context)
-            entity.id = model.id
-            entity.amount = model.amount
-            entity.date = model.date
-            entity.title = model.title
-            entity.memo = model.memo
-            entity.type = model.type.rawValue
-            entity.createdAt = model.createdAt
-            entity.updatedAt = model.updatedAt
-            entity.category = category
+            self.map(model: model, to: entity, category: category)
 
-            try context.save()
+            try self.save(in: context)
         }
     }
 
     func update(_ model: TransactionModel) async throws {
-        try await container.performBackgroundTask { context in
-            // Fetch existing transaction
+        let context = self.context
+        try await context.perform {
             let entity = try self.fetchEntity(by: model.id, in: context)
-
-            // Fetch new category
             let category = try self.fetchCategory(by: model.categoryId, in: context)
 
-            // Update properties
-            entity.amount = model.amount
-            entity.date = model.date
-            entity.title = model.title
-            entity.memo = model.memo
-            entity.type = model.type.rawValue
-            entity.createdAt = model.createdAt
-            entity.updatedAt = model.updatedAt
-            entity.category = category
+            self.map(model: model, to: entity, category: category)
 
-            try context.save()
+            try self.save(in: context)
         }
     }
 
     func delete(_ model: TransactionModel) async throws {
-        try await container.performBackgroundTask { context in
+        let context = self.context
+        try await context.perform {
             let entity = try self.fetchEntity(by: model.id, in: context)
             context.delete(entity)
-            try context.save()
+            try self.save(in: context)
         }
     }
 
     // MARK: - Private Helpers
-    private func fetchEntity(
+
+    nonisolated private func map(
+        model: TransactionModel,
+        to entity: TransactionEntity,
+        category: CategoryEntity
+    ) {
+        entity.id = model.id
+        entity.amount = model.amount
+        entity.date = model.date
+        entity.title = model.title
+        entity.memo = model.memo
+        entity.type = model.type.rawValue
+        entity.createdAt = model.createdAt
+        entity.updatedAt = model.updatedAt
+        entity.category = category
+    }
+
+    /// context.performから呼び出すこと
+    nonisolated private func fetchEntity(
         by id: UUID,
         in context: NSManagedObjectContext
     ) throws -> TransactionEntity {
@@ -152,7 +156,8 @@ actor TransactionRepository: TransactionRepositoryProtocol {
         return entity
     }
 
-    private func fetchCategory(
+    /// context.performから呼び出すこと
+    nonisolated private func fetchCategory(
         by id: UUID,
         in context: NSManagedObjectContext
     ) throws -> CategoryEntity {
@@ -164,5 +169,12 @@ actor TransactionRepository: TransactionRepositoryProtocol {
             throw CustomError.categoryNotFoundError
         }
         return category
+    }
+
+    /// context.performから呼び出すこと
+    nonisolated private func save(in context: NSManagedObjectContext) throws {
+        if context.hasChanges {
+            try context.save()
+        }
     }
 }

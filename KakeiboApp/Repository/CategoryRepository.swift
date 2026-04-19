@@ -4,7 +4,6 @@
 //
 //  Created by Hyakusetufutou on 2025/10/02
 //
-//
 
 import CoreData
 
@@ -20,13 +19,17 @@ protocol CategoryRepositoryProtocol: Sendable {
 // MARK: - Category Repository Implementation
 actor CategoryRepository: CategoryRepositoryProtocol {
     private let container: NSPersistentContainer
+    private let context: NSManagedObjectContext
 
     init(container: NSPersistentContainer = PersistenceController.shared.container) {
         self.container = container
+        self.context = container.newBackgroundContext()
+        self.context.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
     }
 
     func fetchAll() async throws -> [CategoryModel] {
-        return try await container.performBackgroundTask { context in
+        let context = self.context
+        return try await context.perform {
             let request: NSFetchRequest<CategoryEntity> = CategoryEntity.fetchRequest()
             request.sortDescriptors = [
                 NSSortDescriptor(keyPath: \CategoryEntity.name, ascending: true)
@@ -36,45 +39,56 @@ actor CategoryRepository: CategoryRepositoryProtocol {
     }
 
     func fetch(by id: UUID) async throws -> CategoryModel {
-        return try await container.performBackgroundTask { context in
+        let context = self.context
+        return try await context.perform {
             let entity = try self.fetchEntity(by: id, in: context)
             return try entity.toModel()
         }
     }
 
     func add(_ categoryModel: CategoryModel) async throws {
-        try await container.performBackgroundTask { context in
+        let context = self.context
+        try await context.perform {
             let entity = CategoryEntity(context: context)
-            entity.id = categoryModel.id
-            entity.name = categoryModel.name
-            entity.color = categoryModel.color.rawValue
-            entity.type = categoryModel.type.rawValue
-            entity.isDefault = categoryModel.isDefault
-            try context.save()
+            self.map(model: categoryModel, to: entity)
+
+            try self.save(in: context)
         }
     }
 
     func update(_ categoryModel: CategoryModel) async throws {
-        try await container.performBackgroundTask { context in
+        let context = self.context
+        try await context.perform {
             let entity = try self.fetchEntity(by: categoryModel.id, in: context)
-            entity.name = categoryModel.name
-            entity.color = categoryModel.color.rawValue
-            entity.type = categoryModel.type.rawValue
-            entity.isDefault = categoryModel.isDefault
-            try context.save()
+            self.map(model: categoryModel, to: entity)
+
+            try self.save(in: context)
         }
     }
 
     func delete(_ categoryModel: CategoryModel) async throws {
-        try await container.performBackgroundTask { context in
+        let context = self.context
+        try await context.perform {
             let entity = try self.fetchEntity(by: categoryModel.id, in: context)
             context.delete(entity)
-            try context.save()
+
+            try self.save(in: context)
         }
     }
 
     // MARK: - Private Helpers
-    private func fetchEntity(
+
+    /// context.performから呼び出すこと
+    nonisolated private func map(model: CategoryModel, to entity: CategoryEntity) {
+        entity.id = model.id
+        entity.name = model.name
+        entity.color = model.color.rawValue
+        entity.type = model.type.rawValue
+        entity.isDefault = model.isDefault
+    }
+
+    /// context.performから呼び出すこと
+    nonisolated private func fetchEntity(
         by id: UUID,
         in context: NSManagedObjectContext
     ) throws -> CategoryEntity {
@@ -86,5 +100,12 @@ actor CategoryRepository: CategoryRepositoryProtocol {
             throw CustomError.categoryNotFoundError
         }
         return entity
+    }
+
+    /// context.performから呼び出すこと
+    nonisolated private func save(in context: NSManagedObjectContext) throws {
+        if context.hasChanges {
+            try context.save()
+        }
     }
 }

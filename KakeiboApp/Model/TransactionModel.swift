@@ -76,7 +76,8 @@ extension TransactionEntity {
             date: date,
             createdAt: createdAt,
             updatedAt: updatedAt,
-            type: TransactionType(rawValue: self.type ?? "支出") ?? .expense,
+            type: TransactionType(rawValue: self.type ?? TransactionType.expense.rawValue)
+                ?? .expense,
             categoryId: categoryId
         )
     }
