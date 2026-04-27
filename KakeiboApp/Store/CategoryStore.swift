@@ -13,6 +13,7 @@ import SwiftUI
 @MainActor
 protocol CategoryStoreProtocol {
     var categories: AnyPublisher<[CategoryModel], Never> { get }
+    var lastError: AnyPublisher<Error?, Never> { get }
 
     func find(id: UUID) -> CategoryModel?
     func add(_ category: CategoryModel) async throws
@@ -24,10 +25,14 @@ protocol CategoryStoreProtocol {
 final class CategoryStore: CategoryStoreProtocol {
     // MARK: - State
     @Published private var _categories: [CategoryModel] = []
+    @Published private var _lastError: Error?
     @AppStorage("defaultCategoriesSeeded") private var isSeeded = false
 
     var categories: AnyPublisher<[CategoryModel], Never> {
         $_categories.eraseToAnyPublisher()
+    }
+    var lastError: AnyPublisher<Error?, Never> {
+        $_lastError.eraseToAnyPublisher()
     }
 
     // MARK: - Dependencies
@@ -73,15 +78,16 @@ final class CategoryStore: CategoryStoreProtocol {
                 isSeeded = true
             }
         } catch {
-
+            _lastError = error
         }
     }
 
     private func reload() async {
         do {
             _categories = try await repository.fetchAll()
+            _lastError = nil
         } catch {
-            // エラー時は現在のデータを保持
+            _lastError = error
         }
     }
 }

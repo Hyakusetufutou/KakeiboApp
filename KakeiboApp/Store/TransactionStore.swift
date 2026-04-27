@@ -13,11 +13,12 @@ import Combine
 protocol TransactionStoreProtocol {
     var transactions: AnyPublisher<[TransactionModel], Never> { get }
     var hasMoreData: AnyPublisher<Bool, Never> { get }
+    var lastError: AnyPublisher<Error?, Never> { get }
 
     func add(_ transaction: TransactionModel) async throws
     func update(_ transaction: TransactionModel) async throws
     func delete(_ transaction: TransactionModel) async throws
-    func search(text: String?) async -> [TransactionModel]
+    func search(text: String?) async throws -> [TransactionModel]
     func loadMore() async
     func reload() async
 }
@@ -27,6 +28,7 @@ final class TransactionStore: TransactionStoreProtocol {
     // MARK: - State
     @Published private var _transactions: [TransactionModel] = []
     @Published private var _hasMoreData = true
+    @Published private var _lastError: Error?
 
     var transactions: AnyPublisher<[TransactionModel], Never> {
         $_transactions.eraseToAnyPublisher()
@@ -34,6 +36,10 @@ final class TransactionStore: TransactionStoreProtocol {
 
     var hasMoreData: AnyPublisher<Bool, Never> {
         $_hasMoreData.eraseToAnyPublisher()
+    }
+
+    var lastError: AnyPublisher<Error?, Never> {
+        $_lastError.eraseToAnyPublisher()
     }
 
     // MARK: - Dependencies
@@ -64,12 +70,8 @@ final class TransactionStore: TransactionStoreProtocol {
         await reload()
     }
 
-    func search(text: String?) async -> [TransactionModel] {
-        do {
-            return try await repository.search(text: text)
-        } catch {
-            return []
-        }
+    func search(text: String?) async throws -> [TransactionModel] {
+        return try await repository.search(text: text)
     }
 
     func loadMore() async {
@@ -101,8 +103,10 @@ final class TransactionStore: TransactionStoreProtocol {
             if newItems.count < loadMoreLimit {
                 _hasMoreData = false
             }
+
+            _lastError = nil
         } catch {
-            // エラー時は何もしない
+            _lastError = error
         }
     }
 
@@ -122,6 +126,7 @@ final class TransactionStore: TransactionStoreProtocol {
             _hasMoreData = items.count == initialLimit
         } catch {
             // エラー時は現在のデータを保持
+            _lastError = error
         }
     }
 }
