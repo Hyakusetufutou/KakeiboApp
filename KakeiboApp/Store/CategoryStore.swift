@@ -24,15 +24,15 @@ protocol CategoryStoreProtocol {
 @MainActor
 final class CategoryStore: CategoryStoreProtocol {
     // MARK: - State
-    @Published private var _categories: [CategoryModel] = []
-    @Published private var _lastError: Error?
+    @Published private var categoriesInternal: [CategoryModel] = []
+    @Published private var lastErrorInternal: Error?
     @AppStorage("defaultCategoriesSeeded") private var isSeeded = false
 
     var categories: AnyPublisher<[CategoryModel], Never> {
-        $_categories.eraseToAnyPublisher()
+        $categoriesInternal.eraseToAnyPublisher()
     }
     var lastError: AnyPublisher<Error?, Never> {
-        $_lastError.eraseToAnyPublisher()
+        $lastErrorInternal.eraseToAnyPublisher()
     }
 
     // MARK: - Dependencies
@@ -49,7 +49,7 @@ final class CategoryStore: CategoryStoreProtocol {
 
     // MARK: - Actions
     func find(id: UUID) -> CategoryModel? {
-        _categories.first { $0.id == id }
+        categoriesInternal.first { $0.id == id }
     }
 
     func add(_ category: CategoryModel) async throws {
@@ -78,16 +78,16 @@ final class CategoryStore: CategoryStoreProtocol {
                 isSeeded = true
             }
         } catch {
-            _lastError = error
+            lastErrorInternal = error
         }
     }
 
     private func reload() async {
         do {
-            _categories = try await repository.fetchAll()
-            _lastError = nil
+            categoriesInternal = try await repository.fetchAll()
+            lastErrorInternal = nil
         } catch {
-            _lastError = error
+            lastErrorInternal = error
         }
     }
 }

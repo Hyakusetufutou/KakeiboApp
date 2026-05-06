@@ -21,21 +21,26 @@ final class MockCategoryStore: CategoryStoreProtocol, @unchecked Sendable {
 
     // 注入するデータ・エラー
     var stubbedCategories: [CategoryModel] = [] {
-        didSet { _categoriesSubject.send(stubbedCategories) }
+        didSet { categoriesSubject.send(stubbedCategories) }
     }
     var addError: Error?
     var updateError: Error?
     var deleteError: Error?
 
-    private let _categoriesSubject: CurrentValueSubject<[CategoryModel], Never>
+    private let categoriesSubject: CurrentValueSubject<[CategoryModel], Never>
+    private let lastErrorSubject: CurrentValueSubject<Error?, Never>
 
     var categories: AnyPublisher<[CategoryModel], Never> {
-        _categoriesSubject.eraseToAnyPublisher()
+        categoriesSubject.eraseToAnyPublisher()
+    }
+    var lastError: AnyPublisher<Error?, Never> {
+        lastErrorSubject.eraseToAnyPublisher()
     }
 
     init(categories: [CategoryModel] = []) {
         self.stubbedCategories = categories
-        self._categoriesSubject = CurrentValueSubject(categories)
+        self.categoriesSubject = CurrentValueSubject(categories)
+        self.lastErrorSubject = CurrentValueSubject(nil)
     }
 
     func find(id: UUID) -> CategoryModel? {
@@ -76,35 +81,41 @@ final class MockTransactionStore: TransactionStoreProtocol, @unchecked Sendable 
 
     // 注入するデータ・エラー
     var stubbedTransactions: [TransactionModel] = [] {
-        didSet { _transactionsSubject.send(stubbedTransactions) }
+        didSet { transactionsSubject.send(stubbedTransactions) }
     }
     var stubbedHasMoreData = true {
-        didSet { _hasMoreDataSubject.send(stubbedHasMoreData) }
+        didSet { hasMoreDataSubject.send(stubbedHasMoreData) }
     }
     var deleteError: Error?
     var addError: Error?
 
-    private let _transactionsSubject: CurrentValueSubject<[TransactionModel], Never>
-    private let _hasMoreDataSubject: CurrentValueSubject<Bool, Never>
+    var lastError: AnyPublisher<Error?, Never> {
+        lastErrorSubject.eraseToAnyPublisher()
+    }
+
+    private let transactionsSubject: CurrentValueSubject<[TransactionModel], Never>
+    private let hasMoreDataSubject: CurrentValueSubject<Bool, Never>
+    private let lastErrorSubject: CurrentValueSubject<Error?, Never>
 
     var transactions: AnyPublisher<[TransactionModel], Never> {
-        _transactionsSubject.eraseToAnyPublisher()
+        transactionsSubject.eraseToAnyPublisher()
     }
 
     var hasMoreData: AnyPublisher<Bool, Never> {
-        _hasMoreDataSubject.eraseToAnyPublisher()
+        hasMoreDataSubject.eraseToAnyPublisher()
     }
 
     init(transactions: [TransactionModel] = [], hasMoreData: Bool = true) {
         self.stubbedTransactions = transactions
         self.stubbedHasMoreData = hasMoreData
-        self._transactionsSubject = CurrentValueSubject(transactions)
-        self._hasMoreDataSubject = CurrentValueSubject(hasMoreData)
+        self.transactionsSubject = CurrentValueSubject(transactions)
+        self.hasMoreDataSubject = CurrentValueSubject(hasMoreData)
+        self.lastErrorSubject = CurrentValueSubject(nil)
     }
 
     func add(_ transaction: TransactionModel) async throws {
         addCallCount += 1
-        if let error = addError { throw error }  // ← 追加
+        if let error = addError { throw error }
         stubbedTransactions.append(transaction)
     }
 
@@ -124,7 +135,7 @@ final class MockTransactionStore: TransactionStoreProtocol, @unchecked Sendable 
     func search(text: String?) async -> [TransactionModel] {
         guard let text, !text.isEmpty else { return stubbedTransactions }
         return stubbedTransactions.filter {
-            $0.title.contains(text) || ($0.memo ?? "").contains(text)
+            $0.title.contains(text) || ($0.memo).contains(text)
         }
     }
 
