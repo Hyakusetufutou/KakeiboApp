@@ -66,6 +66,7 @@ final class TransactionInputViewModel: ObservableObject {
         self.categoryStore = categoryStore
         self.transactionStore = transactionStore
         setupBindings()
+        bindError()
     }
 
     // MARK: - Public Methods
@@ -100,19 +101,14 @@ final class TransactionInputViewModel: ObservableObject {
         isLoading = true
         defer { isLoading = false }
 
-        do {
-            if isEdit {
-                try await transactionStore.update(transaction)
-            } else {
-                try await transactionStore.add(transaction)
-            }
-
-            // Success: close the view
-            closeInputView()
-        } catch {
-            // Error: keep the view open and show error
-            errorMessage = "保存に失敗しました: \(error.localizedDescription)"
+        if isEdit {
+            await transactionStore.update(transaction)
+        } else {
+            await transactionStore.add(transaction)
         }
+
+        // Success: close the view
+        closeInputView()
     }
 
     func cancel() {
@@ -197,6 +193,13 @@ final class TransactionInputViewModel: ObservableObject {
         isPresentInputView = false
         errorMessage = nil
         resetForm()
+    }
+
+    private func bindError() {
+        transactionStore.errorPublisher
+            .map(ErrorMapper.message)
+            .receive(on: DispatchQueue.main)
+            .assign(to: &$errorMessage)
     }
 }
 

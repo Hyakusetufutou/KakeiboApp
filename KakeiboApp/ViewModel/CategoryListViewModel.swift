@@ -23,16 +23,13 @@ final class CategoryListViewModel: ObservableObject {
     init(categoryStore: CategoryStoreProtocol) {
         self.categoryStore = categoryStore
         bindCategories()
+        bindError()
     }
 
     // MARK: - Public Methods
 
     func delete(_ category: CategoryModel) async {
-        do {
-            try await categoryStore.delete(category)
-        } catch {
-            errorMessage = "削除に失敗しました: \(error.localizedDescription)"
-        }
+        await categoryStore.delete(category)
     }
 
     func clearError() {
@@ -45,5 +42,12 @@ final class CategoryListViewModel: ObservableObject {
         categoryStore.categories
             .receive(on: DispatchQueue.main)
             .assign(to: &$categories)
+    }
+
+    private func bindError() {
+        categoryStore.errorPublisher
+            .map(ErrorMapper.message)
+            .receive(on: DispatchQueue.main)
+            .assign(to: &$errorMessage)
     }
 }

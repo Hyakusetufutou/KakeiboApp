@@ -56,6 +56,7 @@ final class GraphViewModel: ObservableObject {
         self.transactionStore = transactionStore
         bindCategorySummaries()
         bindHasMoreData()
+        bindError()
     }
 
     // MARK: - Public Methods
@@ -68,11 +69,7 @@ final class GraphViewModel: ObservableObject {
         isLoading = true
         defer { isLoading = false }
 
-        do {
-            try await transactionStore.delete(transaction)
-        } catch {
-            errorMessage = "削除に失敗しました: \(error.localizedDescription)"
-        }
+        await transactionStore.delete(transaction)
     }
 
     func changeMonth(by value: Int) {
@@ -165,5 +162,12 @@ final class GraphViewModel: ObservableObject {
                 )
             }
             .sorted { $0.totalAmount > $1.totalAmount }
+    }
+
+    private func bindError() {
+        transactionStore.errorPublisher
+            .map(ErrorMapper.message)
+            .receive(on: DispatchQueue.main)
+            .assign(to: &$errorMessage)
     }
 }

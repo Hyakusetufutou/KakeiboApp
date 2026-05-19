@@ -44,6 +44,7 @@ final class CalendarViewModel: ObservableObject {
         self.transactionStore = transactionStore
         bindDailySummaries()
         bindHasMoreData()
+        bindError()
     }
 
     // MARK: - Public Methods
@@ -59,11 +60,7 @@ final class CalendarViewModel: ObservableObject {
         isLoading = true
         defer { isLoading = false }
 
-        do {
-            try await transactionStore.delete(transaction)
-        } catch {
-            errorMessage = "削除に失敗しました: \(error.localizedDescription)"
-        }
+        await transactionStore.delete(transaction)
     }
 
     func category(for id: UUID) -> CategoryModel? {
@@ -154,5 +151,12 @@ final class CalendarViewModel: ObservableObject {
                 transactions: dailyTransactions
             )
         }
+    }
+
+    private func bindError() {
+        transactionStore.errorPublisher
+            .map(ErrorMapper.message)
+            .receive(on: DispatchQueue.main)
+            .assign(to: &$errorMessage)
     }
 }

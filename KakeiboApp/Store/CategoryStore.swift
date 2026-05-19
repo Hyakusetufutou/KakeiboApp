@@ -13,26 +13,28 @@ import SwiftUI
 @MainActor
 protocol CategoryStoreProtocol {
     var categories: AnyPublisher<[CategoryModel], Never> { get }
-    var lastError: AnyPublisher<Error?, Never> { get }
+    var errorPublisher: AnyPublisher<Error, Never> { get }
 
     func find(id: UUID) -> CategoryModel?
-    func add(_ category: CategoryModel) async throws
-    func update(_ category: CategoryModel) async throws
-    func delete(_ category: CategoryModel) async throws
+    func add(_ category: CategoryModel) async
+    func update(_ category: CategoryModel) async
+    func delete(_ category: CategoryModel) async
 }
 
 @MainActor
 final class CategoryStore: CategoryStoreProtocol {
     // MARK: - State
     @Published private var categoriesInternal: [CategoryModel] = []
-    @Published private var lastErrorInternal: Error?
     @AppStorage("defaultCategoriesSeeded") private var isSeeded = false
 
     var categories: AnyPublisher<[CategoryModel], Never> {
         $categoriesInternal.eraseToAnyPublisher()
     }
-    var lastError: AnyPublisher<Error?, Never> {
-        $lastErrorInternal.eraseToAnyPublisher()
+
+    private let errorSubject = PassthroughSubject<Error, Never>()
+
+    var errorPublisher: AnyPublisher<Error, Never> {
+        errorSubject.eraseToAnyPublisher()
     }
 
     // MARK: - Dependencies
@@ -52,20 +54,32 @@ final class CategoryStore: CategoryStoreProtocol {
         categoriesInternal.first { $0.id == id }
     }
 
-    func add(_ category: CategoryModel) async throws {
-        try await repository.add(category)
-        await reload()
+    func add(_ category: CategoryModel) async {
+        do {
+            try await repository.add(category)
+            await reload()
+        } catch {
+            errorSubject.send(error)
+        }
     }
 
-    func update(_ category: CategoryModel) async throws {
-        try await repository.update(category)
-        await reload()
+    func update(_ category: CategoryModel) async {
+        do {
+            try await repository.update(category)
+            await reload()
+        } catch {
+            errorSubject.send(error)
+        }
     }
 
-    func delete(_ category: CategoryModel) async throws {
-        guard !category.isDefault else { throw CustomError.cannotDeletedefaultCategory }
-        try await repository.delete(category)
-        await reload()
+    func delete(_ category: CategoryModel) async {
+        do {
+            guard !category.isDefault else { throw CustomError.cannotDeletedefaultCategory }
+            try await repository.delete(category)
+            await reload()
+        } catch {
+            errorSubject.send(error)
+        }
     }
 
     // MARK: - Private
@@ -75,19 +89,18 @@ final class CategoryStore: CategoryStoreProtocol {
         do {
             for category in CategoryModel.defaults {
                 try await repository.add(category)
-                isSeeded = true
             }
+            isSeeded = true
         } catch {
-            lastErrorInternal = error
+            errorSubject.send(error)
         }
     }
 
     private func reload() async {
         do {
             categoriesInternal = try await repository.fetchAll()
-            lastErrorInternal = nil
         } catch {
-            lastErrorInternal = error
+            errorSubject.send(error)
         }
     }
 }

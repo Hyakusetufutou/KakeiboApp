@@ -52,6 +52,7 @@ final class HomeViewModel: ObservableObject {
         self.transactionStore = transactionStore
         bindTransactions()
         bindHasMoreData()
+        bindError()
     }
 
     // MARK: - Public Methods
@@ -64,11 +65,7 @@ final class HomeViewModel: ObservableObject {
         isLoading = true
         defer { isLoading = false }
 
-        do {
-            try await transactionStore.delete(transaction)
-        } catch {
-            errorMessage = "削除に失敗しました: \(error.localizedDescription)"
-        }
+        await transactionStore.delete(transaction)
     }
 
     func loadMore() async {
@@ -123,5 +120,12 @@ final class HomeViewModel: ObservableObject {
         transactionStore.hasMoreData
             .receive(on: DispatchQueue.main)
             .assign(to: &$hasMoreData)
+    }
+
+    private func bindError() {
+        transactionStore.errorPublisher
+            .map(ErrorMapper.message)
+            .receive(on: DispatchQueue.main)
+            .assign(to: &$errorMessage)
     }
 }

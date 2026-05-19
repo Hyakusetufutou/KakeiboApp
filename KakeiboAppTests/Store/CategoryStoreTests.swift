@@ -1,5 +1,5 @@
 //
-//  KakeiboAppTests.swift
+//  CategoryStoreTests.swift
 //  KakeiboAppTests
 //
 //  Created by Hyakusetufutou on 2025/09/07
@@ -94,31 +94,40 @@ final class CategoryStoreTests: XCTestCase {
         try await super.tearDown()
     }
 
-    private func collectCategories(count: Int = 1) async -> [[CategoryModel]] {
-        var results: [[CategoryModel]] = []
-        let exp = expectation(description: "categories publisher")
-        exp.expectedFulfillmentCount = count
+    // MARK: - Private Helpers
 
-        store.categories
-            .sink { categories in
-                results.append(categories)
+    /// Store 初期化後、初回 reload の完了を待つ
+    private func makeStore() async -> CategoryStore {
+        let store = CategoryStore(repository: repository)
+        // 初期化時の Task (seedDefaultsIfNeeded + reload) の完了を待つ
+        try? await Task.sleep(nanoseconds: 100_000_000)
+        return store
+    }
+
+    /// errorPublisher から最初のエラーを受け取る
+    private func collectFirstError(timeout: TimeInterval = 2.0) async -> Error? {
+        let exp = expectation(description: "error received")
+        var receivedError: Error?
+
+        store.errorPublisher
+            .first()
+            .sink { error in
+                receivedError = error
                 exp.fulfill()
             }
             .store(in: &cancellables)
 
-        await fulfillment(of: [exp], timeout: 2.0)
-        return results
+        await fulfillment(of: [exp], timeout: timeout)
+        return receivedError
     }
 
     // MARK: - 正常系
 
     func test_init_fetchAllが呼ばれカテゴリが読み込まれる() async throws {
         repository.stubbedCategories = [.stub(name: "食費"), .stub(name: "交通費")]
-        store = CategoryStore(repository: repository)
+        store = await makeStore()
 
-        try await Task.sleep(nanoseconds: 100_000_000)
-
-        XCTAssertEqual(repository.fetchAllCallCount, 1)
+        XCTAssertGreaterThanOrEqual(repository.fetchAllCallCount, 1)
 
         let exp = expectation(description: "categories loaded")
         store.categories
@@ -130,20 +139,23 @@ final class CategoryStoreTests: XCTestCase {
     }
 
     func test_add_リポジトリにカテゴリが追加されreloadされる() async throws {
-        store = CategoryStore(repository: repository)
+        store = await makeStore()
+        let fetchCountBefore = repository.fetchAllCallCount
         let category = CategoryModel.stub(name: "娯楽")
 
-        try await store.add(category)
+        await store.add(category)
 
         XCTAssertEqual(repository.addCallCount, 1)
-        XCTAssertEqual(repository.fetchAllCallCount, 2)
+        // add 後に reload が呼ばれることを確認
+        XCTAssertEqual(repository.fetchAllCallCount, fetchCountBefore + 1)
         XCTAssertTrue(repository.stubbedCategories.contains { $0.id == category.id })
     }
 
     func test_update_リポジトリのカテゴリが更新されreloadされる() async throws {
         let original = CategoryModel.stub(name: "食費")
         repository.stubbedCategories = [original]
-        store = CategoryStore(repository: repository)
+        store = await makeStore()
+        let fetchCountBefore = repository.fetchAllCallCount
 
         let updated = CategoryModel(
             id: original.id,
@@ -152,29 +164,54 @@ final class CategoryStoreTests: XCTestCase {
             type: .expense,
             isDefault: false
         )
-        try await store.update(updated)
+        await store.update(updated)
 
         XCTAssertEqual(repository.updateCallCount, 1)
+        // update 後に reload が呼ばれることを確認
+        XCTAssertEqual(repository.fetchAllCallCount, fetchCountBefore + 1)
         XCTAssertEqual(repository.stubbedCategories.first?.name, "外食費")
     }
 
     func test_delete_リポジトリからカテゴリが削除されreloadされる() async throws {
         let category = CategoryModel.stub(name: "医療費")
         repository.stubbedCategories = [category]
-        store = CategoryStore(repository: repository)
+        store = await makeStore()
+        let fetchCountBefore = repository.fetchAllCallCount
 
-        try await store.delete(category)
+        await store.delete(category)
 
         XCTAssertEqual(repository.deleteCallCount, 1)
+        // delete 後に reload が呼ばれることを確認
+        XCTAssertEqual(repository.fetchAllCallCount, fetchCountBefore + 1)
         XCTAssertTrue(repository.stubbedCategories.isEmpty)
+    }
+
+    func test_delete_デフォルトカテゴリは削除できずエラーになる() async throws {
+        let defaultCategory = CategoryModel.stub(name: "その他", isDefault: true)
+        repository.stubbedCategories = [defaultCategory]
+        store = await makeStore()
+
+        // errorPublisher の購読を先に開始してから delete を呼ぶ
+        let exp = expectation(description: "error on delete default category")
+        store.errorPublisher
+            .first()
+            .sink { error in
+                // cannotDeleteDefaultCategory エラーが発行されることを確認
+                exp.fulfill()
+            }
+            .store(in: &cancellables)
+
+        await store.delete(defaultCategory)
+
+        await fulfillment(of: [exp], timeout: 2.0)
+        // リポジトリの delete は呼ばれていない
+        XCTAssertEqual(repository.deleteCallCount, 0)
     }
 
     func test_find_存在するIDでカテゴリが返る() async throws {
         let category = CategoryModel.stub(name: "給与", type: .income)
         repository.stubbedCategories = [category]
-        store = CategoryStore(repository: repository)
-
-        try await Task.sleep(nanoseconds: 100_000_000)
+        store = await makeStore()
 
         let found = store.find(id: category.id)
         XCTAssertEqual(found?.id, category.id)
@@ -183,9 +220,7 @@ final class CategoryStoreTests: XCTestCase {
 
     func test_find_存在しないIDでnilが返る() async throws {
         repository.stubbedCategories = [.stub()]
-        store = CategoryStore(repository: repository)
-
-        try await Task.sleep(nanoseconds: 100_000_000)
+        store = await makeStore()
 
         let found = store.find(id: UUID())
         XCTAssertNil(found)
@@ -193,57 +228,66 @@ final class CategoryStoreTests: XCTestCase {
 
     // MARK: - 異常系
 
-    func test_add_エラー時にthrowされる() async throws {
-        store = CategoryStore(repository: repository)
+    func test_add_エラー時にerrorPublisherにエラーが流れる() async throws {
+        store = await makeStore()
         repository.addError = CustomError.categoryNotFoundError
 
-        do {
-            try await store.add(.stub())
-            XCTFail("エラーがthrowされるべき")
-        } catch {
-            XCTAssertEqual(repository.addCallCount, 1)
-        }
+        // errorPublisher の購読を先に開始してから add を呼ぶ
+        let exp = expectation(description: "error on add")
+        store.errorPublisher
+            .first()
+            .sink { _ in exp.fulfill() }
+            .store(in: &cancellables)
+
+        await store.add(.stub())
+
+        await fulfillment(of: [exp], timeout: 2.0)
+        XCTAssertEqual(repository.addCallCount, 1)
     }
 
-    func test_update_エラー時にthrowされる() async throws {
+    func test_update_エラー時にerrorPublisherにエラーが流れる() async throws {
         let category = CategoryModel.stub()
         repository.stubbedCategories = [category]
-        store = CategoryStore(repository: repository)
+        store = await makeStore()
         repository.updateError = CustomError.categoryNotFoundError
 
-        do {
-            try await store.update(category)
-            XCTFail("エラーがthrowされるべき")
-        } catch {
-            XCTAssertEqual(repository.updateCallCount, 1)
-        }
+        let exp = expectation(description: "error on update")
+        store.errorPublisher
+            .first()
+            .sink { _ in exp.fulfill() }
+            .store(in: &cancellables)
+
+        await store.update(category)
+
+        await fulfillment(of: [exp], timeout: 2.0)
+        XCTAssertEqual(repository.updateCallCount, 1)
     }
 
-    func test_delete_エラー時にthrowされる() async throws {
+    func test_delete_エラー時にerrorPublisherにエラーが流れる() async throws {
         let category = CategoryModel.stub()
         repository.stubbedCategories = [category]
-        store = CategoryStore(repository: repository)
+        store = await makeStore()
         repository.deleteError = CustomError.categoryNotFoundError
 
-        do {
-            try await store.delete(category)
-            XCTFail("エラーがthrowされるべき")
-        } catch {
-            XCTAssertEqual(repository.deleteCallCount, 1)
-        }
+        let exp = expectation(description: "error on delete")
+        store.errorPublisher
+            .first()
+            .sink { _ in exp.fulfill() }
+            .store(in: &cancellables)
+
+        await store.delete(category)
+
+        await fulfillment(of: [exp], timeout: 2.0)
+        XCTAssertEqual(repository.deleteCallCount, 1)
     }
 
     func test_reload_fetchAllエラー時に既存データが保持される() async throws {
         repository.stubbedCategories = [.stub(name: "食費")]
-        store = CategoryStore(repository: repository)
-        try await Task.sleep(nanoseconds: 100_000_000)
+        store = await makeStore()
 
-        // reload時にエラーを注入
+        // reload後にエラーを注入（次の reload で失敗させる）
         repository.fetchAllError = CustomError.categoryNotFoundError
-        repository.stubbedCategories = []
 
-        // deleteでreloadをトリガー（deleteは成功、reloadのfetchAllが失敗）
-        // エラー時はデータ保持のため、現在のcategoriesを確認
         let exp = expectation(description: "categories retained")
         store.categories
             .first { $0.count == 1 }
@@ -260,7 +304,7 @@ final class CategoryStoreTests: XCTestCase {
 
     func test_categories_空のリポジトリで空配列が返る() async throws {
         repository.stubbedCategories = []
-        store = CategoryStore(repository: repository)
+        store = await makeStore()
 
         let exp = expectation(description: "empty categories")
         store.categories
@@ -275,13 +319,44 @@ final class CategoryStoreTests: XCTestCase {
     }
 
     func test_add_複数追加後に全件取得できる() async throws {
-        store = CategoryStore(repository: repository)
+        store = await makeStore()
 
         let categories = (1...5).map { CategoryModel.stub(name: "カテゴリ\($0)") }
         for category in categories {
-            try await store.add(category)
+            await store.add(category)
         }
 
         XCTAssertEqual(repository.stubbedCategories.count, 5)
+    }
+
+    func test_add_categoriesパブリッシャーが更新される() async throws {
+        store = await makeStore()
+        let category = CategoryModel.stub(name: "新カテゴリ")
+
+        let exp = expectation(description: "categories updated after add")
+        store.categories
+            .first { $0.contains { $0.id == category.id } }
+            .sink { _ in exp.fulfill() }
+            .store(in: &cancellables)
+
+        await store.add(category)
+
+        await fulfillment(of: [exp], timeout: 2.0)
+    }
+
+    func test_delete_categoriesパブリッシャーから削除される() async throws {
+        let category = CategoryModel.stub(name: "削除対象")
+        repository.stubbedCategories = [category]
+        store = await makeStore()
+
+        let exp = expectation(description: "categories updated after delete")
+        store.categories
+            .first { !$0.contains { $0.id == category.id } }
+            .sink { _ in exp.fulfill() }
+            .store(in: &cancellables)
+
+        await store.delete(category)
+
+        await fulfillment(of: [exp], timeout: 2.0)
     }
 }

@@ -28,42 +28,41 @@ final class MockCategoryStore: CategoryStoreProtocol, @unchecked Sendable {
     var deleteError: Error?
 
     private let categoriesSubject: CurrentValueSubject<[CategoryModel], Never>
-    private let lastErrorSubject: CurrentValueSubject<Error?, Never>
+    private let errorSubject = PassthroughSubject<Error, Never>()
 
     var categories: AnyPublisher<[CategoryModel], Never> {
         categoriesSubject.eraseToAnyPublisher()
     }
-    var lastError: AnyPublisher<Error?, Never> {
-        lastErrorSubject.eraseToAnyPublisher()
+    var errorPublisher: AnyPublisher<Error, Never> {
+        errorSubject.eraseToAnyPublisher()
     }
 
     init(categories: [CategoryModel] = []) {
         self.stubbedCategories = categories
         self.categoriesSubject = CurrentValueSubject(categories)
-        self.lastErrorSubject = CurrentValueSubject(nil)
     }
 
     func find(id: UUID) -> CategoryModel? {
         stubbedCategories.first { $0.id == id }
     }
 
-    func add(_ category: CategoryModel) async throws {
+    func add(_ category: CategoryModel) async {
         addCallCount += 1
-        if let error = addError { throw error }
+        if let error = addError { errorSubject.send(error) }
         stubbedCategories.append(category)
     }
 
-    func update(_ category: CategoryModel) async throws {
+    func update(_ category: CategoryModel) async {
         updateCallCount += 1
-        if let error = updateError { throw error }
+        if let error = updateError { errorSubject.send(error) }
         if let index = stubbedCategories.firstIndex(where: { $0.id == category.id }) {
             stubbedCategories[index] = category
         }
     }
 
-    func delete(_ category: CategoryModel) async throws {
+    func delete(_ category: CategoryModel) async {
         deleteCallCount += 1
-        if let error = deleteError { throw error }
+        if let error = deleteError { errorSubject.send(error) }
         stubbedCategories.removeAll { $0.id == category.id }
     }
 }
@@ -89,13 +88,10 @@ final class MockTransactionStore: TransactionStoreProtocol, @unchecked Sendable 
     var deleteError: Error?
     var addError: Error?
 
-    var lastError: AnyPublisher<Error?, Never> {
-        lastErrorSubject.eraseToAnyPublisher()
-    }
-
     private let transactionsSubject: CurrentValueSubject<[TransactionModel], Never>
     private let hasMoreDataSubject: CurrentValueSubject<Bool, Never>
     private let lastErrorSubject: CurrentValueSubject<Error?, Never>
+    private let errorSubject = PassthroughSubject<Error, Never>()
 
     var transactions: AnyPublisher<[TransactionModel], Never> {
         transactionsSubject.eraseToAnyPublisher()
@@ -103,6 +99,10 @@ final class MockTransactionStore: TransactionStoreProtocol, @unchecked Sendable 
 
     var hasMoreData: AnyPublisher<Bool, Never> {
         hasMoreDataSubject.eraseToAnyPublisher()
+    }
+
+    var errorPublisher: AnyPublisher<Error, Never> {
+        errorSubject.eraseToAnyPublisher()
     }
 
     init(transactions: [TransactionModel] = [], hasMoreData: Bool = true) {
@@ -113,22 +113,22 @@ final class MockTransactionStore: TransactionStoreProtocol, @unchecked Sendable 
         self.lastErrorSubject = CurrentValueSubject(nil)
     }
 
-    func add(_ transaction: TransactionModel) async throws {
+    func add(_ transaction: TransactionModel) async {
         addCallCount += 1
-        if let error = addError { throw error }
+        if let error = addError { errorSubject.send(error) }
         stubbedTransactions.append(transaction)
     }
 
-    func update(_ transaction: TransactionModel) async throws {
+    func update(_ transaction: TransactionModel) async {
         updateCallCount += 1
         if let index = stubbedTransactions.firstIndex(where: { $0.id == transaction.id }) {
             stubbedTransactions[index] = transaction
         }
     }
 
-    func delete(_ transaction: TransactionModel) async throws {
+    func delete(_ transaction: TransactionModel) async {
         deleteCallCount += 1
-        if let error = deleteError { throw error }
+        if let error = deleteError { errorSubject.send(error) }
         stubbedTransactions.removeAll { $0.id == transaction.id }
     }
 

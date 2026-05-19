@@ -26,6 +26,7 @@ final class CategoryInputViewModel: ObservableObject {
 
     init(categoryStore: CategoryStoreProtocol) {
         self.categoryStore = categoryStore
+        bindError()
     }
 
     // MARK: - Public Methods
@@ -48,6 +49,8 @@ final class CategoryInputViewModel: ObservableObject {
             return
         }
 
+        clearError()
+
         let category = CategoryModel(
             id: id,
             name: name,
@@ -59,16 +62,15 @@ final class CategoryInputViewModel: ObservableObject {
         isLoading = true
         defer { isLoading = false }
 
-        do {
-            if isEdit {
-                try await categoryStore.update(category)
-            } else {
-                try await categoryStore.add(category)
-            }
+        if isEdit {
+            await categoryStore.update(category)
+        } else {
+            await categoryStore.add(category)
+        }
+
+        if errorMessage == nil {
             // 成功時のみ閉じる
             closeInputView()
-        } catch {
-            errorMessage = "保存に失敗しました: \(error.localizedDescription)"
         }
     }
 
@@ -105,5 +107,12 @@ final class CategoryInputViewModel: ObservableObject {
         isPresentInputView = false
         errorMessage = nil
         resetForm()
+    }
+
+    private func bindError() {
+        categoryStore.errorPublisher
+            .map(ErrorMapper.message)
+            .receive(on: DispatchQueue.main)
+            .assign(to: &$errorMessage)
     }
 }

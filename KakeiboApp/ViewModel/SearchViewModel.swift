@@ -26,6 +26,7 @@ final class SearchViewModel: ObservableObject {
         self.categoryStore = categoryStore
         self.transactionStore = transactionStore
         setupSearchPipeline()
+        bindError()
     }
 
     // MARK: - Public Methods
@@ -34,11 +35,7 @@ final class SearchViewModel: ObservableObject {
         isLoading = true
         defer { isLoading = false }
 
-        do {
-            try await transactionStore.delete(transaction)
-        } catch {
-            errorMessage = "削除に失敗しました: \(error.localizedDescription)"
-        }
+        await transactionStore.delete(transaction)
     }
 
     func findCategory(id: UUID) -> CategoryModel? {
@@ -82,5 +79,12 @@ final class SearchViewModel: ObservableObject {
                 self.resultTransactions = []
             }
         }
+    }
+
+    private func bindError() {
+        transactionStore.errorPublisher
+            .map(ErrorMapper.message)
+            .receive(on: DispatchQueue.main)
+            .assign(to: &$errorMessage)
     }
 }

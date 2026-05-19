@@ -13,11 +13,11 @@ import Combine
 protocol TransactionStoreProtocol {
     var transactions: AnyPublisher<[TransactionModel], Never> { get }
     var hasMoreData: AnyPublisher<Bool, Never> { get }
-    var lastError: AnyPublisher<Error?, Never> { get }
+    var errorPublisher: AnyPublisher<Error, Never> { get }
 
-    func add(_ transaction: TransactionModel) async throws
-    func update(_ transaction: TransactionModel) async throws
-    func delete(_ transaction: TransactionModel) async throws
+    func add(_ transaction: TransactionModel) async
+    func update(_ transaction: TransactionModel) async
+    func delete(_ transaction: TransactionModel) async
     func search(text: String?) async throws -> [TransactionModel]
     func loadMore() async
     func reload() async
@@ -28,7 +28,6 @@ final class TransactionStore: TransactionStoreProtocol {
     // MARK: - State
     @Published private var transactionsInternal: [TransactionModel] = []
     @Published private var hasMoreDataInternal = true
-    @Published private var lastErrorInternal: Error?
 
     var transactions: AnyPublisher<[TransactionModel], Never> {
         $transactionsInternal.eraseToAnyPublisher()
@@ -38,8 +37,10 @@ final class TransactionStore: TransactionStoreProtocol {
         $hasMoreDataInternal.eraseToAnyPublisher()
     }
 
-    var lastError: AnyPublisher<Error?, Never> {
-        $lastErrorInternal.eraseToAnyPublisher()
+    private let errorSubject = PassthroughSubject<Error, Never>()
+
+    var errorPublisher: AnyPublisher<Error, Never> {
+        errorSubject.eraseToAnyPublisher()
     }
 
     // MARK: - Dependencies
@@ -55,19 +56,31 @@ final class TransactionStore: TransactionStoreProtocol {
     }
 
     // MARK: - Actions
-    func add(_ transaction: TransactionModel) async throws {
-        try await repository.add(transaction)
-        await reload()
+    func add(_ transaction: TransactionModel) async {
+        do {
+            try await repository.add(transaction)
+            await reload()
+        } catch {
+            errorSubject.send(error)
+        }
     }
 
-    func update(_ transaction: TransactionModel) async throws {
-        try await repository.update(transaction)
-        await reload()
+    func update(_ transaction: TransactionModel) async {
+        do {
+            try await repository.update(transaction)
+            await reload()
+        } catch {
+            errorSubject.send(error)
+        }
     }
 
-    func delete(_ transaction: TransactionModel) async throws {
-        try await repository.delete(transaction)
-        await reload()
+    func delete(_ transaction: TransactionModel) async {
+        do {
+            try await repository.delete(transaction)
+            await reload()
+        } catch {
+            errorSubject.send(error)
+        }
     }
 
     func search(text: String?) async throws -> [TransactionModel] {
@@ -104,9 +117,8 @@ final class TransactionStore: TransactionStoreProtocol {
                 hasMoreDataInternal = false
             }
 
-            lastErrorInternal = nil
         } catch {
-            lastErrorInternal = error
+            errorSubject.send(error)
         }
     }
 
@@ -125,8 +137,7 @@ final class TransactionStore: TransactionStoreProtocol {
             // 初回読み込みでlimit件未満なら、これ以上データはない
             hasMoreDataInternal = items.count == initialLimit
         } catch {
-            // エラー時は現在のデータを保持
-            lastErrorInternal = error
+            errorSubject.send(error)
         }
     }
 }

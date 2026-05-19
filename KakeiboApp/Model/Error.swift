@@ -33,3 +33,9 @@ enum CustomError: Equatable, LocalizedError {
         }
     }
 }
+
+enum ErrorMapper {
+    static func message(for error: Error) -> String {
+        return error.localizedDescription
+    }
+}
