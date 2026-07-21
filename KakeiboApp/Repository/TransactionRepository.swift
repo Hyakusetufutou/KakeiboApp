@@ -31,6 +31,9 @@ actor TransactionRepository: TransactionRepositoryProtocol {
         self.container = container
         self.context = container.newBackgroundContext()
         self.context.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+        // 他のコンテキスト（メインコンテキスト等）での保存内容をこのバックグラウンド
+        // コンテキストにも自動反映させ、複数コンテキスト間の不整合を防ぐ。
+        self.context.automaticallyMergesChangesFromParent = true
     }
 
     func fetch(
@@ -39,10 +42,8 @@ actor TransactionRepository: TransactionRepositoryProtocol {
         limit: Int?,
         offset: Int?
     ) async throws -> [TransactionModel] {
-        let context = self.context
-        return try await context.perform {
+        try await performBackgroundTask { context in
             let request: NSFetchRequest<TransactionEntity> = TransactionEntity.fetchRequest()
-
             request.relationshipKeyPathsForPrefetching = ["category"]
 
             var predicates: [NSPredicate] = []
@@ -68,20 +69,18 @@ actor TransactionRepository: TransactionRepositoryProtocol {
     }
 
     func search(text: String?) async throws -> [TransactionModel] {
-        let context = self.context
-        return try await context.perform {
-            let request: NSFetchRequest<TransactionEntity> = TransactionEntity.fetchRequest()
-            request.relationshipKeyPathsForPrefetching = ["category"]
-
+        try await performBackgroundTask { context in
             guard let text = text, !text.isEmpty else {
                 return []
             }
+
+            let request: NSFetchRequest<TransactionEntity> = TransactionEntity.fetchRequest()
+            request.relationshipKeyPathsForPrefetching = ["category"]
             request.predicate = NSPredicate(
                 format: "title CONTAINS[c] %@ OR memo CONTAINS[c] %@",
                 text,
                 text
             )
-
             request.sortDescriptors = [
                 NSSortDescriptor(keyPath: \TransactionEntity.date, ascending: false)
             ]
@@ -91,9 +90,8 @@ actor TransactionRepository: TransactionRepositoryProtocol {
     }
 
     func add(_ model: TransactionModel) async throws {
-        let context = self.context
-        try await context.perform {
-            let category = try self.fetchCategory(by: model.categoryId, in: context)
+        try await performBackgroundTask { context in
+            let category = try self.fetchCategoryEntity(by: model.categoryId, in: context)
 
             let entity = TransactionEntity(context: context)
             self.map(model: model, to: entity, category: category)
@@ -103,10 +101,9 @@ actor TransactionRepository: TransactionRepositoryProtocol {
     }
 
     func update(_ model: TransactionModel) async throws {
-        let context = self.context
-        try await context.perform {
+        try await performBackgroundTask { context in
             let entity = try self.fetchEntity(by: model.id, in: context)
-            let category = try self.fetchCategory(by: model.categoryId, in: context)
+            let category = try self.fetchCategoryEntity(by: model.categoryId, in: context)
 
             self.map(model: model, to: entity, category: category)
 
@@ -115,8 +112,7 @@ actor TransactionRepository: TransactionRepositoryProtocol {
     }
 
     func delete(_ model: TransactionModel) async throws {
-        let context = self.context
-        try await context.perform {
+        try await performBackgroundTask { context in
             let entity = try self.fetchEntity(by: model.id, in: context)
             context.delete(entity)
             try self.save(in: context)
@@ -125,6 +121,18 @@ actor TransactionRepository: TransactionRepositoryProtocol {
 
     // MARK: - Private Helpers
 
+    /// バックグラウンドコンテキスト上でブロックを実行する共通ラッパー。
+    /// 各メソッドで `context.perform` を個別に書く重複を避けるために用意。
+    private func performBackgroundTask<T: Sendable>(
+        _ block: @escaping (NSManagedObjectContext) throws -> T
+    ) async throws -> T {
+        let context = self.context
+        return try await context.perform {
+            try block(context)
+        }
+    }
+
+    /// context.performから呼び出すこと
     nonisolated private func map(
         model: TransactionModel,
         to entity: TransactionEntity,
@@ -157,7 +165,7 @@ actor TransactionRepository: TransactionRepositoryProtocol {
     }
 
     /// context.performから呼び出すこと
-    nonisolated private func fetchCategory(
+    nonisolated private func fetchCategoryEntity(
         by id: UUID,
         in context: NSManagedObjectContext
     ) throws -> CategoryEntity {

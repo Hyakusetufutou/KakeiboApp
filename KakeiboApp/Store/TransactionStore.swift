@@ -126,15 +126,17 @@ final class TransactionStore: TransactionStoreProtocol {
         hasMoreDataInternal = true
 
         do {
+            // 初回は initialLimit 件だけ取得する。limit: nil にすると全件取得になり、
+            // 直後の hasMoreData 判定（件数比較）と矛盾してしまうため注意。
             let items = try await repository.fetch(
                 from: nil,
                 to: nil,
-                limit: nil,
+                limit: initialLimit,
                 offset: 0
             )
             transactionsInternal = items
 
-            // 初回読み込みでlimit件未満なら、これ以上データはない
+            // 取得件数が initialLimit 未満なら、これ以上データはない
             hasMoreDataInternal = items.count == initialLimit
         } catch {
             errorSubject.send(error)

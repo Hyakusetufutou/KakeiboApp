@@ -25,11 +25,11 @@ actor CategoryRepository: CategoryRepositoryProtocol {
         self.container = container
         self.context = container.newBackgroundContext()
         self.context.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+        self.context.automaticallyMergesChangesFromParent = true
     }
 
     func fetchAll() async throws -> [CategoryModel] {
-        let context = self.context
-        return try await context.perform {
+        try await performBackgroundTask { context in
             let request: NSFetchRequest<CategoryEntity> = CategoryEntity.fetchRequest()
             request.sortDescriptors = [
                 NSSortDescriptor(keyPath: \CategoryEntity.name, ascending: true)
@@ -39,16 +39,14 @@ actor CategoryRepository: CategoryRepositoryProtocol {
     }
 
     func fetch(by id: UUID) async throws -> CategoryModel {
-        let context = self.context
-        return try await context.perform {
+        try await performBackgroundTask { context in
             let entity = try self.fetchEntity(by: id, in: context)
             return try entity.toModel()
         }
     }
 
     func add(_ categoryModel: CategoryModel) async throws {
-        let context = self.context
-        try await context.perform {
+        try await performBackgroundTask { context in
             let entity = CategoryEntity(context: context)
             self.map(model: categoryModel, to: entity)
 
@@ -57,8 +55,7 @@ actor CategoryRepository: CategoryRepositoryProtocol {
     }
 
     func update(_ categoryModel: CategoryModel) async throws {
-        let context = self.context
-        try await context.perform {
+        try await performBackgroundTask { context in
             let entity = try self.fetchEntity(by: categoryModel.id, in: context)
             self.map(model: categoryModel, to: entity)
 
@@ -67,8 +64,7 @@ actor CategoryRepository: CategoryRepositoryProtocol {
     }
 
     func delete(_ categoryModel: CategoryModel) async throws {
-        let context = self.context
-        try await context.perform {
+        try await performBackgroundTask { context in
             let entity = try self.fetchEntity(by: categoryModel.id, in: context)
             context.delete(entity)
 
@@ -77,6 +73,16 @@ actor CategoryRepository: CategoryRepositoryProtocol {
     }
 
     // MARK: - Private Helpers
+
+    /// バックグラウンドコンテキスト上でブロックを実行する共通ラッパー。
+    private func performBackgroundTask<T: Sendable>(
+        _ block: @escaping (NSManagedObjectContext) throws -> T
+    ) async throws -> T {
+        let context = self.context
+        return try await context.perform {
+            try block(context)
+        }
+    }
 
     /// context.performから呼び出すこと
     nonisolated private func map(model: CategoryModel, to entity: CategoryEntity) {
