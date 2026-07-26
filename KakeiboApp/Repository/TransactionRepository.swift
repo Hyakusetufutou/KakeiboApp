@@ -127,10 +127,12 @@ actor TransactionRepository: TransactionRepositoryProtocol {
 
     // MARK: - Private Helpers
 
-    private static let transactionSortDescriptors = [
-        NSSortDescriptor(keyPath: \TransactionEntity.date, ascending: false),
-        NSSortDescriptor(keyPath: \TransactionEntity.id, ascending: false),
-    ]
+    private static var transactionSortDescriptors: [NSSortDescriptor] {
+        [
+            NSSortDescriptor(keyPath: \TransactionEntity.date, ascending: false),
+            NSSortDescriptor(keyPath: \TransactionEntity.id, ascending: false),
+        ]
+    }
 
     private static func map(
         model: TransactionModel,
