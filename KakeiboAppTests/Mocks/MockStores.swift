@@ -65,6 +65,10 @@ final class MockCategoryStore: CategoryStoreProtocol, @unchecked Sendable {
         if let error = deleteError { errorSubject.send(error) }
         stubbedCategories.removeAll { $0.id == category.id }
     }
+
+    func reload() async {
+        categoriesSubject.send(stubbedCategories)
+    }
 }
 
 // MARK: - MockTransactionStore

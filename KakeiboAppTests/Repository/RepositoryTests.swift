@@ -509,20 +509,28 @@ final class TransactionRepositoryTests: XCTestCase {
         XCTAssertTrue(fetched.contains { $0.title == "月末" })
     }
 
-    func test_search_nilのとき全件返る() async throws {
+    func test_search_nilのとき空配列が返る() async throws {
         for i in 1...3 { try await transactionRepository.add(makeTransaction(title: "item\(i)")) }
 
         let results = try await transactionRepository.search(text: nil)
 
-        XCTAssertEqual(results.count, 3)
+        XCTAssertTrue(results.isEmpty)
     }
 
-    func test_search_空文字のとき全件返る() async throws {
+    func test_search_空文字のとき空配列が返る() async throws {
         for i in 1...3 { try await transactionRepository.add(makeTransaction(title: "item\(i)")) }
 
         let results = try await transactionRepository.search(text: "")
 
-        XCTAssertEqual(results.count, 3)
+        XCTAssertTrue(results.isEmpty)
+    }
+
+    func test_search_空白のみのとき空配列が返る() async throws {
+        for i in 1...3 { try await transactionRepository.add(makeTransaction(title: "item\(i)")) }
+
+        let results = try await transactionRepository.search(text: "   ")
+
+        XCTAssertTrue(results.isEmpty)
     }
 
     func test_delete後_残りのトランザクションが正しく返る() async throws {

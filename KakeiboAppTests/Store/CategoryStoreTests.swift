@@ -96,11 +96,10 @@ final class CategoryStoreTests: XCTestCase {
 
     // MARK: - Private Helpers
 
-    /// Store 初期化後、初回 reload の完了を待つ
+    /// Store を生成し、初回 reload を完了させる
     private func makeStore() async -> CategoryStore {
-        let store = CategoryStore(repository: repository)
-        // 初期化時の Task (seedDefaultsIfNeeded + reload) の完了を待つ
-        try? await Task.sleep(nanoseconds: 100_000_000)
+        let store = CategoryStore(repository: repository, autoLoad: false)
+        await store.reload()
         return store
     }
 

@@ -45,50 +45,51 @@ final class TransactionStore: TransactionStoreProtocol {
 
     // MARK: - Dependencies
     private let repository: TransactionRepositoryProtocol
-    private let initialLimit = 100
-    private let loadMoreLimit = 50
-    private var isLoadingMore = false  // loadMoreの多重実行防止用
+    private let initialLimit = StorePagination.initialLimit
+    private let loadMoreLimit = StorePagination.loadMoreLimit
+    private var isLoadingMore = false
+    private var isReloading = false
+    private var reloadGeneration = 0
 
     // MARK: - Init
-    init(repository: TransactionRepositoryProtocol) {
+    init(
+        repository: TransactionRepositoryProtocol,
+        autoLoad: Bool = true
+    ) {
         self.repository = repository
-        Task { await reload() }
+        if autoLoad {
+            Task { await reload() }
+        }
     }
 
     // MARK: - Actions
     func add(_ transaction: TransactionModel) async {
-        do {
+        await mutateAndReload {
             try await repository.add(transaction)
-            await reload()
-        } catch {
-            errorSubject.send(error)
         }
     }
 
     func update(_ transaction: TransactionModel) async {
-        do {
+        await mutateAndReload {
             try await repository.update(transaction)
-            await reload()
-        } catch {
-            errorSubject.send(error)
         }
     }
 
     func delete(_ transaction: TransactionModel) async {
-        do {
+        await mutateAndReload {
             try await repository.delete(transaction)
-            await reload()
-        } catch {
-            errorSubject.send(error)
         }
     }
 
     func search(text: String?) async throws -> [TransactionModel] {
+        guard StoreSupport.normalizedSearchText(text) != nil else {
+            return []
+        }
         return try await repository.search(text: text)
     }
 
     func loadMore() async {
-        guard hasMoreDataInternal, !isLoadingMore else { return }
+        guard hasMoreDataInternal, !isLoadingMore, !isReloading else { return }
 
         isLoadingMore = true
         defer { isLoadingMore = false }
@@ -107,37 +108,49 @@ final class TransactionStore: TransactionStoreProtocol {
                 return
             }
 
-            // 重複を除いて追加
-            let existingIds = Set(transactionsInternal.map { $0.id })
+            let existingIds = Set(transactionsInternal.map(\.id))
             let uniqueItems = newItems.filter { !existingIds.contains($0.id) }
             transactionsInternal.append(contentsOf: uniqueItems)
 
-            // 取得件数がlimitより少なければ、これ以上データはない
             if newItems.count < loadMoreLimit {
                 hasMoreDataInternal = false
             }
-
         } catch {
             errorSubject.send(error)
         }
     }
 
     func reload() async {
-        hasMoreDataInternal = true
+        reloadGeneration += 1
+        let generation = reloadGeneration
+
+        isReloading = true
+        defer { isReloading = false }
 
         do {
-            // 初回は initialLimit 件だけ取得する。limit: nil にすると全件取得になり、
-            // 直後の hasMoreData 判定（件数比較）と矛盾してしまうため注意。
             let items = try await repository.fetch(
                 from: nil,
                 to: nil,
                 limit: initialLimit,
                 offset: 0
             )
-            transactionsInternal = items
 
-            // 取得件数が initialLimit 未満なら、これ以上データはない
+            guard generation == reloadGeneration else { return }
+
+            transactionsInternal = items
             hasMoreDataInternal = items.count == initialLimit
+        } catch {
+            guard generation == reloadGeneration else { return }
+            errorSubject.send(error)
+        }
+    }
+
+    // MARK: - Private
+
+    private func mutateAndReload(_ operation: () async throws -> Void) async {
+        do {
+            try await operation()
+            await reload()
         } catch {
             errorSubject.send(error)
         }

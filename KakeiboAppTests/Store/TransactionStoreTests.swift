@@ -50,9 +50,9 @@ final class MockTransactionRepository: TransactionRepositoryProtocol, @unchecked
     func search(text: String?) async throws -> [TransactionModel] {
         searchCallCount += 1
         if let error = searchError { throw error }
-        guard let text, !text.isEmpty else { return [] }
+        guard let normalizedText = StoreSupport.normalizedSearchText(text) else { return [] }
         return stubbedTransactions.filter {
-            $0.title.contains(text) || $0.memo.contains(text)
+            $0.title.contains(normalizedText) || $0.memo.contains(normalizedText)
         }
     }
 
@@ -129,10 +129,10 @@ final class TransactionStoreTests: XCTestCase {
 
     // MARK: - Private Helpers
 
-    /// Store 初期化後、初回 reload の完了を待つ
+    /// Store を生成し、初回 reload を完了させる
     private func makeStore() async -> TransactionStore {
-        let store = TransactionStore(repository: repository)
-        try? await Task.sleep(nanoseconds: 100_000_000)
+        let store = TransactionStore(repository: repository, autoLoad: false)
+        await store.reload()
         return store
     }
 

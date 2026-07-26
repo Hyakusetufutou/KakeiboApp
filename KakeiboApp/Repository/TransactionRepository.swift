@@ -24,16 +24,10 @@ protocol TransactionRepositoryProtocol: Sendable {
 
 // MARK: - Transaction Repository Implementation
 actor TransactionRepository: TransactionRepositoryProtocol {
-    private let container: NSPersistentContainer
     private let context: NSManagedObjectContext
 
     init(container: NSPersistentContainer = PersistenceController.shared.container) {
-        self.container = container
-        self.context = container.newBackgroundContext()
-        self.context.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
-        // 他のコンテキスト（メインコンテキスト等）での保存内容をこのバックグラウンド
-        // コンテキストにも自動反映させ、複数コンテキスト間の不整合を防ぐ。
-        self.context.automaticallyMergesChangesFromParent = true
+        self.context = CoreDataRepositorySupport.makeBackgroundContext(from: container)
     }
 
     func fetch(
@@ -42,98 +36,103 @@ actor TransactionRepository: TransactionRepositoryProtocol {
         limit: Int?,
         offset: Int?
     ) async throws -> [TransactionModel] {
-        try await performBackgroundTask { context in
+        try await CoreDataRepositorySupport.perform(on: context) { context in
             let request: NSFetchRequest<TransactionEntity> = TransactionEntity.fetchRequest()
             request.relationshipKeyPathsForPrefetching = ["category"]
 
             var predicates: [NSPredicate] = []
-            if let start = start {
+            if let start {
                 predicates.append(NSPredicate(format: "date >= %@", start as NSDate))
             }
-            if let end = end {
+            if let end {
                 predicates.append(NSPredicate(format: "date <= %@", end as NSDate))
             }
             if !predicates.isEmpty {
                 request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
             }
 
-            request.sortDescriptors = [
-                NSSortDescriptor(keyPath: \TransactionEntity.date, ascending: false)
-            ]
+            request.sortDescriptors = Self.transactionSortDescriptors
 
-            if let limit = limit { request.fetchLimit = limit }
-            if let offset = offset { request.fetchOffset = offset }
+            if let limit { request.fetchLimit = limit }
+            if let offset { request.fetchOffset = offset }
 
             return try context.fetch(request).map { try $0.toModel() }
         }
     }
 
     func search(text: String?) async throws -> [TransactionModel] {
-        try await performBackgroundTask { context in
-            guard let text = text, !text.isEmpty else {
-                return []
-            }
+        guard let normalizedText = StoreSupport.normalizedSearchText(text) else {
+            return []
+        }
 
+        return try await CoreDataRepositorySupport.perform(on: context) { context in
             let request: NSFetchRequest<TransactionEntity> = TransactionEntity.fetchRequest()
             request.relationshipKeyPathsForPrefetching = ["category"]
             request.predicate = NSPredicate(
                 format: "title CONTAINS[c] %@ OR memo CONTAINS[c] %@",
-                text,
-                text
+                normalizedText,
+                normalizedText
             )
-            request.sortDescriptors = [
-                NSSortDescriptor(keyPath: \TransactionEntity.date, ascending: false)
-            ]
+            request.sortDescriptors = Self.transactionSortDescriptors
 
             return try context.fetch(request).map { try $0.toModel() }
         }
     }
 
     func add(_ model: TransactionModel) async throws {
-        try await performBackgroundTask { context in
-            let category = try self.fetchCategoryEntity(by: model.categoryId, in: context)
+        try await CoreDataRepositorySupport.perform(on: context) { context in
+            let category = try CoreDataRepositorySupport.fetchEntity(
+                CategoryEntity.self,
+                by: model.categoryId,
+                in: context
+            )
 
             let entity = TransactionEntity(context: context)
-            self.map(model: model, to: entity, category: category)
+            Self.map(model: model, to: entity, category: category)
 
-            try self.save(in: context)
+            try CoreDataRepositorySupport.save(context)
         }
     }
 
     func update(_ model: TransactionModel) async throws {
-        try await performBackgroundTask { context in
-            let entity = try self.fetchEntity(by: model.id, in: context)
-            let category = try self.fetchCategoryEntity(by: model.categoryId, in: context)
+        try await CoreDataRepositorySupport.perform(on: context) { context in
+            let entity = try CoreDataRepositorySupport.fetchEntity(
+                TransactionEntity.self,
+                by: model.id,
+                in: context
+            )
+            let category = try CoreDataRepositorySupport.fetchEntity(
+                CategoryEntity.self,
+                by: model.categoryId,
+                in: context
+            )
 
-            self.map(model: model, to: entity, category: category)
+            Self.map(model: model, to: entity, category: category)
 
-            try self.save(in: context)
+            try CoreDataRepositorySupport.save(context)
         }
     }
 
     func delete(_ model: TransactionModel) async throws {
-        try await performBackgroundTask { context in
-            let entity = try self.fetchEntity(by: model.id, in: context)
+        try await CoreDataRepositorySupport.perform(on: context) { context in
+            let entity = try CoreDataRepositorySupport.fetchEntity(
+                TransactionEntity.self,
+                by: model.id,
+                in: context
+            )
             context.delete(entity)
-            try self.save(in: context)
+            try CoreDataRepositorySupport.save(context)
         }
     }
 
     // MARK: - Private Helpers
 
-    /// バックグラウンドコンテキスト上でブロックを実行する共通ラッパー。
-    /// 各メソッドで `context.perform` を個別に書く重複を避けるために用意。
-    private func performBackgroundTask<T: Sendable>(
-        _ block: @escaping (NSManagedObjectContext) throws -> T
-    ) async throws -> T {
-        let context = self.context
-        return try await context.perform {
-            try block(context)
-        }
-    }
+    private static let transactionSortDescriptors = [
+        NSSortDescriptor(keyPath: \TransactionEntity.date, ascending: false),
+        NSSortDescriptor(keyPath: \TransactionEntity.id, ascending: false),
+    ]
 
-    /// context.performから呼び出すこと
-    nonisolated private func map(
+    private static func map(
         model: TransactionModel,
         to entity: TransactionEntity,
         category: CategoryEntity
@@ -147,42 +146,5 @@ actor TransactionRepository: TransactionRepositoryProtocol {
         entity.createdAt = model.createdAt
         entity.updatedAt = model.updatedAt
         entity.category = category
-    }
-
-    /// context.performから呼び出すこと
-    nonisolated private func fetchEntity(
-        by id: UUID,
-        in context: NSManagedObjectContext
-    ) throws -> TransactionEntity {
-        let request: NSFetchRequest<TransactionEntity> = TransactionEntity.fetchRequest()
-        request.predicate = NSPredicate(format: "id == %@", id as NSUUID)
-        request.fetchLimit = 1
-
-        guard let entity = try context.fetch(request).first else {
-            throw CustomError.transactionNotFoundError
-        }
-        return entity
-    }
-
-    /// context.performから呼び出すこと
-    nonisolated private func fetchCategoryEntity(
-        by id: UUID,
-        in context: NSManagedObjectContext
-    ) throws -> CategoryEntity {
-        let request: NSFetchRequest<CategoryEntity> = CategoryEntity.fetchRequest()
-        request.predicate = NSPredicate(format: "id == %@", id as NSUUID)
-        request.fetchLimit = 1
-
-        guard let category = try context.fetch(request).first else {
-            throw CustomError.categoryNotFoundError
-        }
-        return category
-    }
-
-    /// context.performから呼び出すこと
-    nonisolated private func save(in context: NSManagedObjectContext) throws {
-        if context.hasChanges {
-            try context.save()
-        }
     }
 }
