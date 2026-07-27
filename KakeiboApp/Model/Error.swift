@@ -34,6 +34,31 @@ enum CustomError: Equatable, LocalizedError {
     }
 }
 
+enum CategoryMapperError: LocalizedError {
+    case invalidColor
+    case invalidType
+
+    var errorDescription: String? {
+        switch self {
+        case .invalidColor:
+            return "カテゴリの色が無効です"
+        case .invalidType:
+            return "カテゴリの種類が無効です"
+        }
+    }
+}
+
+enum TransactionMapperError: LocalizedError {
+    case invalidType
+
+    var errorDescription: String? {
+        switch self {
+        case .invalidType:
+            return "Transactionの種別が無効です"
+        }
+    }
+}
+
 enum ErrorMapper {
     static func message(for error: Error) -> String {
         return error.localizedDescription

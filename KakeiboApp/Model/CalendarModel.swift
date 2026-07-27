@@ -11,7 +11,7 @@ import Foundation
 struct DailySummary {
     let id = UUID()
     let date: Date
-    let income: Double
-    let expense: Double
+    let income: Decimal
+    let expense: Decimal
     let transactions: [TransactionModel]
 }

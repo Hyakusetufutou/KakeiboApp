@@ -12,7 +12,7 @@ struct TransactionModel: Identifiable, Hashable {
     let id: UUID
     let title: String
     let memo: String
-    let amount: Double
+    let amount: Decimal
     let date: Date
     let createdAt: Date
     let updatedAt: Date
@@ -23,7 +23,7 @@ struct TransactionModel: Identifiable, Hashable {
         id: UUID = UUID(),
         title: String,
         memo: String,
-        amount: Double,
+        amount: Decimal,
         date: Date,
         createdAt: Date,
         updatedAt: Date,
@@ -58,27 +58,19 @@ enum TransactionType: String, CaseIterable {
 
 extension TransactionEntity {
     func toModel() throws -> TransactionModel {
-        guard let id = self.id,
-            let title = self.title,
-            let memo = self.memo,
-            let date = self.date,
-            let createdAt = self.createdAt,
-            let updatedAt = self.updatedAt,
-            let categoryId = self.category?.id
-        else {
-            throw CustomError.invalidData
+        guard let type = TransactionType(rawValue: self.type) else {
+            throw TransactionMapperError.invalidType
         }
         return TransactionModel(
             id: id,
             title: title,
             memo: memo,
-            amount: self.amount,
+            amount: self.amount.decimalValue,
             date: date,
             createdAt: createdAt,
             updatedAt: updatedAt,
-            type: TransactionType(rawValue: self.type ?? TransactionType.expense.rawValue)
-                ?? .expense,
-            categoryId: categoryId
+            type: type,
+            categoryId: self.category.id
         )
     }
 }

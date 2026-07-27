@@ -140,7 +140,7 @@ actor TransactionRepository: TransactionRepositoryProtocol {
         category: CategoryEntity
     ) {
         entity.id = model.id
-        entity.amount = model.amount
+        entity.amount = NSDecimalNumber(decimal: model.amount)
         entity.date = model.date
         entity.title = model.title
         entity.memo = model.memo

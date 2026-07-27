@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="24512" systemVersion="25F84" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
-    <entity name="CategoryEntity" representedClassName="CategoryEntity" syncable="YES" codeGenerationType="class">
+    <entity name="CategoryEntity" representedClassName="CategoryEntity" syncable="YES">
         <attribute name="color" attributeType="String"/>
         <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="isDefault" attributeType="Boolean" usesScalarValueType="YES"/>
@@ -11,7 +11,7 @@
         <relationship name="recurringTransactions" optional="YES" toMany="YES" deletionRule="Deny" destinationEntity="RecurringTransactionEntity" inverseName="category" inverseEntity="RecurringTransactionEntity"/>
         <relationship name="transactions" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="TransactionEntity" inverseName="category" inverseEntity="TransactionEntity"/>
     </entity>
-    <entity name="GoalEntity" representedClassName="GoalEntity" syncable="YES" codeGenerationType="class">
+    <entity name="GoalEntity" representedClassName="GoalEntity" syncable="YES">
         <attribute name="endDate" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="startDate" attributeType="Date" usesScalarValueType="NO"/>
@@ -20,7 +20,7 @@
         <attribute name="type" attributeType="String"/>
         <relationship name="category" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="CategoryEntity" inverseName="goals" inverseEntity="CategoryEntity"/>
     </entity>
-    <entity name="RecurringTransactionEntity" representedClassName="RecurringTransactionEntity" syncable="YES" codeGenerationType="class">
+    <entity name="RecurringTransactionEntity" representedClassName="RecurringTransactionEntity" syncable="YES">
         <attribute name="amount" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="endDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="frequency" attributeType="String"/>
@@ -31,8 +31,8 @@
         <relationship name="category" maxCount="1" deletionRule="Nullify" destinationEntity="CategoryEntity" inverseName="recurringTransactions" inverseEntity="CategoryEntity"/>
         <relationship name="transactions" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="TransactionEntity" inverseName="recurringTransaction" inverseEntity="TransactionEntity"/>
     </entity>
-    <entity name="TransactionEntity" representedClassName="TransactionEntity" syncable="YES" codeGenerationType="class">
-        <attribute name="amount" attributeType="Double" minValueString="0" defaultValueString="0.0" usesScalarValueType="YES"/>
+    <entity name="TransactionEntity" representedClassName="TransactionEntity" syncable="YES">
+        <attribute name="amount" attributeType="Decimal" minValueString="0" defaultValueString="0.0"/>
         <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="date" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>

@@ -162,7 +162,7 @@ final class TransactionInputViewModel: ObservableObject {
         id = transaction.id
         title = transaction.title
         memo = transaction.memo
-        amount = String(Int(transaction.amount))
+        amount = String(NSDecimalNumber(decimal: transaction.amount).intValue)
         date = transaction.date
         type = transaction.type
         selectedCategoryId = transaction.categoryId
@@ -170,7 +170,7 @@ final class TransactionInputViewModel: ObservableObject {
     }
 
     private func createTransaction() -> TransactionModel? {
-        guard let amountValue = Double(amount),
+        guard let amountValue = Decimal(string: amount),
             let categoryId = selectedCategoryId
         else {
             return nil

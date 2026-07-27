@@ -9,10 +9,10 @@
 import SwiftUI
 
 struct ExpensesCardView: View {
-    let income: Double
-    let expense: Double
+    let income: Decimal
+    let expense: Decimal
 
-    private var balance: Double { income - expense }
+    private var balance: Decimal { income - expense }
 
     var body: some View {
         VStack(spacing: 12) {

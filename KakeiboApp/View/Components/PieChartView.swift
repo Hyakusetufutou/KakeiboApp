@@ -44,15 +44,19 @@ struct PieChartView: View {
     }
 
     private func makeAngles() -> [Angle] {
-        let total = data.reduce(0) { $0 + $1.totalAmount }
+        let amounts = data.map { NSDecimalNumber(decimal: $0.totalAmount).doubleValue }
+        let total = amounts.reduce(0, +)
+
         guard total > 0 else { return Array(repeating: .zero, count: data.count) }
 
         var angles: [Angle] = []
         var current: Double = 0
-        for item in data {
+
+        for amount in amounts {
             angles.append(.degrees(current))
-            current += (item.totalAmount / total) * 360
+            current += (amount / total) * 360
         }
+
         return angles
     }
 }

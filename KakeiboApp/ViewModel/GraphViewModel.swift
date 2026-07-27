@@ -37,7 +37,7 @@ final class GraphViewModel: ObservableObject {
         )
     }
 
-    var totalAmount: Double {
+    var totalAmount: Decimal {
         categorySummaries.reduce(0) { $0 + $1.totalAmount }
     }
 

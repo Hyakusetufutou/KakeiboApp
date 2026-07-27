@@ -141,34 +141,23 @@ struct CategorySummary: Identifiable {
     let categoryID: UUID
     let categoryName: String
     let type: TransactionType
-    let totalAmount: Double
+    let totalAmount: Decimal
     let color: Color
     let transactions: [TransactionModel]
 }
 
 extension CategoryEntity {
     func toModel() throws -> CategoryModel {
-        guard let id = self.id,
-            let name = self.name
-        else {
-            throw CustomError.invalidData
+        guard let color = CategoryColor(rawValue: self.color) else {
+            throw CategoryMapperError.invalidColor
         }
-
-        guard let rawColor = self.color,
-            let color = CategoryColor(rawValue: rawColor)
-        else {
-            throw CustomError.invalidData
-        }
-
-        guard let rawType = self.type,
-            let type = TransactionType(rawValue: rawType)
-        else {
-            throw CustomError.invalidData
+        guard let type = TransactionType(rawValue: self.type) else {
+            throw CategoryMapperError.invalidType
         }
 
         return CategoryModel(
-            id: id,
-            name: name,
+            id: self.id,
+            name: self.name,
             color: color,
             type: type,
             isDefault: self.isDefault

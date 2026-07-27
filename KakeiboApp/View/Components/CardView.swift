@@ -9,10 +9,10 @@
 import SwiftUI
 
 struct CardView: View {
-    var income: Double
-    var expense: Double
+    var income: Decimal
+    var expense: Decimal
 
-    private var balance: Double { income - expense }
+    private var balance: Decimal { income - expense }
 
     var body: some View {
         ZStack {
@@ -78,7 +78,7 @@ struct CardView: View {
         type == .income ? .income : .expense
     }
 
-    private func amount(for type: TransactionType) -> Double {
+    private func amount(for type: TransactionType) -> Decimal {
         type == .income ? income : expense
     }
 }

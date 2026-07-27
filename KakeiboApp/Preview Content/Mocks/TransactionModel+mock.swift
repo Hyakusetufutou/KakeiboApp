@@ -12,7 +12,7 @@ extension TransactionModel {
     static let mock1 = TransactionModel(
         title: "食費",
         memo: "お肉代",
-        amount: Double(1000),
+        amount: Decimal(1000),
         date: Date(),
         createdAt: Date(),
         updatedAt: Date(),
@@ -22,7 +22,7 @@ extension TransactionModel {
     static let mock2 = TransactionModel(
         title: "給料",
         memo: "給料",
-        amount: Double(200000),
+        amount: Decimal(200000),
         date: Date(),
         createdAt: Date(),
         updatedAt: Date(),
@@ -32,7 +32,7 @@ extension TransactionModel {
     static let mock3 = TransactionModel(
         title: "ティッシュ",
         memo: "ティッシュ",
-        amount: Double(500),
+        amount: Decimal(500),
         date: Date(),
         createdAt: Date(),
         updatedAt: Date(),
