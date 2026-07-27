@@ -11,22 +11,17 @@ import SwiftUI
 struct TransactionCardView: View {
     var transaction: TransactionModel
     var category: CategoryModel?
-    var onDelete: (TransactionModel) -> Void
 
     var body: some View {
-        SwipeAction(cornerRadius: 10) {
-            HStack(spacing: 12) {
-                categoryIcon
-                transactionInfo
-                Spacer()
-                amountText
-            }
-            .padding(.horizontal, 15)
-            .padding(.vertical, 10)
-            .background(cardBackground)
-        } onDelete: {
-            onDelete(transaction)
+        HStack(spacing: 12) {
+            categoryIcon
+            transactionInfo
+            Spacer()
+            amountText
         }
+        .padding(.horizontal, 15)
+        .padding(.vertical, 10)
+        .background(cardBackground)
     }
 
     // MARK: - Components
@@ -86,8 +81,8 @@ struct TransactionCardView: View {
 
 #Preview("Light Mode") {
     VStack(spacing: 8) {
-        TransactionCardView(transaction: .mock1, category: .mock1, onDelete: { _ in })
-        TransactionCardView(transaction: .mock2, category: .mock2, onDelete: { _ in })
+        TransactionCardView(transaction: .mock1, category: .mock1)
+        TransactionCardView(transaction: .mock2, category: .mock2)
     }
     .padding()
     .background(Color(.systemGroupedBackground))
@@ -96,8 +91,8 @@ struct TransactionCardView: View {
 
 #Preview("Dark Mode") {
     VStack(spacing: 8) {
-        TransactionCardView(transaction: .mock1, category: .mock1, onDelete: { _ in })
-        TransactionCardView(transaction: .mock2, category: .mock2, onDelete: { _ in })
+        TransactionCardView(transaction: .mock1, category: .mock1)
+        TransactionCardView(transaction: .mock2, category: .mock2)
     }
     .padding()
     .background(Color(.systemGroupedBackground))

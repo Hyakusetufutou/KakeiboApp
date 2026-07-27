@@ -10,12 +10,11 @@ import SwiftUI
 
 struct ActionButton: View {
     let imageName: String
+    var accessibilityLabel: String? = nil
     let onTapped: () -> Void
 
     var body: some View {
-        Button {
-            onTapped()
-        } label: {
+        Button(action: onTapped) {
             Image(systemName: imageName)
                 .font(.title3)
                 .foregroundStyle(.primary)
@@ -27,9 +26,10 @@ struct ActionButton: View {
                 }
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(accessibilityLabel ?? imageName)
     }
 }
 
 #Preview {
-    ActionButton(imageName: "calendar", onTapped: {})
+    ActionButton(imageName: "calendar", accessibilityLabel: "期間を絞り込む", onTapped: {})
 }

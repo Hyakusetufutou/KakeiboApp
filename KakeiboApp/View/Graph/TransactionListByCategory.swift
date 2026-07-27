@@ -72,7 +72,7 @@ struct TransactionListByCategory: View {
                     TransactionCardView(
                         transaction: transaction,
                         category: graphViewModel.findCategory(id: transaction.categoryId),
-                        onDelete: onDeleteTransaction
+                        //                        onDelete: onDeleteTransaction
                     )
                     .onTapGesture {
                         transactionInputViewModel.presentInputView(for: transaction)

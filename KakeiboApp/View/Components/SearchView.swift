@@ -66,9 +66,9 @@ struct SearchView: View {
                     TransactionCardView(
                         transaction: transaction,
                         category: searchViewModel.findCategory(id: transaction.categoryId),
-                        onDelete: { transaction in
-                            Task { await searchViewModel.deleteTransaction(transaction) }
-                        }
+                        //                        onDelete: { transaction in
+                        //                            Task { await searchViewModel.deleteTransaction(transaction) }
+                        //                        }
                     )
                     .onTapGesture {
                         transactionInputViewModel.presentInputView(for: transaction)

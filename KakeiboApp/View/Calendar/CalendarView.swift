@@ -214,11 +214,11 @@ struct CalendarView: View {
                 TransactionCardView(
                     transaction: transaction,
                     category: calendarViewModel.category(for: transaction.categoryId),
-                    onDelete: { transaction in
-                        Task {
-                            await calendarViewModel.delete(transaction)
-                        }
-                    }
+                    //                    onDelete: { transaction in
+                    //                        Task {
+                    //                            await calendarViewModel.delete(transaction)
+                    //                        }
+                    //                    }
                 )
                 .onTapGesture {
                     transactionInputViewModel.presentInputView(for: transaction)
