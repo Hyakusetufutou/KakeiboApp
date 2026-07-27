@@ -37,7 +37,6 @@ final class HomeViewModel: ObservableObject {
 
     private let categoryStore: CategoryStoreProtocol
     private let transactionStore: TransactionStoreProtocol
-    private var cancellables = Set<AnyCancellable>()
     private var isDefaultDateRange: Bool {
         let today = Date()
         return Calendar.current.isDate(

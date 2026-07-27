@@ -48,7 +48,6 @@ final class GraphViewModel: ObservableObject {
     // MARK: - Dependencies
     private let categoryStore: CategoryStoreProtocol
     private let transactionStore: TransactionStoreProtocol
-    private var cancellables = Set<AnyCancellable>()
 
     // MARK: - Init
     init(categoryStore: CategoryStoreProtocol, transactionStore: TransactionStoreProtocol) {

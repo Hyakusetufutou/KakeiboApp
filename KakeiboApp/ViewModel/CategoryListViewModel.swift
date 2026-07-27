@@ -17,7 +17,6 @@ final class CategoryListViewModel: ObservableObject {
 
     // MARK: - Dependencies
     private let categoryStore: CategoryStoreProtocol
-    private var cancellables = Set<AnyCancellable>()
 
     // MARK: - Init
     init(categoryStore: CategoryStoreProtocol) {

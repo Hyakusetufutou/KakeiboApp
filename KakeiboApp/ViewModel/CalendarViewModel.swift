@@ -37,7 +37,6 @@ final class CalendarViewModel: ObservableObject {
 
     private let categoryStore: CategoryStoreProtocol
     private let transactionStore: TransactionStoreProtocol
-    private var cancellables = Set<AnyCancellable>()
 
     init(categoryStore: CategoryStoreProtocol, transactionStore: TransactionStoreProtocol) {
         self.categoryStore = categoryStore

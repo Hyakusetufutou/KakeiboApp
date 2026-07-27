@@ -40,6 +40,8 @@ final class TransactionInputViewModel: ObservableObject {
         validationError == nil
     }
 
+    private var originalCreatedAt: Date?
+
     private var validationError: ValidationError? {
         if title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             return .emptyTitle
@@ -132,10 +134,7 @@ final class TransactionInputViewModel: ObservableObject {
     private func bindCategories() {
         categoryStore.categories
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] categories in
-                self?.categories = categories
-            }
-            .store(in: &cancellables)
+            .assign(to: &$categories)
     }
 
     private func observeTypeChange() {
@@ -155,6 +154,7 @@ final class TransactionInputViewModel: ObservableObject {
         date = Date()
         type = .expense
         selectedCategoryId = nil
+        originalCreatedAt = nil
         errorMessage = nil
     }
 
@@ -176,14 +176,16 @@ final class TransactionInputViewModel: ObservableObject {
             return nil
         }
 
+        let now = Date()
+
         return TransactionModel(
             id: id,
             title: title.trimmingCharacters(in: .whitespacesAndNewlines),
             memo: memo.trimmingCharacters(in: .whitespacesAndNewlines),
             amount: amountValue,
             date: date,
-            createdAt: isEdit ? Date() : Date(),
-            updatedAt: Date(),
+            createdAt: isEdit ? (originalCreatedAt ?? now) : now,
+            updatedAt: now,
             type: type,
             categoryId: categoryId
         )

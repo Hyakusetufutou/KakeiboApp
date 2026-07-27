@@ -22,7 +22,6 @@ final class CategoryInputViewModel: ObservableObject {
     @Published var type: TransactionType = .expense
 
     private let categoryStore: CategoryStoreProtocol
-    private var cancellables = Set<AnyCancellable>()
 
     init(categoryStore: CategoryStoreProtocol) {
         self.categoryStore = categoryStore
