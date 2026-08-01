@@ -28,7 +28,11 @@ struct TransactionListByCategory: View {
                     transactionList(summary.transactions)
                 }
             } else {
-                EmptyStateView(icon: "tray", message: "取引がありません")
+                VStack {
+                    Spacer()
+                    EmptyStateView(icon: "tray", message: "取引がありません")
+                    Spacer()
+                }
             }
         }
         .background(Color(.systemGroupedBackground))
@@ -66,22 +70,31 @@ struct TransactionListByCategory: View {
     }
 
     private func transactionList(_ transactions: [TransactionModel]) -> some View {
-        ScrollView {
-            LazyVStack(spacing: 8) {
-                ForEach(transactions) { transaction in
-                    TransactionCardView(
-                        transaction: transaction,
-                        category: graphViewModel.findCategory(id: transaction.categoryId),
-                        //                        onDelete: onDeleteTransaction
-                    )
-                    .onTapGesture {
-                        transactionInputViewModel.presentInputView(for: transaction)
+        List {
+            ForEach(transactions) { transaction in
+                TransactionCardView(
+                    transaction: transaction,
+                    category: graphViewModel.findCategory(id: transaction.categoryId),
+                )
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
+                .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    transactionInputViewModel.presentInputView(for: transaction)
+                }
+                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                    Button(role: .destructive) {
+                        onDeleteTransaction(transaction)
+                    } label: {
+                        Label("", systemImage: "trash")
                     }
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
         }
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
+        .background(Color(.systemGroupedBackground))
     }
 
     // MARK: - Helper

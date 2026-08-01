@@ -55,6 +55,17 @@ struct GraphView: View {
                         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
                 }
             }
+            .navigationDestination(for: UUID.self) { categoryID in
+                TransactionListByCategory(
+                    graphViewModel: graphViewModel,
+                    transactionInputViewModel: transactionInputViewModel,
+                    categoryID: categoryID,
+                    onDeleteTransaction: { transaction in
+                        Task { await graphViewModel.deleteTransaction(transaction) }
+                    }
+                )
+                .frame(width: .infinity, height: .infinity)
+            }
         }
         .disabled(categoryInputViewModel.isPresentInputView)
         .sheet(isPresented: $isPresentCategoryList) {
@@ -151,16 +162,7 @@ struct GraphView: View {
     }
 
     private func categoryRow(summary: CategorySummary) -> some View {
-        NavigationLink(
-            destination: TransactionListByCategory(
-                graphViewModel: graphViewModel,
-                transactionInputViewModel: transactionInputViewModel,
-                categoryID: summary.categoryID,
-                onDeleteTransaction: { transaction in
-                    Task { await graphViewModel.deleteTransaction(transaction) }
-                }
-            )
-        ) {
+        NavigationLink(value: summary.categoryID) {
             HStack {
                 Circle()
                     .frame(width: 12)
