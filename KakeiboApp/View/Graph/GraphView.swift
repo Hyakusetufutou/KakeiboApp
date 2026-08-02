@@ -29,6 +29,7 @@ struct GraphView: View {
     }
 
     var body: some View {
+        let _ = Self._printChanges()
         NavigationStack {
             ZStack {
                 Color(.systemGroupedBackground)
@@ -39,7 +40,7 @@ struct GraphView: View {
                         controlSection
 
                         if !graphViewModel.categorySummaries.isEmpty {
-                            categorySection
+                            GraphCategorySectionView(graphViewModel: graphViewModel)
                         } else {
                             emptySection
                         }
@@ -64,12 +65,16 @@ struct GraphView: View {
                         Task { await graphViewModel.deleteTransaction(transaction) }
                     }
                 )
-                .frame(width: .infinity, height: .infinity)
             }
         }
         .disabled(categoryInputViewModel.isPresentInputView)
         .sheet(isPresented: $isPresentCategoryList) {
-            categoryListSheet
+            GraphCategoryListSheetView(
+                categoryInputViewModel: categoryInputViewModel,
+                categoryListViewModel: categoryListViewModel,
+                isPresentCategoryList: $isPresentCategoryList,
+                selectedType: graphViewModel.selectedType
+            )
         }
         .alert("エラー", isPresented: graphErrorAlertBinding) {
             Button("OK") { graphViewModel.clearError() }
@@ -117,75 +122,6 @@ struct GraphView: View {
         .background(Color(.systemGroupedBackground))
     }
 
-    // MARK: - Category Section
-
-    private var categorySection: some View {
-        Section {
-            VStack(spacing: 12) {
-                totalAmountView
-                pieChartView
-                categoryListView
-            }
-            .padding(.horizontal, 16)
-            .padding(.top, 4)
-            .animation(.snappy, value: graphViewModel.categorySummaries.map(\.id))
-        }
-    }
-
-    private var totalAmountView: some View {
-        Text(
-            "\(graphViewModel.totalTitle)  \(currencyString(graphViewModel.totalAmount, allowedDigits: 0))"
-        )
-        .font(.title3.bold())
-    }
-
-    private var pieChartView: some View {
-        PieChartView(data: graphViewModel.categorySummaries)
-            .frame(height: 200)
-    }
-
-    private var categoryListView: some View {
-        let summaries = graphViewModel.categorySummaries
-
-        return VStack(spacing: 0) {
-            ForEach(summaries.indices, id: \.self) { index in
-                categoryRow(summary: summaries[index])
-
-                if index < summaries.count - 1 {
-                    Divider()
-                        .padding(.leading, 44)
-                }
-            }
-        }
-        .background(Color(.systemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 10))
-    }
-
-    private func categoryRow(summary: CategorySummary) -> some View {
-        NavigationLink(value: summary.categoryID) {
-            HStack {
-                Circle()
-                    .frame(width: 12)
-                    .foregroundStyle(summary.color)
-
-                Text(summary.categoryName)
-                    .foregroundStyle(.primary)
-
-                Spacer()
-
-                Text(currencyString(summary.totalAmount, allowedDigits: 2))
-                    .foregroundStyle(.primary)
-            }
-            .padding(.vertical, 12)
-            .padding(.horizontal, 16)
-            .background(Color(.systemBackground))
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-    }
-
-    // MARK: - Empty Section
-
     private var emptySection: some View {
         Section {
             NoTransactionView()
@@ -194,60 +130,10 @@ struct GraphView: View {
         }
     }
 
-    // MARK: - Sheet
-
-    private var categoryListSheet: some View {
-        CategoryListView(
-            categoryInputViewModel: categoryInputViewModel,
-            categoryListViewModel: categoryListViewModel,
-            isPresentCategoryList: $isPresentCategoryList,
-            type: graphViewModel.selectedType
-        )
-        .interactiveDismissDisabled(true)
-        .alert("エラー", isPresented: categoryListErrorAlertBinding) {
-            Button("OK") { categoryListViewModel.clearError() }
-        } message: {
-            if let message = categoryListViewModel.errorMessage {
-                Text(message)
-            }
-        }
-        .overlay { categoryInputOverlay }
-        .animation(.snappy, value: categoryInputViewModel.isPresentInputView)
-    }
-
-    private var categoryInputOverlay: some View {
-        ZStack {
-            if categoryInputViewModel.isPresentInputView {
-                Color(.label).opacity(0.4)
-                    .ignoresSafeArea()
-                    .transition(.opacity)
-            }
-
-            VStack {
-                Spacer()
-
-                if categoryInputViewModel.isPresentInputView {
-                    CategoryInputView(categoryInputViewModel: categoryInputViewModel)
-                        .padding(.bottom, 8)
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
-                }
-            }
-        }
-    }
-
-    // MARK: - Helpers
-
     private var graphErrorAlertBinding: Binding<Bool> {
         Binding(
             get: { graphViewModel.errorMessage != nil },
             set: { if !$0 { graphViewModel.clearError() } }
-        )
-    }
-
-    private var categoryListErrorAlertBinding: Binding<Bool> {
-        Binding(
-            get: { categoryListViewModel.errorMessage != nil },
-            set: { if !$0 { categoryListViewModel.clearError() } }
         )
     }
 }
