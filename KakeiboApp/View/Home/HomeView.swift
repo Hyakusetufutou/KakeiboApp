@@ -30,7 +30,11 @@ struct HomeView: View {
                 dateRangeSection
                 summarySection
                 controlSection
-                transactionSection
+
+                HomeTransactionSectionView(
+                    homeViewModel: homeViewModel,
+                    transactionInputViewModel: transactionInputViewModel
+                )
             }
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
@@ -67,19 +71,7 @@ struct HomeView: View {
                 }
             }
             .sheet(isPresented: $homeViewModel.showFilterView) {
-                DateFilterView(
-                    start: homeViewModel.startDate,
-                    end: homeViewModel.endDate,
-                    onSubmit: { start, end in
-                        homeViewModel.dateRange = DateRange(start: start, end: end)
-                        homeViewModel.showFilterView = false
-                    },
-                    onClose: {
-                        homeViewModel.showFilterView = false
-                    }
-                )
-                .presentationDetents([.medium])
-                .presentationDragIndicator(.visible)
+                HomeDateFilterSheetView(homeViewModel: homeViewModel)
             }
             .alert("エラー", isPresented: errorAlertBinding) {
                 Button("OK") {
@@ -93,7 +85,7 @@ struct HomeView: View {
         }
     }
 
-    // MARK: - Sections
+    // MARK: - Subviews (HomeView直下にとどめる軽量な表示)
 
     private var dateRangeSection: some View {
         Section {
@@ -134,63 +126,6 @@ struct HomeView: View {
         .listRowBackground(Color.clear)
         .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 8, trailing: 16))
         .padding(.vertical, 8)
-    }
-
-    private var transactionSection: some View {
-        Section {
-            if homeViewModel.filteredTransactions.isEmpty {
-                NoTransactionView()
-                    .listRowSeparator(.hidden)
-                    .listRowBackground(Color.clear)
-            } else {
-                ForEach(homeViewModel.filteredTransactions) { transaction in
-                    TransactionCardView(
-                        transaction: transaction,
-                        category: homeViewModel.categoryFind(id: transaction.categoryId)
-                    )
-                    .listRowSeparator(.hidden)
-                    .listRowBackground(Color.clear)
-                    .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        transactionInputViewModel.presentInputView(for: transaction)
-                    }
-                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                        Button(role: .destructive) {
-                            Task {
-                                await homeViewModel.deleteTransaction(transaction)
-                            }
-                        } label: {
-                            Label("", systemImage: "trash")
-                        }
-                    }
-                    .onAppear {
-                        if transaction.id == homeViewModel.filteredTransactions.last?.id,
-                            homeViewModel.hasMoreData
-                        {
-                            Task {
-                                await homeViewModel.loadMore()
-                            }
-                        }
-                    }
-                }
-
-                if homeViewModel.isLoading && !homeViewModel.filteredTransactions.isEmpty {
-                    loadingIndicator
-                        .listRowSeparator(.hidden)
-                        .listRowBackground(Color.clear)
-                }
-            }
-        }
-    }
-
-    private var loadingIndicator: some View {
-        HStack {
-            Spacer()
-            ProgressView()
-                .padding()
-            Spacer()
-        }
     }
 
     // MARK: - Helpers
