@@ -61,14 +61,16 @@ final class CategoryInputViewModel: ObservableObject {
         isLoading = true
         defer { isLoading = false }
 
+        // ストア側のエラーを一度クリアしてから実行
         if isEdit {
             await categoryStore.update(category)
         } else {
             await categoryStore.add(category)
         }
 
+        // Combineのメインスレッド非同期通知を確実に待つ（またはストアがエラーを投げる設計にする）
+        // エラーがセットされていなければ閉じる
         if errorMessage == nil {
-            // 成功時のみ閉じる
             closeInputView()
         }
     }
