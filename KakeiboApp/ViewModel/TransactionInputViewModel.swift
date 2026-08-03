@@ -166,6 +166,7 @@ final class TransactionInputViewModel: ObservableObject {
         date = transaction.date
         type = transaction.type
         selectedCategoryId = transaction.categoryId
+        originalCreatedAt = transaction.createdAt
         errorMessage = nil
     }
 

@@ -12,7 +12,6 @@ struct TransactionInputView: View {
     @ObservedObject var transactionInputViewModel: TransactionInputViewModel
     @ObservedObject var categoryInputViewModel: CategoryInputViewModel
 
-    @Namespace private var animation
     @FocusState private var isNumberPadActive: Bool
 
     var body: some View {
@@ -82,62 +81,13 @@ struct TransactionInputView: View {
             )
             .frame(maxWidth: .infinity)
 
-            categorySelector
-                .frame(maxWidth: .infinity)
+            // 切り出した子 View
+            TransactionCategorySelector(
+                transactionInputViewModel: transactionInputViewModel,
+                categoryInputViewModel: categoryInputViewModel
+            )
+            .frame(maxWidth: .infinity)
         }
-    }
-
-    private var categorySelector: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            sectionHeader("カテゴリ")
-
-            Menu {
-                categoryMenuContent
-            } label: {
-                categoryMenuLabel
-            }
-            .buttonStyle(.plain)
-            .tint(.primary)
-        }
-    }
-
-    private var categoryMenuContent: some View {
-        Group {
-            Button {
-                withAnimation(.snappy) {
-                    categoryInputViewModel.presentInputView(type: transactionInputViewModel.type)
-                }
-            } label: {
-                Label("カテゴリを追加", systemImage: "plus.circle.fill")
-            }
-
-            if !transactionInputViewModel.availableCategories.isEmpty {
-                ForEach(transactionInputViewModel.availableCategories) { item in
-                    Button(item.name) {
-                        transactionInputViewModel.selectedCategoryId = item.id
-                    }
-                }
-            }
-        }
-    }
-
-    private var categoryMenuLabel: some View {
-        HStack {
-            Text(transactionInputViewModel.selectedCategory?.name ?? "選択してください")
-                .font(.callout)
-                .padding(.leading, 12)
-                .lineLimit(1)
-
-            Spacer()
-
-            Image(systemName: "chevron.up.chevron.down")
-                .font(.system(size: 10))
-                .padding(.trailing, 12)
-                .opacity(0.5)
-        }
-        .foregroundStyle(.primary)
-        .frame(height: 44)
-        .background(.background, in: .rect(cornerRadius: 10))
     }
 
     // MARK: - Date Picker Section
@@ -215,7 +165,7 @@ struct TransactionInputView: View {
         Text(text)
             .font(.caption)
             .foregroundStyle(.secondary)
-            .hSpacing(.leading)
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func customTextField(
