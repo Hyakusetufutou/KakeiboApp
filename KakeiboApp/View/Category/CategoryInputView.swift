@@ -16,7 +16,7 @@ struct CategoryInputView: View {
         VStack(spacing: 16) {
             headerView
             nameInputSection
-            colorPickerSection
+            CategoryColorPickerView(selectedColor: $categoryInputViewModel.color)
             actionButtons
         }
         .padding(20)
@@ -36,8 +36,6 @@ struct CategoryInputView: View {
             }
         }
     }
-
-    // MARK: - Components
 
     private var headerView: some View {
         Text(categoryInputViewModel.isEdit ? "カテゴリを編集" : "カテゴリを追加")
@@ -62,47 +60,8 @@ struct CategoryInputView: View {
         }
     }
 
-    private var colorPickerSection: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("カラー")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-
-            LazyVGrid(
-                columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 6),
-                spacing: 12
-            ) {
-                ForEach(AppTheme.categoryColors, id: \.self) { color in
-                    colorButton(color: color)
-                }
-            }
-        }
-    }
-
-    private func colorButton(color: Color) -> some View {
-        Circle()
-            .fill(color)
-            .frame(width: 34, height: 34)
-            .overlay {
-                if color == categoryInputViewModel.color.color {
-                    Image(systemName: "checkmark")
-                        .font(.caption.bold())
-                        .foregroundStyle(.white)
-                }
-            }
-            .scaleEffect(color == categoryInputViewModel.color.color ? 1.15 : 1)
-            .animation(
-                .spring(response: 0.35, dampingFraction: 0.7),
-                value: categoryInputViewModel.color
-            )
-            .onTapGesture {
-                categoryInputViewModel.color = CategoryColor(color: color)
-            }
-    }
-
     private var actionButtons: some View {
         HStack(spacing: 12) {
-            // キャンセル
             Button {
                 isFocused = false
                 categoryInputViewModel.cancel()
@@ -117,7 +76,6 @@ struct CategoryInputView: View {
                     .foregroundStyle(.primary)
             }
 
-            // 保存・更新
             Button {
                 Task {
                     isFocused = false

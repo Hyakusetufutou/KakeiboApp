@@ -15,8 +15,6 @@ struct CategoryListView: View {
 
     let type: TransactionType
 
-    // MARK: - Body
-
     var body: some View {
         VStack {
             headerView
@@ -24,8 +22,6 @@ struct CategoryListView: View {
         }
         .background(Color(.systemGroupedBackground))
     }
-
-    // MARK: - Header
 
     private var headerView: some View {
         HStack {
@@ -66,34 +62,17 @@ struct CategoryListView: View {
         }
     }
 
-    // MARK: - Category List
-
     private var categoryList: some View {
         let categories = categoryListViewModel.categories.filter { $0.type == type }
 
         return List {
             ForEach(categories) { category in
-                HStack {
-                    Circle()
-                        .frame(width: 12)
-                        .foregroundStyle(category.color.color)
-
-                    Text(category.name)
-
-                    Spacer()
-                }
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    categoryInputViewModel.presentInputView(type: type, categoryItem: category)
-                }
-                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                    Button {
-                        Task { await categoryListViewModel.delete(category) }
-                    } label: {
-                        Image(systemName: "trash")
-                    }
-                    .tint(.red)
-                }
+                CategoryRowView(
+                    category: category,
+                    type: type,
+                    categoryInputViewModel: categoryInputViewModel,
+                    categoryListViewModel: categoryListViewModel
+                )
             }
         }
         .scrollContentBackground(.hidden)
