@@ -21,20 +21,6 @@ final class CalendarViewModel: ObservableObject {
     @Published var currentDate: Date = Date()
     @Published var dateRange: DateRange = DateRange()
 
-    var startDate: Binding<Date> {
-        Binding(
-            get: { self.dateRange.start },
-            set: { self.dateRange = self.dateRange.withStart($0) }
-        )
-    }
-
-    var endDate: Binding<Date> {
-        Binding(
-            get: { self.dateRange.end },
-            set: { self.dateRange = self.dateRange.withEnd($0) }
-        )
-    }
-
     private let categoryStore: CategoryStoreProtocol
     private let transactionStore: TransactionStoreProtocol
 

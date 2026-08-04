@@ -13,8 +13,8 @@ struct HomeDateFilterSheetView: View {
 
     var body: some View {
         DateFilterView(
-            start: homeViewModel.startDate,
-            end: homeViewModel.endDate,
+            start: $homeViewModel.dateRange.start,
+            end: $homeViewModel.dateRange.end,
             onSubmit: { start, end in
                 homeViewModel.dateRange = DateRange(start: start, end: end)
                 homeViewModel.showFilterView = false

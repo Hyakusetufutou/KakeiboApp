@@ -23,20 +23,6 @@ final class GraphViewModel: ObservableObject {
 
     // MARK: - Computed Properties
 
-    var startDate: Binding<Date> {
-        Binding(
-            get: { self.dateRange.start },
-            set: { self.dateRange = self.dateRange.withStart($0) }
-        )
-    }
-
-    var endDate: Binding<Date> {
-        Binding(
-            get: { self.dateRange.end },
-            set: { self.dateRange = self.dateRange.withEnd($0) }
-        )
-    }
-
     var totalAmount: Decimal {
         categorySummaries.reduce(0) { $0 + $1.totalAmount }
     }
