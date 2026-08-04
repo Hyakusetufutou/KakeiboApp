@@ -15,14 +15,15 @@ struct DaySummaryView: View {
     private var balance: Decimal { income - expense }
 
     var body: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 0) {
             summaryColumn(
                 title: "収入",
                 value: currencyString(income, allowedDigits: 0),
                 color: .income
             )
 
-            Spacer()
+            Divider()
+                .frame(height: 32)
 
             summaryColumn(
                 title: "支出",
@@ -30,7 +31,8 @@ struct DaySummaryView: View {
                 color: .expense
             )
 
-            Spacer()
+            Divider()
+                .frame(height: 32)
 
             summaryColumn(
                 title: "合計",
@@ -39,9 +41,9 @@ struct DaySummaryView: View {
             )
         }
         .padding(.horizontal, 16)
-        .padding(.vertical, 8)
+        .padding(.vertical, 12)
         .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 
     private func summaryColumn(title: String, value: String, color: Color) -> some View {
@@ -50,9 +52,13 @@ struct DaySummaryView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
             Text(value)
-                .fontWeight(.semibold)
+                .font(.subheadline.weight(.semibold))
+                .monospacedDigit()
                 .foregroundStyle(color)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
         }
+        .frame(maxWidth: .infinity)
     }
 }
 

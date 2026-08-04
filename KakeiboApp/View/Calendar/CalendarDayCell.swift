@@ -34,52 +34,76 @@ struct CalendarDayCell: View {
 
     var body: some View {
         Button(action: onSelect) {
-            VStack(spacing: 2) {
+            VStack(spacing: 3) {
                 Text("\(dayNumber)")
-                    .font(.caption)
-                    .fontWeight(isToday ? .bold : .regular)
-                    .foregroundStyle(isToday ? Color.accentColor : Color.primary)
-                    .frame(width: 24, height: 24)
+                    .font(.callout)
+                    .fontWeight(isToday || isSelected ? .semibold : .regular)
+                    .foregroundStyle(dayNumberColor)
+                    .frame(width: 28, height: 28)
                     .background {
                         if isSelected {
                             Circle()
-                                .fill(Color.accentColor.opacity(0.15))
+                                .fill(Color.accentColor)
+                        } else if isToday {
+                            Circle()
+                                .stroke(Color.accentColor, lineWidth: 1.5)
                         }
                     }
 
                 VStack(spacing: 1) {
-                    if let income = summary?.income, income > 0 {
-                        Text(currencyString(income, allowedDigits: 0))
-                            .font(.system(size: 9))
-                            .foregroundStyle(Color.income)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.6)
-                    } else {
-                        Spacer()
-                            .frame(height: 10)
-                    }
-
-                    if let expense = summary?.expense, expense > 0 {
-                        Text(currencyString(expense, allowedDigits: 0))
-                            .font(.system(size: 9))
-                            .foregroundStyle(Color.expense)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.6)
-                    } else {
-                        Spacer()
-                            .frame(height: 10)
-                    }
+                    amountLabel(summary?.income, color: .income)
+                    amountLabel(summary?.expense, color: .expense)
                 }
             }
             .frame(maxWidth: .infinity)
             .frame(height: 56)
-            .background {
-                if isSelected {
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(Color(.secondarySystemGroupedBackground))
-                }
-            }
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(accessibilityLabel)
+        .accessibilityAddTraits(isSelected ? [.isSelected] : [])
     }
+
+    private var dayNumberColor: Color {
+        if isSelected { return .white }
+        if isToday { return .accentColor }
+        return .primary
+    }
+
+    @ViewBuilder
+    private func amountLabel(_ amount: Decimal?, color: Color) -> some View {
+        if let amount, amount > 0 {
+            Text(currencyString(amount, allowedDigits: 0))
+                .font(.system(size: 9))
+                .foregroundStyle(color)
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+        } else {
+            Spacer()
+                .frame(height: 10)
+        }
+    }
+
+    private var accessibilityLabel: String {
+        var components = [DateFormatter.dayAccessibilityFormatter.string(from: date)]
+
+        if isToday { components.append("今日") }
+        if let income = summary?.income, income > 0 {
+            components.append("収入 \(currencyString(income, allowedDigits: 0))")
+        }
+        if let expense = summary?.expense, expense > 0 {
+            components.append("支出 \(currencyString(expense, allowedDigits: 0))")
+        }
+
+        return components.joined(separator: "、")
+    }
+}
+
+extension DateFormatter {
+    fileprivate static let dayAccessibilityFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ja_JP")
+        formatter.dateFormat = "M月d日"
+        return formatter
+    }()
 }

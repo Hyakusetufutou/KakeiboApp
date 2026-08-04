@@ -23,12 +23,10 @@ struct CalendarView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                headerView
-
                 VStack(spacing: 0) {
                     monthNavigationView
                         .padding(.horizontal, 16)
-                        .padding(.top, 12)
+                        .padding(.top, 8)
 
                     CalendarGridView(calendarViewModel: calendarViewModel)
                         .padding(.horizontal, 16)
@@ -36,21 +34,28 @@ struct CalendarView: View {
                 }
                 .background(Color(.systemGroupedBackground))
 
-                ScrollView(.vertical, showsIndicators: false) {
-                    CalendarSelectedDateContentView(
-                        calendarViewModel: calendarViewModel,
-                        transactionInputViewModel: transactionInputViewModel
-                    )
-                    .padding(.horizontal, 16)
-                    .padding(.top, 16)
-                    .padding(.bottom, 20)
-                }
-                .background(Color(.systemGroupedBackground))
-                .refreshable {
-                    await calendarViewModel.reload()
-                }
+                CalendarSelectedDateContentView(
+                    calendarViewModel: calendarViewModel,
+                    transactionInputViewModel: transactionInputViewModel
+                )
+                .padding(.horizontal, 16)
+                .padding(.top, 16)
+                .padding(.bottom, 20)
             }
             .background(Color(.systemGroupedBackground))
+            .navigationTitle("カレンダー")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("今日") {
+                        withAnimation(.snappy) {
+                            let today = Date()
+                            calendarViewModel.currentDate = today
+                            calendarViewModel.selectedDate = today
+                        }
+                    }
+                }
+            }
             .overlay {
                 if calendarViewModel.isLoading && calendarViewModel.dailySummaries.isEmpty {
                     ProgressView("読み込み中...")
@@ -70,22 +75,7 @@ struct CalendarView: View {
         }
     }
 
-    // MARK: - Header & Month Navigation
-
-    private var headerView: some View {
-        HStack {
-            Text("カレンダー")
-                .font(.headline)
-
-            Spacer()
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-        .background {
-            Color(.systemGroupedBackground)
-                .shadow(color: Color(.label).opacity(0.08), radius: 2, y: 1)
-        }
-    }
+    // MARK: - Month Navigation
 
     private var monthNavigationView: some View {
         ChangeMonthView(
