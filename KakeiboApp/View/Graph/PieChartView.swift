@@ -24,15 +24,23 @@ struct PieChartView: View {
                     let endAngle = index < data.count - 1 ? angles[index + 1] : .degrees(360)
                     let midAngle = Angle(degrees: (startAngle.degrees + endAngle.degrees) / 2)
                     let adjustedAngle = midAngle - .degrees(90)
-                    let labelRadius = radius * 0.6
+                    let labelRadius = radius * 0.68
 
                     PieSlice(startAngle: startAngle, endAngle: endAngle)
                         .fill(item.color)
+                        .overlay(
+                            PieSlice(startAngle: startAngle, endAngle: endAngle)
+                                .stroke(Color(.systemGroupedBackground), lineWidth: 2)
+                        )
 
                     if endAngle - startAngle > .degrees(18) {
                         Text(item.categoryName)
-                            .font(.callout)
-                            .foregroundStyle(.primary)
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.white)
+                            .lineLimit(1)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 3)
+                            .background(.black.opacity(0.25), in: Capsule())
                             .position(
                                 x: center.x + CGFloat(cos(adjustedAngle.radians)) * labelRadius,
                                 y: center.y + CGFloat(sin(adjustedAngle.radians)) * labelRadius
@@ -41,6 +49,13 @@ struct PieChartView: View {
                 }
             }
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(accessibilitySummary)
+    }
+
+    private var accessibilitySummary: String {
+        data.map { "\($0.categoryName) \(currencyString($0.totalAmount, allowedDigits: 0))" }
+            .joined(separator: "、")
     }
 
     private func makeAngles() -> [Angle] {

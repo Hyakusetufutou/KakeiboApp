@@ -15,12 +15,25 @@ struct GraphCategoryListSheetView: View {
     let selectedType: TransactionType
 
     var body: some View {
-        CategoryListView(
-            categoryInputViewModel: categoryInputViewModel,
-            categoryListViewModel: categoryListViewModel,
-            isPresentCategoryList: $isPresentCategoryList,
-            type: selectedType
-        )
+        NavigationStack {
+            CategoryListView(
+                categoryInputViewModel: categoryInputViewModel,
+                categoryListViewModel: categoryListViewModel,
+                isPresentCategoryList: $isPresentCategoryList,
+                type: selectedType
+            )
+            .navigationTitle("カテゴリ")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("完了") {
+                        isPresentCategoryList = false
+                    }
+                    .fontWeight(.semibold)
+                }
+            }
+        }
+        .presentationDragIndicator(.visible)
         .interactiveDismissDisabled(true)
         .alert("エラー", isPresented: categoryListErrorAlertBinding) {
             Button("OK") { categoryListViewModel.clearError() }
@@ -36,7 +49,7 @@ struct GraphCategoryListSheetView: View {
     private var categoryInputOverlay: some View {
         ZStack {
             if categoryInputViewModel.isPresentInputView {
-                Color(.label).opacity(0.4)
+                Color.black.opacity(0.4)
                     .ignoresSafeArea()
                     .transition(.opacity)
             }

@@ -22,27 +22,20 @@ struct TransactionListByCategory: View {
     var body: some View {
         Group {
             if let summary = categorySummary {
-                VStack(spacing: 0) {
-                    header(summary)
-                        .padding(.horizontal, 16)
-                    transactionList(summary.transactions)
-                }
+                transactionList(summary)
             } else {
                 VStack {
                     Spacer()
                     EmptyStateView(icon: "tray", message: "取引がありません")
                     Spacer()
                 }
+                .frame(maxWidth: .infinity)
+                .background(Color(.systemGroupedBackground))
             }
         }
         .background(Color(.systemGroupedBackground))
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                Text(graphViewModel.findCategory(id: categoryID)?.name ?? "")
-                    .font(.title2)
-                    .fontWeight(.bold)
-            }
-        }
+        .navigationTitle(graphViewModel.findCategory(id: categoryID)?.name ?? "")
+        .navigationBarTitleDisplayMode(.inline)
         .alert("エラー", isPresented: errorAlertBinding) {
             Button("OK") { graphViewModel.clearError() }
         } message: {
@@ -54,47 +47,42 @@ struct TransactionListByCategory: View {
 
     // MARK: - Components
 
-    private func header(_ summary: CategorySummary) -> some View {
-        HStack {
-            Text("合計金額")
-                .font(.title2)
-                .fontWeight(.bold)
-
-            Spacer()
-
-            Text(currencyString(summary.totalAmount))
-                .font(.title2)
-                .fontWeight(.bold)
-        }
-        .padding(.vertical, 12)
-    }
-
-    private func transactionList(_ transactions: [TransactionModel]) -> some View {
+    private func transactionList(_ summary: CategorySummary) -> some View {
         List {
-            ForEach(transactions) { transaction in
-                TransactionCardView(
-                    transaction: transaction,
-                    category: graphViewModel.findCategory(id: transaction.categoryId),
-                )
-                .listRowSeparator(.hidden)
-                .listRowBackground(Color.clear)
-                .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    transactionInputViewModel.presentInputView(for: transaction)
+            Section {
+                HStack {
+                    Text("合計金額")
+                        .foregroundStyle(.secondary)
+
+                    Spacer()
+
+                    Text(currencyString(summary.totalAmount))
+                        .font(.headline)
+                        .monospacedDigit()
                 }
-                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                    Button(role: .destructive) {
-                        onDeleteTransaction(transaction)
-                    } label: {
-                        Label("", systemImage: "trash")
+            }
+
+            Section {
+                ForEach(summary.transactions) { transaction in
+                    TransactionCardView(
+                        transaction: transaction,
+                        category: graphViewModel.findCategory(id: transaction.categoryId)
+                    )
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        transactionInputViewModel.presentInputView(for: transaction)
+                    }
+                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                        Button(role: .destructive) {
+                            onDeleteTransaction(transaction)
+                        } label: {
+                            Label("削除", systemImage: "trash")
+                        }
                     }
                 }
             }
         }
-        .listStyle(.plain)
-        .scrollContentBackground(.hidden)
-        .background(Color(.systemGroupedBackground))
+        .listStyle(.insetGrouped)
     }
 
     // MARK: - Helper

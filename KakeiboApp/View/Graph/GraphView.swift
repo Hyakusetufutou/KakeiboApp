@@ -55,6 +55,18 @@ struct GraphView: View {
                         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
                 }
             }
+            .navigationTitle("グラフ")
+            .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        isPresentCategoryList = true
+                    } label: {
+                        Image(systemName: "list.bullet")
+                    }
+                    .accessibilityLabel("カテゴリ一覧")
+                }
+            }
             .navigationDestination(for: UUID.self) { categoryID in
                 TransactionListByCategory(
                     graphViewModel: graphViewModel,
@@ -99,26 +111,12 @@ struct GraphView: View {
                     .animation(.snappy, value: graphViewModel.selectedType)
             }
             .padding(.horizontal, 16)
-            .padding(.top, 4)
+            .padding(.top, 8)
+            .padding(.bottom, 12)
         } header: {
-            headerView
+            Color(.systemGroupedBackground)
+                .frame(height: 0)
         }
-    }
-
-    private var headerView: some View {
-        HStack {
-            Text("グラフ")
-                .font(.title2.bold())
-
-            Spacer()
-
-            ActionButton(imageName: "list.bullet") {
-                isPresentCategoryList = true
-            }
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
-        .background(Color(.systemGroupedBackground))
     }
 
     private var emptySection: some View {
