@@ -31,23 +31,30 @@ struct CategoryColorPickerView: View {
     private func colorButton(color: Color) -> some View {
         let isSelected = color == selectedColor.color
 
-        return Circle()
-            .fill(color)
-            .frame(width: 34, height: 34)
-            .overlay {
-                if isSelected {
-                    Image(systemName: "checkmark")
-                        .font(.caption.bold())
-                        .foregroundStyle(.white)
-                }
-            }
-            .scaleEffect(isSelected ? 1.15 : 1)
-            .animation(
-                .spring(response: 0.35, dampingFraction: 0.7),
-                value: selectedColor
-            )
-            .onTapGesture {
+        return Button {
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
                 selectedColor = CategoryColor(color: color)
             }
+        } label: {
+            Circle()
+                .fill(color)
+                .frame(width: 34, height: 34)
+                .overlay {
+                    Circle()
+                        .strokeBorder(Color(.systemBackground), lineWidth: isSelected ? 2 : 0)
+                }
+                .overlay {
+                    if isSelected {
+                        Image(systemName: "checkmark")
+                            .font(.caption.bold())
+                            .foregroundStyle(.white)
+                            .shadow(color: .black.opacity(0.3), radius: 1)
+                    }
+                }
+                .scaleEffect(isSelected ? 1.15 : 1)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("カラーを選択")
+        .accessibilityAddTraits(isSelected ? [.isSelected] : [])
     }
 }

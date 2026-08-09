@@ -36,6 +36,7 @@ struct HomeView: View {
                     transactionInputViewModel: transactionInputViewModel
                 )
             }
+            .padding(.horizontal, 16)
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
             .background(Color(.systemGroupedBackground))
@@ -97,7 +98,7 @@ struct HomeView: View {
         }
         .listRowSeparator(.hidden)
         .listRowBackground(Color.clear)
-        .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 0, trailing: 16))
+        .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 0, trailing: 0))
     }
 
     private var summarySection: some View {
@@ -109,7 +110,7 @@ struct HomeView: View {
         }
         .listRowSeparator(.hidden)
         .listRowBackground(Color.clear)
-        .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
+        .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
     }
 
     private var controlSection: some View {
@@ -124,7 +125,7 @@ struct HomeView: View {
         }
         .listRowSeparator(.hidden)
         .listRowBackground(Color.clear)
-        .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 8, trailing: 16))
+        .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 8, trailing: 0))
         .padding(.vertical, 8)
     }
 

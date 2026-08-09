@@ -15,12 +15,13 @@ struct CategoryRowView: View {
     @ObservedObject var categoryListViewModel: CategoryListViewModel
 
     var body: some View {
-        HStack {
+        HStack(spacing: 12) {
             Circle()
-                .frame(width: 12)
-                .foregroundStyle(category.color.color)
+                .fill(category.color.color)
+                .frame(width: 12, height: 12)
 
             Text(category.name)
+                .foregroundStyle(.primary)
 
             Spacer()
         }
@@ -29,12 +30,13 @@ struct CategoryRowView: View {
             categoryInputViewModel.presentInputView(type: type, categoryItem: category)
         }
         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-            Button {
+            Button(role: .destructive) {
                 Task { await categoryListViewModel.delete(category) }
             } label: {
-                Image(systemName: "trash")
+                Label("削除", systemImage: "trash")
             }
-            .tint(.red)
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityHint("タップして編集")
     }
 }

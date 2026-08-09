@@ -13,7 +13,7 @@ struct CategoryInputView: View {
     @FocusState private var isFocused: Bool
 
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 20) {
             headerView
             nameInputSection
             CategoryColorPickerView(selectedColor: $categoryInputViewModel.color)
@@ -23,7 +23,7 @@ struct CategoryInputView: View {
         .background(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .fill(Color(.systemBackground))
-                .shadow(color: Color(.label).opacity(0.10), radius: 20, y: 10)
+                .shadow(color: Color.black.opacity(0.12), radius: 20, y: 10)
         )
         .padding(.horizontal, 24)
         .alert("エラー", isPresented: errorAlertBinding) {
@@ -40,7 +40,7 @@ struct CategoryInputView: View {
     private var headerView: some View {
         Text(categoryInputViewModel.isEdit ? "カテゴリを編集" : "カテゴリを追加")
             .font(.headline)
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxWidth: .infinity, alignment: .center)
     }
 
     private var nameInputSection: some View {
@@ -56,6 +56,7 @@ struct CategoryInputView: View {
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
                         .fill(Color(.secondarySystemGroupedBackground))
                 )
+                .submitLabel(.done)
                 .focused($isFocused)
         }
     }
@@ -67,14 +68,11 @@ struct CategoryInputView: View {
                 categoryInputViewModel.cancel()
             } label: {
                 Text("キャンセル")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity, minHeight: 50)
-                    .background(
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .fill(Color(.secondarySystemGroupedBackground))
-                    )
-                    .foregroundStyle(.primary)
+                    .frame(maxWidth: .infinity)
             }
+            .buttonStyle(.bordered)
+            .controlSize(.large)
+            .tint(.secondary)
 
             Button {
                 Task {
@@ -83,15 +81,10 @@ struct CategoryInputView: View {
                 }
             } label: {
                 Text(categoryInputViewModel.isEdit ? "更新" : "作成")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity, minHeight: 50)
-                    .background(
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .fill(Color.accentColor)
-                    )
-                    .foregroundStyle(.white)
-                    .opacity(categoryInputViewModel.name.isEmpty ? 0.5 : 1)
+                    .frame(maxWidth: .infinity)
             }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
             .disabled(categoryInputViewModel.name.isEmpty)
         }
     }

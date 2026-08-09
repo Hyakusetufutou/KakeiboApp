@@ -16,66 +16,48 @@ struct CategoryListView: View {
     let type: TransactionType
 
     var body: some View {
-        VStack {
-            headerView
-            categoryList
-        }
-        .background(Color(.systemGroupedBackground))
-    }
-
-    private var headerView: some View {
-        HStack {
-            headerButton(icon: "plus") {
-                withAnimation(.snappy) {
-                    categoryInputViewModel.presentInputView(type: type)
+        categoryList
+            .navigationTitle("\(type.rawValue)カテゴリ")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button {
+                        withAnimation(.snappy) {
+                            categoryInputViewModel.presentInputView(type: type)
+                        }
+                    } label: {
+                        Image(systemName: "plus")
+                    }
+                    .accessibilityLabel("カテゴリを追加")
                 }
             }
-
-            Spacer()
-
-            Text("\(type.rawValue)カテゴリ")
-                .font(.title3)
-                .fontWeight(.bold)
-
-            Spacer()
-
-            headerButton(icon: "checkmark") {
-                isPresentCategoryList = false
-            }
-        }
-        .padding(.horizontal, 24)
-        .padding(.vertical, 16)
-    }
-
-    private func headerButton(icon: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: icon)
-                .font(.title2)
-                .foregroundStyle(.primary)
-                .padding(.vertical, 10)
-                .padding(.horizontal, 14)
-                .background {
-                    Capsule()
-                        .fill(Color(.systemBackground))
-                        .shadow(color: Color(.label).opacity(0.12), radius: 8, y: 1)
-                }
-        }
     }
 
     private var categoryList: some View {
         let categories = categoryListViewModel.categories.filter { $0.type == type }
 
-        return List {
-            ForEach(categories) { category in
-                CategoryRowView(
-                    category: category,
-                    type: type,
-                    categoryInputViewModel: categoryInputViewModel,
-                    categoryListViewModel: categoryListViewModel
-                )
+        return Group {
+            if categories.isEmpty {
+                VStack {
+                    Spacer()
+                    EmptyStateView(icon: "tag", message: "カテゴリがありません")
+                    Spacer()
+                }
+                .frame(maxWidth: .infinity)
+                .background(Color(.systemGroupedBackground))
+            } else {
+                List {
+                    ForEach(categories) { category in
+                        CategoryRowView(
+                            category: category,
+                            type: type,
+                            categoryInputViewModel: categoryInputViewModel,
+                            categoryListViewModel: categoryListViewModel
+                        )
+                    }
+                }
+                .listStyle(.insetGrouped)
             }
         }
-        .scrollContentBackground(.hidden)
-        .background(Color(.systemGroupedBackground))
     }
 }

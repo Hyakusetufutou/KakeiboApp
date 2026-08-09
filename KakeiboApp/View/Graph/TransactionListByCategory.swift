@@ -23,6 +23,7 @@ struct TransactionListByCategory: View {
         Group {
             if let summary = categorySummary {
                 transactionList(summary)
+                    .padding(.horizontal, 16)
             } else {
                 VStack {
                     Spacer()
@@ -68,6 +69,9 @@ struct TransactionListByCategory: View {
                         transaction: transaction,
                         category: graphViewModel.findCategory(id: transaction.categoryId)
                     )
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
                     .contentShape(Rectangle())
                     .onTapGesture {
                         transactionInputViewModel.presentInputView(for: transaction)
@@ -76,13 +80,15 @@ struct TransactionListByCategory: View {
                         Button(role: .destructive) {
                             onDeleteTransaction(transaction)
                         } label: {
-                            Label("削除", systemImage: "trash")
+                            Label("", systemImage: "trash")
                         }
                     }
                 }
             }
         }
-        .listStyle(.insetGrouped)
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
+        .background(Color(.systemGroupedBackground))
     }
 
     // MARK: - Helper
