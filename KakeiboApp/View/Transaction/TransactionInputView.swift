@@ -12,7 +12,11 @@ struct TransactionInputView: View {
     @ObservedObject var transactionInputViewModel: TransactionInputViewModel
     @ObservedObject var categoryInputViewModel: CategoryInputViewModel
 
-    @FocusState private var isNumberPadActive: Bool
+    @FocusState private var focusedField: Field?
+
+    private enum Field {
+        case title, memo, amount
+    }
 
     var body: some View {
         NavigationStack {
@@ -25,6 +29,10 @@ struct TransactionInputView: View {
                     datePickerSection
                 }
                 .padding(16)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    focusedField = nil
+                }
             }
             .scrollIndicators(.hidden)
             .background(.gray.opacity(0.15))
@@ -55,11 +63,21 @@ struct TransactionInputView: View {
     // MARK: - Input Fields
 
     private var titleField: some View {
-        customTextField("タイトル", hint: "タイトル", value: $transactionInputViewModel.title)
+        customTextField(
+            "タイトル",
+            hint: "タイトル",
+            value: $transactionInputViewModel.title,
+            field: .title
+        )
     }
 
     private var memoField: some View {
-        customTextField("メモ", hint: "メモ", value: $transactionInputViewModel.memo)
+        customTextField(
+            "メモ",
+            hint: "メモ",
+            value: $transactionInputViewModel.memo,
+            field: .memo
+        )
     }
 
     private var amountField: some View {
@@ -67,7 +85,8 @@ struct TransactionInputView: View {
             "金額",
             hint: "金額",
             value: $transactionInputViewModel.amount,
-            keyboardType: .numberPad
+            keyboardType: .numberPad,
+            field: .amount
         )
     }
 
@@ -81,13 +100,18 @@ struct TransactionInputView: View {
             )
             .frame(maxWidth: .infinity)
 
-            // 切り出した子 View
             TransactionCategorySelector(
                 transactionInputViewModel: transactionInputViewModel,
                 categoryInputViewModel: categoryInputViewModel
             )
             .frame(maxWidth: .infinity)
         }
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in
+                    focusedField = nil
+                }
+        )
     }
 
     // MARK: - Date Picker Section
@@ -172,7 +196,8 @@ struct TransactionInputView: View {
         _ title: String,
         hint: String,
         value: Binding<String>,
-        keyboardType: UIKeyboardType = .default
+        keyboardType: UIKeyboardType = .default,
+        field: Field
     ) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             sectionHeader(title)
@@ -182,7 +207,7 @@ struct TransactionInputView: View {
                 .padding(.vertical, 12)
                 .background(.background, in: .rect(cornerRadius: 10))
                 .keyboardType(keyboardType)
-                .focused($isNumberPadActive)
+                .focused($focusedField, equals: field)
         }
     }
 
