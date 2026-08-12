@@ -37,7 +37,11 @@ final class HomeViewModel: ObservableObject {
         bindTransactions()
         bindError()
         Task {
-            await self.transactionStore.load(from: dateRange.start, to: dateRange.end)
+            do {
+                try await self.transactionStore.load(from: dateRange.start, to: dateRange.end)
+            } catch {
+                errorMessage = ErrorMapper.message(for: error)
+            }
         }
     }
 
@@ -52,7 +56,11 @@ final class HomeViewModel: ObservableObject {
         defer { isLoading = false }
 
         Task {
-            await transactionStore.delete(transaction)
+            do {
+                try await transactionStore.delete(transaction)
+            } catch {
+                errorMessage = ErrorMapper.message(for: error)
+            }
         }
     }
 
@@ -60,7 +68,11 @@ final class HomeViewModel: ObservableObject {
         isLoading = true
         defer { isLoading = false }
 
-        await transactionStore.load(from: dateRange.start, to: dateRange.end)
+        do {
+            try await transactionStore.load(from: dateRange.start, to: dateRange.end)
+        } catch {
+            errorMessage = ErrorMapper.message(for: error)
+        }
     }
 
     func clearError() {

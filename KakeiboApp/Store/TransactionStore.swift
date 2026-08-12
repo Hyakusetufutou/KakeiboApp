@@ -15,10 +15,10 @@ protocol TransactionStoreProtocol {
     var hasMoreData: AnyPublisher<Bool, Never> { get }
     var errorPublisher: AnyPublisher<Error, Never> { get }
 
-    func load(from start: Date, to end: Date) async
-    func add(_ transaction: TransactionModel) async
-    func update(_ transaction: TransactionModel) async
-    func delete(_ transaction: TransactionModel) async
+    func load(from start: Date, to end: Date) async throws
+    func add(_ transaction: TransactionModel) async throws
+    func update(_ transaction: TransactionModel) async throws
+    func delete(_ transaction: TransactionModel) async throws
     func search(text: String?) async throws -> [TransactionModel]
 }
 
@@ -57,36 +57,26 @@ final class TransactionStore: TransactionStoreProtocol {
     }
 
     // MARK: - Actions
-    func load(from start: Date, to end: Date) async {
+    func load(from start: Date, to end: Date) async throws {
         let range = updateLoadedRange(from: start, to: end)
         loadedRange = range
 
-        do {
-            transactionsInternal = try await repository.fetch(
-                from: range.startDate,
-                to: range.endDate
-            )
-        } catch {
-            errorSubject.send(error)
-        }
+        transactionsInternal = try await repository.fetch(
+            from: range.startDate,
+            to: range.endDate
+        )
     }
 
-    func add(_ transaction: TransactionModel) async {
-        await mutateAndReload {
-            try await repository.add(transaction)
-        }
+    func add(_ transaction: TransactionModel) async throws {
+        try await repository.add(transaction)
     }
 
-    func update(_ transaction: TransactionModel) async {
-        await mutateAndReload {
-            try await repository.update(transaction)
-        }
+    func update(_ transaction: TransactionModel) async throws {
+        try await repository.update(transaction)
     }
 
-    func delete(_ transaction: TransactionModel) async {
-        await mutateAndReload {
-            try await repository.delete(transaction)
-        }
+    func delete(_ transaction: TransactionModel) async throws {
+        try await repository.delete(transaction)
     }
 
     func search(text: String?) async throws -> [TransactionModel] {
@@ -97,15 +87,6 @@ final class TransactionStore: TransactionStoreProtocol {
     }
 
     // MARK: - Private
-
-    private func mutateAndReload(_ operation: () async throws -> Void) async {
-        do {
-            try await operation()
-            await load()
-        } catch {
-            errorSubject.send(error)
-        }
-    }
 
     private func load() async {
         guard let range = loadedRange else { return }

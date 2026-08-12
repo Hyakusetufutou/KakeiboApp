@@ -89,7 +89,7 @@ final class TransactionInputViewModel: ObservableObject {
 
         // Validate form
         if let error = validationError {
-            errorMessage = error.localizedDescription
+            errorMessage = ErrorMapper.message(for: error)
             return
         }
 
@@ -103,14 +103,17 @@ final class TransactionInputViewModel: ObservableObject {
         isLoading = true
         defer { isLoading = false }
 
-        if isEdit {
-            await transactionStore.update(transaction)
-        } else {
-            await transactionStore.add(transaction)
+        do {
+            if isEdit {
+                try await transactionStore.update(transaction)
+            } else {
+                try await transactionStore.add(transaction)
+            }
+            // Success: close the view
+            closeInputView()
+        } catch {
+            errorMessage = ErrorMapper.message(for: error)
         }
-
-        // Success: close the view
-        closeInputView()
     }
 
     func cancel() {

@@ -53,7 +53,11 @@ final class GraphViewModel: ObservableObject {
             isLoading = true
             defer { isLoading = false }
 
-            await transactionStore.delete(transaction)
+            do {
+                try await transactionStore.delete(transaction)
+            } catch {
+                errorMessage = ErrorMapper.message(for: error)
+            }
         }
     }
 
@@ -68,7 +72,11 @@ final class GraphViewModel: ObservableObject {
         isLoading = true
         defer { isLoading = false }
 
-        await transactionStore.load(from: dateRange.start, to: dateRange.end)
+        do {
+            try await transactionStore.load(from: dateRange.start, to: dateRange.end)
+        } catch {
+            errorMessage = ErrorMapper.message(for: error)
+        }
     }
 
     func clearError() {

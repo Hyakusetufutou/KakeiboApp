@@ -36,7 +36,11 @@ final class SearchViewModel: ObservableObject {
             isLoading = true
             defer { isLoading = false }
 
-            await transactionStore.delete(transaction)
+            do {
+                try await transactionStore.delete(transaction)
+            } catch {
+                errorMessage = ErrorMapper.message(for: error)
+            }
         }
     }
 
@@ -68,7 +72,7 @@ final class SearchViewModel: ObservableObject {
             return
         }
 
-        searchTask = Task { @MainActor in
+        searchTask = Task {
             do {
                 let results = try await transactionStore.search(text: text)
 
@@ -77,7 +81,8 @@ final class SearchViewModel: ObservableObject {
             } catch is CancellationError {
 
             } catch {
-                self.errorMessage = "検索に失敗しました: \(error.localizedDescription)"
+                let message = ErrorMapper.message(for: error)
+                self.errorMessage = "検索に失敗しました: \(message)"
                 self.resultTransactions = []
             }
         }

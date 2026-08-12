@@ -15,10 +15,9 @@ protocol CategoryStoreProtocol {
     var errorPublisher: AnyPublisher<Error, Never> { get }
 
     func find(id: UUID) -> CategoryModel?
-    func add(_ category: CategoryModel) async
-    func update(_ category: CategoryModel) async
-    func delete(_ category: CategoryModel) async
-    func reload() async
+    func add(_ category: CategoryModel) async throws
+    func update(_ category: CategoryModel) async throws
+    func delete(_ category: CategoryModel) async throws
 }
 
 @MainActor
@@ -47,8 +46,12 @@ final class CategoryStore: CategoryStoreProtocol {
         self.repository = repository
         if autoLoad {
             Task {
-                await seedDefaultsIfNeeded()
-                await reload()
+                do {
+                    try await seedDefaultsIfNeeded()
+                    try await reload()
+                } catch {
+                    errorSubject.send(error)
+                }
             }
         }
     }
@@ -58,62 +61,37 @@ final class CategoryStore: CategoryStoreProtocol {
         categoriesInternal.first { $0.id == id }
     }
 
-    func add(_ category: CategoryModel) async {
-        await mutateAndReload {
-            try await repository.add(category)
-        }
+    func add(_ category: CategoryModel) async throws {
+        try await repository.add(category)
     }
 
-    func update(_ category: CategoryModel) async {
-        await mutateAndReload {
-            try await repository.update(category)
-        }
+    func update(_ category: CategoryModel) async throws {
+        try await repository.update(category)
     }
 
-    func delete(_ category: CategoryModel) async {
-        do {
-            guard !category.isDefault else {
-                throw CustomError.cannotDeletedefaultCategory
-            }
-            try await repository.delete(category)
-            await reload()
-        } catch {
-            errorSubject.send(error)
+    func delete(_ category: CategoryModel) async throws {
+        guard !category.isDefault else {
+            throw CustomError.cannotDeletedefaultCategory
         }
-    }
-
-    func reload() async {
-        do {
-            categoriesInternal = try await repository.fetchAll()
-        } catch {
-            errorSubject.send(error)
-        }
+        try await repository.delete(category)
+        try await reload()
     }
 
     // MARK: - Private
 
-    private func seedDefaultsIfNeeded() async {
-        do {
-            let existing = try await repository.fetchAll()
-            let existingIds = Set(existing.map(\.id))
-            let missingDefaults = CategoryModel.defaults.filter { !existingIds.contains($0.id) }
-
-            guard !missingDefaults.isEmpty else { return }
-
-            for category in missingDefaults {
-                try await repository.add(category)
-            }
-        } catch {
-            errorSubject.send(error)
-        }
+    func reload() async throws {
+        categoriesInternal = try await repository.fetchAll()
     }
 
-    private func mutateAndReload(_ operation: () async throws -> Void) async {
-        do {
-            try await operation()
-            await reload()
-        } catch {
-            errorSubject.send(error)
+    private func seedDefaultsIfNeeded() async throws {
+        let existing = try await repository.fetchAll()
+        let existingIds = Set(existing.map(\.id))
+        let missingDefaults = CategoryModel.defaults.filter { !existingIds.contains($0.id) }
+
+        guard !missingDefaults.isEmpty else { return }
+
+        for category in missingDefaults {
+            try await repository.add(category)
         }
     }
 }
