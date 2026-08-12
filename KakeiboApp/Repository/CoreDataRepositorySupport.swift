@@ -29,7 +29,12 @@ enum CoreDataRepositorySupport {
 
     static func save(_ context: NSManagedObjectContext) throws {
         if context.hasChanges {
-            try context.save()
+            do {
+                try context.save()
+            } catch {
+                context.rollback()
+                throw error
+            }
         }
     }
 
