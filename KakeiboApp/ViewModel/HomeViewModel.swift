@@ -47,11 +47,13 @@ final class HomeViewModel: ObservableObject {
         categoryStore.find(id: id)
     }
 
-    func deleteTransaction(_ transaction: TransactionModel) async {
+    func deleteTransaction(_ transaction: TransactionModel) {
         isLoading = true
         defer { isLoading = false }
 
-        await transactionStore.delete(transaction)
+        Task {
+            await transactionStore.delete(transaction)
+        }
     }
 
     func reload() async {

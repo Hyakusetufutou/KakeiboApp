@@ -33,9 +33,7 @@ struct HomeTransactionSectionView: View {
                     }
                     .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                         Button(role: .destructive) {
-                            Task {
-                                await homeViewModel.deleteTransaction(transaction)
-                            }
+                            homeViewModel.deleteTransaction(transaction)
                         } label: {
                             Label("", systemImage: "trash")
                         }

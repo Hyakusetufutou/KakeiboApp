@@ -31,11 +31,13 @@ final class SearchViewModel: ObservableObject {
 
     // MARK: - Public Methods
 
-    func deleteTransaction(_ transaction: TransactionModel) async {
-        isLoading = true
-        defer { isLoading = false }
+    func deleteTransaction(_ transaction: TransactionModel) {
+        Task {
+            isLoading = true
+            defer { isLoading = false }
 
-        await transactionStore.delete(transaction)
+            await transactionStore.delete(transaction)
+        }
     }
 
     func findCategory(id: UUID) -> CategoryModel? {

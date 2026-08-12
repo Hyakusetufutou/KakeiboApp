@@ -48,11 +48,13 @@ final class GraphViewModel: ObservableObject {
         categoryStore.find(id: id)
     }
 
-    func deleteTransaction(_ transaction: TransactionModel) async {
-        isLoading = true
-        defer { isLoading = false }
+    func deleteTransaction(_ transaction: TransactionModel) {
+        Task {
+            isLoading = true
+            defer { isLoading = false }
 
-        await transactionStore.delete(transaction)
+            await transactionStore.delete(transaction)
+        }
     }
 
     func changeMonth(by value: Int) {

@@ -31,7 +31,7 @@ struct CategoryRowView: View {
         }
         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
             Button(role: .destructive) {
-                Task { await categoryListViewModel.delete(category) }
+                categoryListViewModel.delete(category)
             } label: {
                 Label("削除", systemImage: "trash")
             }

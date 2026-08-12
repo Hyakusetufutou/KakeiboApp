@@ -39,11 +39,12 @@ final class CalendarViewModel: ObservableObject {
         dateRange = DateRange(start: newDate.startOfMonth, end: newDate.endOfMonth)
     }
 
-    func delete(_ transaction: TransactionModel) async {
-        isLoading = true
-        defer { isLoading = false }
-
-        await transactionStore.delete(transaction)
+    func delete(_ transaction: TransactionModel) {
+        Task {
+            isLoading = true
+            defer { isLoading = false }
+            await transactionStore.delete(transaction)
+        }
     }
 
     func category(for id: UUID) -> CategoryModel? {

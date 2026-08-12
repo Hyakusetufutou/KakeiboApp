@@ -27,8 +27,10 @@ final class CategoryListViewModel: ObservableObject {
 
     // MARK: - Public Methods
 
-    func delete(_ category: CategoryModel) async {
-        await categoryStore.delete(category)
+    func delete(_ category: CategoryModel) {
+        Task {
+            await categoryStore.delete(category)
+        }
     }
 
     func clearError() {

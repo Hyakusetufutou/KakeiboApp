@@ -9,8 +9,8 @@
 import SwiftUI
 
 struct DateFilterView: View {
-    @Binding var start: Date
-    @Binding var end: Date
+    @State var start: Date
+    @State var end: Date
     var onSubmit: (Date, Date) -> Void
     var onClose: () -> Void
 
@@ -62,8 +62,8 @@ struct DateFilterView: View {
 
 #Preview {
     DateFilterView(
-        start: .constant(Date()),
-        end: .constant(Date()),
+        start: Date().startOfMonth,
+        end: Date().endOfMonth,
         onSubmit: { _, _ in },
         onClose: {}
     )

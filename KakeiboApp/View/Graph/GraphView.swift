@@ -73,7 +73,7 @@ struct GraphView: View {
                     transactionInputViewModel: transactionInputViewModel,
                     categoryID: categoryID,
                     onDeleteTransaction: { transaction in
-                        Task { await graphViewModel.deleteTransaction(transaction) }
+                        graphViewModel.deleteTransaction(transaction)
                     }
                 )
             }
