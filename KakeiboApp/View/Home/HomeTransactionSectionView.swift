@@ -40,15 +40,6 @@ struct HomeTransactionSectionView: View {
                             Label("", systemImage: "trash")
                         }
                     }
-                    .onAppear {
-                        if transaction.id == homeViewModel.filteredTransactions.last?.id,
-                            homeViewModel.hasMoreData
-                        {
-                            Task {
-                                await homeViewModel.loadMore()
-                            }
-                        }
-                    }
                 }
 
                 if homeViewModel.isLoading && !homeViewModel.filteredTransactions.isEmpty {

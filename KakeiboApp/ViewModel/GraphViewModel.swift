@@ -16,7 +16,6 @@ final class GraphViewModel: ObservableObject {
     @Published private(set) var categorySummaries: [CategorySummary] = []
     @Published private(set) var isLoading = false
     @Published private(set) var errorMessage: String?
-    @Published private(set) var hasMoreData = true
 
     @Published var selectedType: TransactionType = .expense
     @Published var dateRange: DateRange = DateRange()
@@ -40,7 +39,6 @@ final class GraphViewModel: ObservableObject {
         self.categoryStore = categoryStore
         self.transactionStore = transactionStore
         bindCategorySummaries()
-        bindHasMoreData()
         bindError()
     }
 
@@ -64,20 +62,11 @@ final class GraphViewModel: ObservableObject {
         dateRange = DateRange(start: newDate.startOfMonth, end: newDate.endOfMonth)
     }
 
-    func loadMore() async {
-        guard hasMoreData else { return }
-
-        isLoading = true
-        defer { isLoading = false }
-
-        await transactionStore.loadMore()
-    }
-
     func reload() async {
         isLoading = true
         defer { isLoading = false }
 
-        await transactionStore.reload()
+        await transactionStore.load(from: dateRange.start, to: dateRange.end)
     }
 
     func clearError() {
@@ -105,12 +94,6 @@ final class GraphViewModel: ObservableObject {
         }
         .receive(on: DispatchQueue.main)
         .assign(to: &$categorySummaries)
-    }
-
-    private func bindHasMoreData() {
-        transactionStore.hasMoreData
-            .receive(on: DispatchQueue.main)
-            .assign(to: &$hasMoreData)
     }
 
     private func makeCategorySummaries(

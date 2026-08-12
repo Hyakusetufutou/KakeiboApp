@@ -15,12 +15,11 @@ protocol TransactionStoreProtocol {
     var hasMoreData: AnyPublisher<Bool, Never> { get }
     var errorPublisher: AnyPublisher<Error, Never> { get }
 
+    func load(from start: Date, to end: Date) async
     func add(_ transaction: TransactionModel) async
     func update(_ transaction: TransactionModel) async
     func delete(_ transaction: TransactionModel) async
     func search(text: String?) async throws -> [TransactionModel]
-    func loadMore() async
-    func reload() async
 }
 
 @MainActor
@@ -37,6 +36,8 @@ final class TransactionStore: TransactionStoreProtocol {
         $hasMoreDataInternal.eraseToAnyPublisher()
     }
 
+    private(set) var loadedRange: DateRange?
+
     private let errorSubject = PassthroughSubject<Error, Never>()
 
     var errorPublisher: AnyPublisher<Error, Never> {
@@ -46,23 +47,30 @@ final class TransactionStore: TransactionStoreProtocol {
     // MARK: - Dependencies
     private let repository: TransactionRepositoryProtocol
     private let initialLimit = StorePagination.initialLimit
-    private let loadMoreLimit = StorePagination.loadMoreLimit
-    private var isLoadingMore = false
     private var isReloading = false
-    private var reloadGeneration = 0
 
     // MARK: - Init
     init(
         repository: TransactionRepositoryProtocol,
-        autoLoad: Bool = true
     ) {
         self.repository = repository
-        if autoLoad {
-            Task { await reload() }
-        }
     }
 
     // MARK: - Actions
+    func load(from start: Date, to end: Date) async {
+        let range = updateLoadedRange(from: start, to: end)
+        loadedRange = range
+
+        do {
+            transactionsInternal = try await repository.fetch(
+                from: range.startDate,
+                to: range.endDate
+            )
+        } catch {
+            errorSubject.send(error)
+        }
+    }
+
     func add(_ transaction: TransactionModel) async {
         await mutateAndReload {
             try await repository.add(transaction)
@@ -88,71 +96,44 @@ final class TransactionStore: TransactionStoreProtocol {
         return try await repository.search(text: text)
     }
 
-    func loadMore() async {
-        guard hasMoreDataInternal, !isLoadingMore, !isReloading else { return }
-
-        isLoadingMore = true
-        defer { isLoadingMore = false }
-
-        do {
-            let offset = transactionsInternal.count
-            let newItems = try await repository.fetch(
-                from: nil,
-                to: nil,
-                limit: loadMoreLimit,
-                offset: offset
-            )
-
-            if newItems.isEmpty {
-                hasMoreDataInternal = false
-                return
-            }
-
-            let existingIds = Set(transactionsInternal.map(\.id))
-            let uniqueItems = newItems.filter { !existingIds.contains($0.id) }
-            transactionsInternal.append(contentsOf: uniqueItems)
-
-            if newItems.count < loadMoreLimit {
-                hasMoreDataInternal = false
-            }
-        } catch {
-            errorSubject.send(error)
-        }
-    }
-
-    func reload() async {
-        reloadGeneration += 1
-        let generation = reloadGeneration
-
-        isReloading = true
-        defer { isReloading = false }
-
-        do {
-            let items = try await repository.fetch(
-                from: nil,
-                to: nil,
-                limit: initialLimit,
-                offset: 0
-            )
-
-            guard generation == reloadGeneration else { return }
-
-            transactionsInternal = items
-            hasMoreDataInternal = items.count == initialLimit
-        } catch {
-            guard generation == reloadGeneration else { return }
-            errorSubject.send(error)
-        }
-    }
-
     // MARK: - Private
 
     private func mutateAndReload(_ operation: () async throws -> Void) async {
         do {
             try await operation()
-            await reload()
+            await load()
         } catch {
             errorSubject.send(error)
         }
+    }
+
+    private func load() async {
+        guard let range = loadedRange else { return }
+
+        do {
+            transactionsInternal = try await repository.fetch(
+                from: range.startDate,
+                to: range.endDate
+            )
+        } catch {
+            errorSubject.send(error)
+        }
+    }
+
+    private func updateLoadedRange(from start: Date, to end: Date) -> DateRange {
+        guard let range = loadedRange else { return DateRange(start: start, end: end) }
+
+        var startDate = range.start
+        var endDate = range.end
+
+        if !range.contains(start) {
+            startDate = start
+        }
+
+        if !range.contains(end) {
+            endDate = end
+        }
+
+        return DateRange(start: startDate, end: endDate)
     }
 }

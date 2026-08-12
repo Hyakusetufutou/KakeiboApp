@@ -15,7 +15,6 @@ final class CalendarViewModel: ObservableObject {
     @Published private(set) var dailySummaries: [Date: DailySummary] = [:]
     @Published private(set) var isLoading = false
     @Published private(set) var errorMessage: String?
-    @Published private(set) var hasMoreData = true
 
     @Published var selectedDate: Date?
     @Published var currentDate: Date = Date()
@@ -28,7 +27,6 @@ final class CalendarViewModel: ObservableObject {
         self.categoryStore = categoryStore
         self.transactionStore = transactionStore
         bindDailySummaries()
-        bindHasMoreData()
         bindError()
     }
 
@@ -52,20 +50,11 @@ final class CalendarViewModel: ObservableObject {
         categoryStore.find(id: id)
     }
 
-    func loadMore() async {
-        guard hasMoreData else { return }
-
-        isLoading = true
-        defer { isLoading = false }
-
-        await transactionStore.loadMore()
-    }
-
     func reload() async {
         isLoading = true
         defer { isLoading = false }
 
-        await transactionStore.reload()
+        await transactionStore.load(from: dateRange.start, to: dateRange.end)
     }
 
     func clearError() {
@@ -98,12 +87,6 @@ final class CalendarViewModel: ObservableObject {
         }
         .receive(on: DispatchQueue.main)
         .assign(to: &$dailySummaries)
-    }
-
-    private func bindHasMoreData() {
-        transactionStore.hasMoreData
-            .receive(on: DispatchQueue.main)
-            .assign(to: &$hasMoreData)
     }
 
     private func makeDailySummaries(

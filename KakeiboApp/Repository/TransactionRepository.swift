@@ -11,10 +11,8 @@ import CoreData
 // MARK: - Transaction Repository Protocol
 protocol TransactionRepositoryProtocol: Sendable {
     func fetch(
-        from start: Date?,
-        to end: Date?,
-        limit: Int?,
-        offset: Int?
+        from start: Date,
+        to end: Date,
     ) async throws -> [TransactionModel]
     func search(text: String?) async throws -> [TransactionModel]
     func add(_ model: TransactionModel) async throws
@@ -31,30 +29,19 @@ actor TransactionRepository: TransactionRepositoryProtocol {
     }
 
     func fetch(
-        from start: Date?,
-        to end: Date?,
-        limit: Int?,
-        offset: Int?
+        from start: Date,
+        to end: Date,
     ) async throws -> [TransactionModel] {
         try await CoreDataRepositorySupport.perform(on: context) { context in
             let request: NSFetchRequest<TransactionEntity> = TransactionEntity.fetchRequest()
             request.relationshipKeyPathsForPrefetching = ["category"]
 
-            var predicates: [NSPredicate] = []
-            if let start {
-                predicates.append(NSPredicate(format: "date >= %@", start as NSDate))
-            }
-            if let end {
-                predicates.append(NSPredicate(format: "date <= %@", end as NSDate))
-            }
-            if !predicates.isEmpty {
-                request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
-            }
-
+            request.predicate = NSPredicate(
+                format: "date >= %@ AND date < %@",
+                start as NSDate,
+                end as NSDate
+            )
             request.sortDescriptors = Self.transactionSortDescriptors
-
-            if let limit { request.fetchLimit = limit }
-            if let offset { request.fetchOffset = offset }
 
             return try context.fetch(request).map { try $0.toModel() }
         }

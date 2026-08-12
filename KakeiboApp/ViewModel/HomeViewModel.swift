@@ -19,7 +19,6 @@ final class HomeViewModel: ObservableObject {
     @Published var dateRange: DateRange = DateRange()
     @Published var selectedType: TransactionType = .expense
     @Published var showFilterView = false
-    @Published private(set) var hasMoreData = true
 
     private let categoryStore: CategoryStoreProtocol
     private let transactionStore: TransactionStoreProtocol
@@ -36,8 +35,10 @@ final class HomeViewModel: ObservableObject {
         self.categoryStore = categoryStore
         self.transactionStore = transactionStore
         bindTransactions()
-        bindHasMoreData()
         bindError()
+        Task {
+            await self.transactionStore.load(from: dateRange.start, to: dateRange.end)
+        }
     }
 
     // MARK: - Public Methods
@@ -53,20 +54,11 @@ final class HomeViewModel: ObservableObject {
         await transactionStore.delete(transaction)
     }
 
-    func loadMore() async {
-        guard hasMoreData else { return }
-
-        isLoading = true
-        defer { isLoading = false }
-
-        await transactionStore.loadMore()
-    }
-
     func reload() async {
         isLoading = true
         defer { isLoading = false }
 
-        await transactionStore.reload()
+        await transactionStore.load(from: dateRange.start, to: dateRange.end)
     }
 
     func clearError() {
@@ -99,12 +91,6 @@ final class HomeViewModel: ObservableObject {
         }
         .receive(on: DispatchQueue.main)
         .assign(to: &$filteredTransactions)
-    }
-
-    private func bindHasMoreData() {
-        transactionStore.hasMoreData
-            .receive(on: DispatchQueue.main)
-            .assign(to: &$hasMoreData)
     }
 
     private func bindError() {
