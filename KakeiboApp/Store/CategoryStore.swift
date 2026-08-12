@@ -62,25 +62,35 @@ final class CategoryStore: CategoryStoreProtocol {
     }
 
     func add(_ category: CategoryModel) async throws {
-        try await repository.add(category)
+        try await mutateAndReload {
+            try await repository.add(category)
+        }
     }
 
     func update(_ category: CategoryModel) async throws {
-        try await repository.update(category)
+        try await mutateAndReload {
+            try await repository.update(category)
+        }
     }
 
     func delete(_ category: CategoryModel) async throws {
-        guard !category.isDefault else {
-            throw CustomError.cannotDeletedefaultCategory
+        try await mutateAndReload {
+            guard !category.isDefault else {
+                throw CustomError.cannotDeletedefaultCategory
+            }
+            try await repository.delete(category)
         }
-        try await repository.delete(category)
-        try await reload()
     }
 
     // MARK: - Private
 
-    func reload() async throws {
+    private func reload() async throws {
         categoriesInternal = try await repository.fetchAll()
+    }
+
+    private func mutateAndReload(_ operation: () async throws -> Void) async throws {
+        try await operation()
+        try await reload()
     }
 
     private func seedDefaultsIfNeeded() async throws {
