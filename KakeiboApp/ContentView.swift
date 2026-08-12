@@ -34,6 +34,22 @@ struct ContentView: View {
         _categoryInputViewModel = StateObject(wrappedValue: factory.categoryInputViewModel)
         _searchViewModel = StateObject(wrappedValue: factory.searchViewModel)
         _categoryListViewModel = StateObject(wrappedValue: factory.categoryListViewModel)
+
+        let appearance = UITabBarAppearance()
+        appearance.configureWithDefaultBackground()
+
+        appearance.stackedLayoutAppearance.normal.iconColor = .black
+        appearance.stackedLayoutAppearance.normal.titleTextAttributes = [
+            .foregroundColor: UIColor.black
+        ]
+
+        appearance.stackedLayoutAppearance.selected.iconColor = .systemBlue
+        appearance.stackedLayoutAppearance.selected.titleTextAttributes = [
+            .foregroundColor: UIColor.systemBlue
+        ]
+
+        UITabBar.appearance().standardAppearance = appearance
+        UITabBar.appearance().scrollEdgeAppearance = appearance
     }
 
     var body: some View {
