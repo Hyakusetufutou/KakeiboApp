@@ -17,12 +17,17 @@ struct CategoryColorPickerView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
-            LazyVGrid(
-                columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 6),
-                spacing: 12
-            ) {
-                ForEach(AppTheme.categoryColors, id: \.self) { color in
-                    colorButton(color: color)
+            Grid(horizontalSpacing: 12, verticalSpacing: 12) {
+                GridRow {
+                    ForEach(AppTheme.categoryColors.prefix(6), id: \.self) {
+                        colorButton(color: $0)
+                    }
+                }
+
+                GridRow {
+                    ForEach(AppTheme.categoryColors.dropFirst(6), id: \.self) {
+                        colorButton(color: $0)
+                    }
                 }
             }
         }
@@ -53,6 +58,7 @@ struct CategoryColorPickerView: View {
                 }
                 .scaleEffect(isSelected ? 1.15 : 1)
         }
+        .frame(maxWidth: .infinity)
         .buttonStyle(.plain)
         .accessibilityLabel("カラーを選択")
         .accessibilityAddTraits(isSelected ? [.isSelected] : [])

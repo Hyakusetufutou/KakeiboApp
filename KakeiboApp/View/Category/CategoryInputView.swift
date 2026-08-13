@@ -22,7 +22,7 @@ struct CategoryInputView: View {
         .padding(20)
         .background(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(Color(.systemBackground))
+                .fill(Color(.systemGroupedBackground))
                 .shadow(color: Color.black.opacity(0.12), radius: 20, y: 10)
         )
         .padding(.horizontal, 24)
