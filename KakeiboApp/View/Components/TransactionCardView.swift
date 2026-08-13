@@ -19,7 +19,7 @@ struct TransactionCardView: View {
             Spacer()
             amountText
         }
-        .padding(.horizontal, 15)
+        .padding(.horizontal, 16)
         .padding(.vertical, 10)
         .background(cardBackground)
     }

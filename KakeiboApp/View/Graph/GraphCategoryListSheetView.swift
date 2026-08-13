@@ -43,7 +43,6 @@ struct GraphCategoryListSheetView: View {
             }
         }
         .overlay { categoryInputOverlay }
-        .animation(.snappy, value: categoryInputViewModel.isPresentInputView)
     }
 
     private var categoryInputOverlay: some View {
@@ -64,6 +63,7 @@ struct GraphCategoryListSheetView: View {
                 }
             }
         }
+        .animation(.snappy, value: categoryInputViewModel.isPresentInputView)
     }
 
     private var categoryListErrorAlertBinding: Binding<Bool> {

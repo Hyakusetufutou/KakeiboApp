@@ -23,7 +23,6 @@ struct TransactionListByCategory: View {
         Group {
             if let summary = categorySummary {
                 transactionList(summary)
-                    .padding(.horizontal, 16)
             } else {
                 VStack {
                     Spacer()
@@ -61,6 +60,14 @@ struct TransactionListByCategory: View {
                         .font(.headline)
                         .monospacedDigit()
                 }
+                .padding()
+                .background(
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(Color(.systemBackground))
+                        .shadow(color: Color(.label).opacity(0.06), radius: 2, y: 1)
+                )
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
             }
 
             Section {
@@ -84,6 +91,7 @@ struct TransactionListByCategory: View {
                         }
                     }
                 }
+                .padding(.horizontal, 16)
             }
         }
         .listStyle(.plain)
