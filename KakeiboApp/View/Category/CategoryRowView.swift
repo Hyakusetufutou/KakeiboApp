@@ -30,10 +30,12 @@ struct CategoryRowView: View {
             categoryInputViewModel.presentInputView(type: type, categoryItem: category)
         }
         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-            Button(role: .destructive) {
-                categoryListViewModel.delete(category)
-            } label: {
-                Label("削除", systemImage: "trash")
+            if !category.isDefault {
+                Button(role: .destructive) {
+                    categoryListViewModel.delete(category)
+                } label: {
+                    Label("", systemImage: "trash")
+                }
             }
         }
         .accessibilityElement(children: .combine)

@@ -21,6 +21,8 @@ final class CategoryInputViewModel: ObservableObject {
     @Published var color: CategoryColor = .blue
     @Published var type: TransactionType = .expense
 
+    var isDefault = false
+
     private let categoryStore: CategoryStoreProtocol
 
     init(categoryStore: CategoryStoreProtocol) {
@@ -55,7 +57,7 @@ final class CategoryInputViewModel: ObservableObject {
             name: name,
             color: color,
             type: type,
-            isDefault: false
+            isDefault: isDefault
         )
 
         isLoading = true
@@ -93,6 +95,7 @@ final class CategoryInputViewModel: ObservableObject {
         id = UUID()
         name = ""
         color = .blue
+        isDefault = false
         errorMessage = nil
     }
 
@@ -101,6 +104,7 @@ final class CategoryInputViewModel: ObservableObject {
         name = category.name
         color = category.color
         type = category.type
+        isDefault = category.isDefault
         errorMessage = nil
     }
 
