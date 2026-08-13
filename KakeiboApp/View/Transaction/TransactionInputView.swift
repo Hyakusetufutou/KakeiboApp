@@ -142,7 +142,6 @@ struct TransactionInputView: View {
             Image(systemName: "xmark")
                 .font(.headline)
                 .foregroundStyle(.primary)
-                .frame(width: 44, height: 44)
         }
         .disabled(categoryInputViewModel.isPresentInputView)
     }
@@ -154,7 +153,6 @@ struct TransactionInputView: View {
             Image(systemName: "checkmark")
                 .font(.headline)
                 .foregroundStyle(.primary)
-                .frame(width: 44, height: 44)
         }
         .disabled(isSaveButtonDisabled)
         .opacity(isSaveButtonDisabled ? 0.2 : 1.0)

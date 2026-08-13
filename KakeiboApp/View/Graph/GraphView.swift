@@ -56,7 +56,7 @@ struct GraphView: View {
                 }
             }
             .navigationTitle("グラフ")
-            .navigationBarTitleDisplayMode(.large)
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
