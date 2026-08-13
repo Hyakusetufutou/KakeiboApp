@@ -38,9 +38,9 @@ struct ContentView: View {
         let appearance = UITabBarAppearance()
         appearance.configureWithDefaultBackground()
 
-        appearance.stackedLayoutAppearance.normal.iconColor = .black
+        appearance.stackedLayoutAppearance.normal.iconColor = .label
         appearance.stackedLayoutAppearance.normal.titleTextAttributes = [
-            .foregroundColor: UIColor.black
+            .foregroundColor: UIColor.label
         ]
 
         appearance.stackedLayoutAppearance.selected.iconColor = .systemBlue
