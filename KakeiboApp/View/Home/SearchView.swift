@@ -15,7 +15,7 @@ struct SearchView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color(.systemGroupedBackground)
+                AppTheme.background
                     .ignoresSafeArea()
 
                 contentView
@@ -85,7 +85,7 @@ struct SearchView: View {
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
-        .background(Color(.systemGroupedBackground))
+        .background(AppTheme.background)
     }
 
     // MARK: - Loading View

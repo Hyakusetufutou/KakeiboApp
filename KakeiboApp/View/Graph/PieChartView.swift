@@ -30,7 +30,7 @@ struct PieChartView: View {
                         .fill(item.color)
                         .overlay(
                             PieSlice(startAngle: startAngle, endAngle: endAngle)
-                                .stroke(Color(.systemGroupedBackground), lineWidth: 2)
+                                .stroke(AppTheme.background, lineWidth: 2)
                         )
 
                     if endAngle - startAngle > .degrees(18) {

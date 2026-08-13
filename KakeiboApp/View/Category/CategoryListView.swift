@@ -44,7 +44,7 @@ struct CategoryListView: View {
                     Spacer()
                 }
                 .frame(maxWidth: .infinity)
-                .background(Color(.systemGroupedBackground))
+                .background(AppTheme.background)
             } else {
                 List {
                     ForEach(categories) { category in

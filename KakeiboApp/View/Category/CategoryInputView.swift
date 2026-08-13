@@ -22,7 +22,7 @@ struct CategoryInputView: View {
         .padding(20)
         .background(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(Color(.systemGroupedBackground))
+                .fill(AppTheme.background)
                 .shadow(color: Color.black.opacity(0.12), radius: 20, y: 10)
         )
         .padding(.horizontal, 24)
@@ -54,7 +54,7 @@ struct CategoryInputView: View {
                 .padding(.horizontal, 12)
                 .background(
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(Color(.secondarySystemGroupedBackground))
+                        .fill(AppTheme.secondaryBackground)
                 )
                 .submitLabel(.done)
                 .focused($isFocused)
@@ -99,7 +99,7 @@ struct CategoryInputView: View {
 
 #Preview("Light Mode") {
     ZStack {
-        Color(.systemGroupedBackground).ignoresSafeArea()
+        AppTheme.background.ignoresSafeArea()
         CategoryInputView(
             categoryInputViewModel: CategoryInputViewModel(
                 categoryStore: CategoryStore(repository: CategoryRepository())
@@ -111,7 +111,7 @@ struct CategoryInputView: View {
 
 #Preview("Dark Mode") {
     ZStack {
-        Color(.systemGroupedBackground).ignoresSafeArea()
+        AppTheme.background.ignoresSafeArea()
         CategoryInputView(
             categoryInputViewModel: CategoryInputViewModel(
                 categoryStore: CategoryStore(repository: CategoryRepository())

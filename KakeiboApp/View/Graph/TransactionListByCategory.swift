@@ -30,10 +30,10 @@ struct TransactionListByCategory: View {
                     Spacer()
                 }
                 .frame(maxWidth: .infinity)
-                .background(Color(.systemGroupedBackground))
+                .background(AppTheme.background)
             }
         }
-        .background(Color(.systemGroupedBackground))
+        .background(AppTheme.background)
         .navigationTitle(graphViewModel.findCategory(id: categoryID)?.name ?? "")
         .navigationBarTitleDisplayMode(.inline)
         .alert("エラー", isPresented: errorAlertBinding) {
@@ -63,8 +63,8 @@ struct TransactionListByCategory: View {
                 .padding()
                 .background(
                     RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .fill(Color(.systemBackground))
-                        .shadow(color: Color(.label).opacity(0.06), radius: 2, y: 1)
+                        .fill(AppTheme.cardBackground)
+                        .shadow(color: AppTheme.primaryText.opacity(0.06), radius: 2, y: 1)
                 )
                 .listRowSeparator(.hidden)
                 .listRowBackground(Color.clear)
@@ -96,7 +96,7 @@ struct TransactionListByCategory: View {
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
-        .background(Color(.systemGroupedBackground))
+        .background(AppTheme.background)
     }
 
     // MARK: - Helper

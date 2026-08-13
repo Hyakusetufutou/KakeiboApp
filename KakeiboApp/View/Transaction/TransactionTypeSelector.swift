@@ -29,7 +29,7 @@ struct TransactionTypeSelector: View {
                         .background {
                             if transactionType == type {
                                 RoundedRectangle(cornerRadius: 10)
-                                    .fill(.gray.opacity(0.15))
+                                    .fill(AppTheme.segmentBackground)
                                     .matchedGeometryEffect(id: "CATEGORYTYPE", in: animation)
                             }
                         }
@@ -45,7 +45,7 @@ struct TransactionTypeSelector: View {
             .padding(8)
             .background(
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(Color(.systemBackground))
+                    .fill(AppTheme.cardBackground)
             )
         }
     }

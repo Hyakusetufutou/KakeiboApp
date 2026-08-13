@@ -35,7 +35,7 @@ struct TransactionInputView: View {
                 }
             }
             .scrollIndicators(.hidden)
-            .background(.gray.opacity(0.15))
+            .background(AppTheme.segmentBackground)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     cancelButton
@@ -163,7 +163,7 @@ struct TransactionInputView: View {
     private var categoryInputOverlay: some View {
         ZStack {
             if categoryInputViewModel.isPresentInputView {
-                Color(.label).opacity(0.4)
+                AppTheme.primaryText.opacity(0.4)
                     .ignoresSafeArea()
                     .transition(.opacity)
             }

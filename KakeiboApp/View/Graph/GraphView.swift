@@ -31,7 +31,7 @@ struct GraphView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color(.systemGroupedBackground)
+                AppTheme.background
                     .ignoresSafeArea()
 
                 ScrollView(.vertical, showsIndicators: false) {
@@ -114,7 +114,7 @@ struct GraphView: View {
             .padding(.top, 8)
             .padding(.bottom, 12)
         } header: {
-            Color(.systemGroupedBackground)
+            AppTheme.background
                 .frame(height: 0)
         }
     }

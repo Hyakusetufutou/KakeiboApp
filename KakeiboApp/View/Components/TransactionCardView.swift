@@ -74,8 +74,8 @@ struct TransactionCardView: View {
 
     private var cardBackground: some View {
         RoundedRectangle(cornerRadius: 10, style: .continuous)
-            .fill(Color(.systemBackground))
-            .shadow(color: Color(.label).opacity(0.06), radius: 2, y: 1)
+            .fill(AppTheme.cardBackground)
+            .shadow(color: AppTheme.primaryText.opacity(0.06), radius: 2, y: 1)
     }
 }
 
@@ -85,7 +85,7 @@ struct TransactionCardView: View {
         TransactionCardView(transaction: .mock2, category: .mock2)
     }
     .padding()
-    .background(Color(.systemGroupedBackground))
+    .background(AppTheme.background)
     .preferredColorScheme(.light)
 }
 
@@ -95,6 +95,6 @@ struct TransactionCardView: View {
         TransactionCardView(transaction: .mock2, category: .mock2)
     }
     .padding()
-    .background(Color(.systemGroupedBackground))
+    .background(AppTheme.background)
     .preferredColorScheme(.dark)
 }

@@ -43,7 +43,7 @@ struct CalendarSelectedDateContentView: View {
                         }
                         .listStyle(.plain)
                         .scrollContentBackground(.hidden)
-                        .background(Color(.systemGroupedBackground))
+                        .background(AppTheme.background)
                         .refreshable {
                             await calendarViewModel.reload()
                         }

@@ -55,7 +55,7 @@ struct GraphCategorySectionView: View {
                 }
             }
         }
-        .background(Color(.secondarySystemGroupedBackground))
+        .background(AppTheme.secondaryBackground)
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 

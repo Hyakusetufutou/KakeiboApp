@@ -38,7 +38,7 @@ struct CustomSegmentedControl: View {
                 }
             }
         }
-        .background(.gray.opacity(0.15), in: .capsule)
+        .background(AppTheme.segmentBackground, in: .capsule)
         .padding(.top, 5)
     }
 }

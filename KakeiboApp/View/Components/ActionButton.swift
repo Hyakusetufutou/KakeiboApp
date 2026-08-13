@@ -22,7 +22,7 @@ struct ActionButton: View {
                 .background {
                     Capsule()
                         .fill(.background)
-                        .shadow(color: Color(.label).opacity(0.08), radius: 8, x: 0, y: 1)
+                        .shadow(color: AppTheme.primaryText.opacity(0.08), radius: 8, x: 0, y: 1)
                 }
         }
         .buttonStyle(.plain)

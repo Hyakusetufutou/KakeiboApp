@@ -32,7 +32,7 @@ struct CalendarView: View {
                         .padding(.horizontal, 16)
                         .padding(.bottom, 12)
                 }
-                .background(Color(.systemGroupedBackground))
+                .background(AppTheme.background)
 
                 CalendarSelectedDateContentView(
                     calendarViewModel: calendarViewModel,
@@ -42,7 +42,7 @@ struct CalendarView: View {
                 .padding(.top, 16)
                 .padding(.bottom, 20)
             }
-            .background(Color(.systemGroupedBackground))
+            .background(AppTheme.background)
             .navigationTitle("カレンダー")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

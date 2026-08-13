@@ -42,7 +42,7 @@ struct DaySummaryView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .background(Color(.secondarySystemGroupedBackground))
+        .background(AppTheme.secondaryBackground)
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 

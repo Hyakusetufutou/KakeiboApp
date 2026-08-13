@@ -17,7 +17,7 @@ struct CardView: View {
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 15)
-                .fill(.background)
+                .fill(AppTheme.cardBackground)
 
             VStack(spacing: 0) {
                 // 収支合計

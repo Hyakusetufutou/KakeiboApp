@@ -39,7 +39,7 @@ struct HomeView: View {
             .padding(.horizontal, 16)
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
-            .background(Color(.systemGroupedBackground))
+            .background(AppTheme.background)
             .refreshable {
                 await homeViewModel.reload()
             }
