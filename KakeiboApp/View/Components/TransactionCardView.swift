@@ -11,22 +11,17 @@ import SwiftUI
 struct TransactionCardView: View {
     var transaction: TransactionModel
     var category: CategoryModel?
-    var onDelete: (TransactionModel) -> Void
 
     var body: some View {
-        SwipeAction(cornerRadius: 10) {
-            HStack(spacing: 12) {
-                categoryIcon
-                transactionInfo
-                Spacer()
-                amountText
-            }
-            .padding(.horizontal, 15)
-            .padding(.vertical, 10)
-            .background(cardBackground)
-        } onDelete: {
-            onDelete(transaction)
+        HStack(spacing: 12) {
+            categoryIcon
+            transactionInfo
+            Spacer()
+            amountText
         }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .background(cardBackground)
     }
 
     // MARK: - Components
@@ -37,7 +32,7 @@ struct TransactionCardView: View {
             .fontWeight(.semibold)
             .foregroundStyle(.white)
             .frame(width: 45, height: 45)
-            .background((category?.color ?? .blue).gradient, in: .circle)
+            .background((category?.color.color ?? .blue).gradient, in: .circle)
     }
 
     private var transactionInfo: some View {
@@ -64,7 +59,7 @@ struct TransactionCardView: View {
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
                         .foregroundStyle(.white)
-                        .background(category.color.gradient, in: .capsule)
+                        .background(category.color.color.gradient, in: .capsule)
                 }
             }
         }
@@ -79,27 +74,27 @@ struct TransactionCardView: View {
 
     private var cardBackground: some View {
         RoundedRectangle(cornerRadius: 10, style: .continuous)
-            .fill(Color(.systemBackground))
-            .shadow(color: Color(.label).opacity(0.06), radius: 2, y: 1)
+            .fill(AppTheme.cardBackground)
+            .shadow(color: AppTheme.primaryText.opacity(0.06), radius: 2, y: 1)
     }
 }
 
 #Preview("Light Mode") {
     VStack(spacing: 8) {
-        TransactionCardView(transaction: .mock1, category: .mock1, onDelete: { _ in })
-        TransactionCardView(transaction: .mock2, category: .mock2, onDelete: { _ in })
+        TransactionCardView(transaction: .mock1, category: .mock1)
+        TransactionCardView(transaction: .mock2, category: .mock2)
     }
     .padding()
-    .background(Color(.systemGroupedBackground))
+    .background(AppTheme.background)
     .preferredColorScheme(.light)
 }
 
 #Preview("Dark Mode") {
     VStack(spacing: 8) {
-        TransactionCardView(transaction: .mock1, category: .mock1, onDelete: { _ in })
-        TransactionCardView(transaction: .mock2, category: .mock2, onDelete: { _ in })
+        TransactionCardView(transaction: .mock1, category: .mock1)
+        TransactionCardView(transaction: .mock2, category: .mock2)
     }
     .padding()
-    .background(Color(.systemGroupedBackground))
+    .background(AppTheme.background)
     .preferredColorScheme(.dark)
 }

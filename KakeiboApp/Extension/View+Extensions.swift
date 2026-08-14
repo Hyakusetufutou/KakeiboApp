@@ -35,12 +35,12 @@ extension View {
         return formatter.string(from: date)
     }
 
-    func currencyString(_ value: Double, allowedDigits: Int = 2) -> String {
+    func currencyString(_ value: Decimal, allowedDigits: Int = 2) -> String {
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
         formatter.maximumFractionDigits = allowedDigits
 
-        return formatter.string(from: .init(value: value)) ?? ""
+        return formatter.string(for: value) ?? ""
     }
 
     var currencySymbol: String {
@@ -49,9 +49,9 @@ extension View {
         return locale.currencySymbol ?? ""
     }
 
-    nonisolated func total(_ transactions: [TransactionModel], type: TransactionType) -> Double {
+    nonisolated func total(_ transactions: [TransactionModel], type: TransactionType) -> Decimal {
         return transactions.filter({ $0.type == type })
-            .reduce(Double.zero) { partialResult, transaction in
+            .reduce(Decimal.zero) { partialResult, transaction in
                 return partialResult + transaction.amount
             }
     }

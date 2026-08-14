@@ -15,35 +15,19 @@ final class CalendarViewModel: ObservableObject {
     @Published private(set) var dailySummaries: [Date: DailySummary] = [:]
     @Published private(set) var isLoading = false
     @Published private(set) var errorMessage: String?
-    @Published private(set) var hasMoreData = true
 
     @Published var selectedDate: Date?
     @Published var currentDate: Date = Date()
     @Published var dateRange: DateRange = DateRange()
 
-    var startDate: Binding<Date> {
-        Binding(
-            get: { self.dateRange.start },
-            set: { self.dateRange = self.dateRange.withStart($0) }
-        )
-    }
-
-    var endDate: Binding<Date> {
-        Binding(
-            get: { self.dateRange.end },
-            set: { self.dateRange = self.dateRange.withEnd($0) }
-        )
-    }
-
     private let categoryStore: CategoryStoreProtocol
     private let transactionStore: TransactionStoreProtocol
-    private var cancellables = Set<AnyCancellable>()
 
     init(categoryStore: CategoryStoreProtocol, transactionStore: TransactionStoreProtocol) {
         self.categoryStore = categoryStore
         self.transactionStore = transactionStore
         bindDailySummaries()
-        bindHasMoreData()
+        bindError()
     }
 
     // MARK: - Public Methods
@@ -55,14 +39,16 @@ final class CalendarViewModel: ObservableObject {
         dateRange = DateRange(start: newDate.startOfMonth, end: newDate.endOfMonth)
     }
 
-    func delete(_ transaction: TransactionModel) async {
-        isLoading = true
-        defer { isLoading = false }
+    func delete(_ transaction: TransactionModel) {
+        Task {
+            isLoading = true
+            defer { isLoading = false }
 
-        do {
-            try await transactionStore.delete(transaction)
-        } catch {
-            errorMessage = "削除に失敗しました: \(error.localizedDescription)"
+            do {
+                try await transactionStore.delete(transaction)
+            } catch {
+                errorMessage = ErrorMapper.message(for: error)
+            }
         }
     }
 
@@ -70,20 +56,15 @@ final class CalendarViewModel: ObservableObject {
         categoryStore.find(id: id)
     }
 
-    func loadMore() async {
-        guard hasMoreData else { return }
-
-        isLoading = true
-        defer { isLoading = false }
-
-        await transactionStore.loadMore()
-    }
-
     func reload() async {
         isLoading = true
         defer { isLoading = false }
 
-        await transactionStore.reload()
+        do {
+            try await transactionStore.load(from: dateRange.start, to: dateRange.end)
+        } catch {
+            errorMessage = ErrorMapper.message(for: error)
+        }
     }
 
     func clearError() {
@@ -118,12 +99,6 @@ final class CalendarViewModel: ObservableObject {
         .assign(to: &$dailySummaries)
     }
 
-    private func bindHasMoreData() {
-        transactionStore.hasMoreData
-            .receive(on: DispatchQueue.main)
-            .assign(to: &$hasMoreData)
-    }
-
     private func makeDailySummaries(
         transactions: [TransactionModel],
         startDate: Date,
@@ -154,5 +129,12 @@ final class CalendarViewModel: ObservableObject {
                 transactions: dailyTransactions
             )
         }
+    }
+
+    private func bindError() {
+        transactionStore.errorPublisher
+            .map(ErrorMapper.message)
+            .receive(on: DispatchQueue.main)
+            .assign(to: &$errorMessage)
     }
 }

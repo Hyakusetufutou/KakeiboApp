@@ -18,14 +18,16 @@ final class CategoryInputViewModel: ObservableObject {
 
     @Published var id = UUID()
     @Published var name = ""
-    @Published var color: Color = .blue
+    @Published var color: CategoryColor = .blue
     @Published var type: TransactionType = .expense
 
+    var isDefault = false
+
     private let categoryStore: CategoryStoreProtocol
-    private var cancellables = Set<AnyCancellable>()
 
     init(categoryStore: CategoryStoreProtocol) {
         self.categoryStore = categoryStore
+        bindError()
     }
 
     // MARK: - Public Methods
@@ -48,27 +50,30 @@ final class CategoryInputViewModel: ObservableObject {
             return
         }
 
+        clearError()
+
         let category = CategoryModel(
             id: id,
             name: name,
             color: color,
             type: type,
-            isDefault: false
+            isDefault: isDefault
         )
 
         isLoading = true
         defer { isLoading = false }
 
+        // ストア側のエラーを一度クリアしてから実行
         do {
             if isEdit {
                 try await categoryStore.update(category)
             } else {
                 try await categoryStore.add(category)
             }
-            // 成功時のみ閉じる
+
             closeInputView()
         } catch {
-            errorMessage = "保存に失敗しました: \(error.localizedDescription)"
+            errorMessage = ErrorMapper.message(for: error)
         }
     }
 
@@ -90,6 +95,7 @@ final class CategoryInputViewModel: ObservableObject {
         id = UUID()
         name = ""
         color = .blue
+        isDefault = false
         errorMessage = nil
     }
 
@@ -98,6 +104,7 @@ final class CategoryInputViewModel: ObservableObject {
         name = category.name
         color = category.color
         type = category.type
+        isDefault = category.isDefault
         errorMessage = nil
     }
 
@@ -105,5 +112,12 @@ final class CategoryInputViewModel: ObservableObject {
         isPresentInputView = false
         errorMessage = nil
         resetForm()
+    }
+
+    private func bindError() {
+        categoryStore.errorPublisher
+            .map(ErrorMapper.message)
+            .receive(on: DispatchQueue.main)
+            .assign(to: &$errorMessage)
     }
 }

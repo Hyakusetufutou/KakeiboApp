@@ -21,18 +21,18 @@ struct LockView: View {
                 .fill(.ultraThinMaterial)
                 .ignoresSafeArea()
 
-            Color(.label).opacity(0.55)
+            AppTheme.primaryText.opacity(0.55)
                 .ignoresSafeArea()
 
             VStack(spacing: 30) {
                 Image(systemName: "lock.fill")
                     .font(.system(size: 80))
-                    .foregroundStyle(Color(.systemBackground))
+                    .foregroundStyle(AppTheme.cardBackground)
 
                 Text("アプリがロックされています")
                     .font(.title2)
                     .fontWeight(.semibold)
-                    .foregroundStyle(Color(.systemBackground))
+                    .foregroundStyle(AppTheme.cardBackground)
 
                 unlockButton
 
@@ -61,14 +61,14 @@ struct LockView: View {
                 if isAuthenticating {
                     ProgressView()
                         .progressViewStyle(.circular)
-                        .tint(Color(.systemBackground))
+                        .tint(AppTheme.secondaryBackground)
                 } else {
                     Image(systemName: "faceid")
                     Text("ロックを解除")
                 }
             }
             .font(.headline)
-            .foregroundStyle(Color(.systemBackground))
+            .foregroundStyle(AppTheme.secondaryBackground)
             .padding()
             .frame(minWidth: 180)
             .background(

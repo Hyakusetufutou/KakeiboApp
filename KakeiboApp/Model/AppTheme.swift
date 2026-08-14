@@ -8,19 +8,14 @@
 
 import SwiftUI
 
-struct AppTheme: Equatable {
-    let primary: Color
-    let background: Color
+enum AppTheme {
+    static let background = Color(.systemGroupedBackground)
+    static let secondaryBackground = Color(.secondarySystemGroupedBackground)
+    static let cardBackground = Color(.secondarySystemGroupedBackground)
+    static let segmentBackground = Color("SegmentBackground")
 
-    static let light = AppTheme(
-        primary: Color("PrimaryLight"),
-        background: Color("BackgroundLight")
-    )
-
-    static let dark = AppTheme(
-        primary: Color("PrimaryDark"),
-        background: Color("BackgroundDark")
-    )
+    static let primaryText = Color(.label)
+    static let secondaryText = Color(.secondaryLabel)
 
     static let categoryColors: [Color] = [
         .red, .orange, .yellow, .green, .mint, .teal, .blue, .indigo, .purple, .pink, .brown, .gray,

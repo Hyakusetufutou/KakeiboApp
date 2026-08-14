@@ -12,6 +12,14 @@ struct DateRange {
     let start: Date
     let end: Date
 
+    var startDate: Date {
+        start
+    }
+
+    var endDate: Date {
+        Calendar.current.date(byAdding: .init(day: 1), to: end) ?? end
+    }
+
     init(start: Date = Date().startOfMonth, end: Date = Date().endOfMonth) {
         if start <= end {
             self.start = start

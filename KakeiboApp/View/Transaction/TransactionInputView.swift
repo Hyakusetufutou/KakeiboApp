@@ -12,8 +12,11 @@ struct TransactionInputView: View {
     @ObservedObject var transactionInputViewModel: TransactionInputViewModel
     @ObservedObject var categoryInputViewModel: CategoryInputViewModel
 
-    @Namespace private var animation
-    @FocusState private var isNumberPadActive: Bool
+    @FocusState private var focusedField: Field?
+
+    private enum Field {
+        case title, memo, amount
+    }
 
     var body: some View {
         NavigationStack {
@@ -26,9 +29,13 @@ struct TransactionInputView: View {
                     datePickerSection
                 }
                 .padding(16)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    focusedField = nil
+                }
             }
             .scrollIndicators(.hidden)
-            .background(.gray.opacity(0.15))
+            .background(AppTheme.background)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     cancelButton
@@ -56,11 +63,21 @@ struct TransactionInputView: View {
     // MARK: - Input Fields
 
     private var titleField: some View {
-        customTextField("タイトル", hint: "タイトル", value: $transactionInputViewModel.title)
+        customTextField(
+            "タイトル",
+            hint: "タイトル",
+            value: $transactionInputViewModel.title,
+            field: .title
+        )
     }
 
     private var memoField: some View {
-        customTextField("メモ", hint: "メモ", value: $transactionInputViewModel.memo)
+        customTextField(
+            "メモ",
+            hint: "メモ",
+            value: $transactionInputViewModel.memo,
+            field: .memo
+        )
     }
 
     private var amountField: some View {
@@ -68,7 +85,8 @@ struct TransactionInputView: View {
             "金額",
             hint: "金額",
             value: $transactionInputViewModel.amount,
-            keyboardType: .numberPad
+            keyboardType: .numberPad,
+            field: .amount
         )
     }
 
@@ -82,62 +100,18 @@ struct TransactionInputView: View {
             )
             .frame(maxWidth: .infinity)
 
-            categorySelector
-                .frame(maxWidth: .infinity)
+            TransactionCategorySelector(
+                transactionInputViewModel: transactionInputViewModel,
+                categoryInputViewModel: categoryInputViewModel
+            )
+            .frame(maxWidth: .infinity)
         }
-    }
-
-    private var categorySelector: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            sectionHeader("カテゴリ")
-
-            Menu {
-                categoryMenuContent
-            } label: {
-                categoryMenuLabel
-            }
-            .buttonStyle(.plain)
-            .tint(.primary)
-        }
-    }
-
-    private var categoryMenuContent: some View {
-        Group {
-            Button {
-                withAnimation(.snappy) {
-                    categoryInputViewModel.presentInputView(type: transactionInputViewModel.type)
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in
+                    focusedField = nil
                 }
-            } label: {
-                Label("カテゴリを追加", systemImage: "plus.circle.fill")
-            }
-
-            if !transactionInputViewModel.availableCategories.isEmpty {
-                ForEach(transactionInputViewModel.availableCategories) { item in
-                    Button(item.name) {
-                        transactionInputViewModel.selectedCategoryId = item.id
-                    }
-                }
-            }
-        }
-    }
-
-    private var categoryMenuLabel: some View {
-        HStack {
-            Text(transactionInputViewModel.selectedCategory?.name ?? "選択してください")
-                .font(.callout)
-                .padding(.leading, 12)
-                .lineLimit(1)
-
-            Spacer()
-
-            Image(systemName: "chevron.up.chevron.down")
-                .font(.system(size: 10))
-                .padding(.trailing, 12)
-                .opacity(0.5)
-        }
-        .foregroundStyle(.primary)
-        .frame(height: 44)
-        .background(.background, in: .rect(cornerRadius: 10))
+        )
     }
 
     // MARK: - Date Picker Section
@@ -155,7 +129,7 @@ struct TransactionInputView: View {
             .environment(\.locale, Locale(identifier: "ja_JP"))
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
-            .background(.background, in: .rect(cornerRadius: 10))
+            .background(AppTheme.secondaryBackground, in: .rect(cornerRadius: 10))
         }
     }
 
@@ -168,7 +142,6 @@ struct TransactionInputView: View {
             Image(systemName: "xmark")
                 .font(.headline)
                 .foregroundStyle(.primary)
-                .frame(width: 44, height: 44)
         }
         .disabled(categoryInputViewModel.isPresentInputView)
     }
@@ -180,7 +153,6 @@ struct TransactionInputView: View {
             Image(systemName: "checkmark")
                 .font(.headline)
                 .foregroundStyle(.primary)
-                .frame(width: 44, height: 44)
         }
         .disabled(isSaveButtonDisabled)
         .opacity(isSaveButtonDisabled ? 0.2 : 1.0)
@@ -191,7 +163,7 @@ struct TransactionInputView: View {
     private var categoryInputOverlay: some View {
         ZStack {
             if categoryInputViewModel.isPresentInputView {
-                Color(.label).opacity(0.4)
+                AppTheme.primaryText.opacity(0.4)
                     .ignoresSafeArea()
                     .transition(.opacity)
             }
@@ -215,14 +187,15 @@ struct TransactionInputView: View {
         Text(text)
             .font(.caption)
             .foregroundStyle(.secondary)
-            .hSpacing(.leading)
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func customTextField(
         _ title: String,
         hint: String,
         value: Binding<String>,
-        keyboardType: UIKeyboardType = .default
+        keyboardType: UIKeyboardType = .default,
+        field: Field
     ) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             sectionHeader(title)
@@ -230,9 +203,9 @@ struct TransactionInputView: View {
             TextField(hint, text: value)
                 .padding(.horizontal, 15)
                 .padding(.vertical, 12)
-                .background(.background, in: .rect(cornerRadius: 10))
+                .background(AppTheme.secondaryBackground, in: .rect(cornerRadius: 10))
                 .keyboardType(keyboardType)
-                .focused($isNumberPadActive)
+                .focused($focusedField, equals: field)
         }
     }
 

@@ -40,6 +40,8 @@ final class TransactionInputViewModel: ObservableObject {
         validationError == nil
     }
 
+    private var originalCreatedAt: Date?
+
     private var validationError: ValidationError? {
         if title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             return .emptyTitle
@@ -66,6 +68,7 @@ final class TransactionInputViewModel: ObservableObject {
         self.categoryStore = categoryStore
         self.transactionStore = transactionStore
         setupBindings()
+        bindError()
     }
 
     // MARK: - Public Methods
@@ -86,7 +89,7 @@ final class TransactionInputViewModel: ObservableObject {
 
         // Validate form
         if let error = validationError {
-            errorMessage = error.localizedDescription
+            errorMessage = ErrorMapper.message(for: error)
             return
         }
 
@@ -106,12 +109,10 @@ final class TransactionInputViewModel: ObservableObject {
             } else {
                 try await transactionStore.add(transaction)
             }
-
             // Success: close the view
             closeInputView()
         } catch {
-            // Error: keep the view open and show error
-            errorMessage = "保存に失敗しました: \(error.localizedDescription)"
+            errorMessage = ErrorMapper.message(for: error)
         }
     }
 
@@ -136,10 +137,7 @@ final class TransactionInputViewModel: ObservableObject {
     private func bindCategories() {
         categoryStore.categories
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] categories in
-                self?.categories = categories
-            }
-            .store(in: &cancellables)
+            .assign(to: &$categories)
     }
 
     private func observeTypeChange() {
@@ -159,6 +157,7 @@ final class TransactionInputViewModel: ObservableObject {
         date = Date()
         type = .expense
         selectedCategoryId = nil
+        originalCreatedAt = nil
         errorMessage = nil
     }
 
@@ -166,19 +165,22 @@ final class TransactionInputViewModel: ObservableObject {
         id = transaction.id
         title = transaction.title
         memo = transaction.memo
-        amount = String(Int(transaction.amount))
+        amount = String(NSDecimalNumber(decimal: transaction.amount).intValue)
         date = transaction.date
         type = transaction.type
         selectedCategoryId = transaction.categoryId
+        originalCreatedAt = transaction.createdAt
         errorMessage = nil
     }
 
     private func createTransaction() -> TransactionModel? {
-        guard let amountValue = Double(amount),
+        guard let amountValue = Decimal(string: amount),
             let categoryId = selectedCategoryId
         else {
             return nil
         }
+
+        let now = Date()
 
         return TransactionModel(
             id: id,
@@ -186,8 +188,8 @@ final class TransactionInputViewModel: ObservableObject {
             memo: memo.trimmingCharacters(in: .whitespacesAndNewlines),
             amount: amountValue,
             date: date,
-            createAt: isEdit ? Date() : Date(),
-            updatedAt: Date(),
+            createdAt: isEdit ? (originalCreatedAt ?? now) : now,
+            updatedAt: now,
             type: type,
             categoryId: categoryId
         )
@@ -197,6 +199,13 @@ final class TransactionInputViewModel: ObservableObject {
         isPresentInputView = false
         errorMessage = nil
         resetForm()
+    }
+
+    private func bindError() {
+        transactionStore.errorPublisher
+            .map(ErrorMapper.message)
+            .receive(on: DispatchQueue.main)
+            .assign(to: &$errorMessage)
     }
 }
 

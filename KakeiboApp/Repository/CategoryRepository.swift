@@ -4,7 +4,6 @@
 //
 //  Created by Hyakusetufutou on 2025/10/02
 //
-//
 
 import CoreData
 
@@ -19,72 +18,75 @@ protocol CategoryRepositoryProtocol: Sendable {
 
 // MARK: - Category Repository Implementation
 actor CategoryRepository: CategoryRepositoryProtocol {
-    private let container: NSPersistentContainer
+    private let context: NSManagedObjectContext
 
     init(container: NSPersistentContainer = PersistenceController.shared.container) {
-        self.container = container
+        self.context = CoreDataRepositorySupport.makeBackgroundContext(from: container)
     }
 
     func fetchAll() async throws -> [CategoryModel] {
-        return try await container.performBackgroundTask { context in
-            let request = CategoryEntity.fetchRequest()
+        try await CoreDataRepositorySupport.perform(on: context) { context in
+            let request: NSFetchRequest<CategoryEntity> = CategoryEntity.fetchRequest()
             request.sortDescriptors = [
                 NSSortDescriptor(keyPath: \CategoryEntity.name, ascending: true)
             ]
-            return try context.fetch(request).map { $0.toModel() }
+            return try context.fetch(request).map { try $0.toModel() }
         }
     }
 
     func fetch(by id: UUID) async throws -> CategoryModel {
-        return try await container.performBackgroundTask { context in
-            let entity = try self.fetchEntity(by: id, in: context)
-            return entity.toModel()
+        try await CoreDataRepositorySupport.perform(on: context) { context in
+            let entity = try CoreDataRepositorySupport.fetchEntity(
+                CategoryEntity.self,
+                by: id,
+                in: context
+            )
+            return try entity.toModel()
         }
     }
 
     func add(_ categoryModel: CategoryModel) async throws {
-        try await container.performBackgroundTask { context in
+        try await CoreDataRepositorySupport.perform(on: context) { context in
             let entity = CategoryEntity(context: context)
-            entity.id = categoryModel.id
-            entity.name = categoryModel.name
-            entity.color = AppTheme.colorToString(categoryModel.color)
-            entity.type = categoryModel.type.rawValue
-            entity.isDefault = categoryModel.isDefault
-            try context.save()
+            Self.map(model: categoryModel, to: entity)
+
+            try CoreDataRepositorySupport.save(context)
         }
     }
 
     func update(_ categoryModel: CategoryModel) async throws {
-        try await container.performBackgroundTask { context in
-            let entity = try self.fetchEntity(by: categoryModel.id, in: context)
-            entity.name = categoryModel.name
-            entity.color = AppTheme.colorToString(categoryModel.color)
-            entity.type = categoryModel.type.rawValue
-            entity.isDefault = categoryModel.isDefault
-            try context.save()
+        try await CoreDataRepositorySupport.perform(on: context) { context in
+            let entity = try CoreDataRepositorySupport.fetchEntity(
+                CategoryEntity.self,
+                by: categoryModel.id,
+                in: context
+            )
+            Self.map(model: categoryModel, to: entity)
+
+            try CoreDataRepositorySupport.save(context)
         }
     }
 
     func delete(_ categoryModel: CategoryModel) async throws {
-        try await container.performBackgroundTask { context in
-            let entity = try self.fetchEntity(by: categoryModel.id, in: context)
+        try await CoreDataRepositorySupport.perform(on: context) { context in
+            let entity = try CoreDataRepositorySupport.fetchEntity(
+                CategoryEntity.self,
+                by: categoryModel.id,
+                in: context
+            )
             context.delete(entity)
-            try context.save()
+
+            try CoreDataRepositorySupport.save(context)
         }
     }
 
     // MARK: - Private Helpers
-    private func fetchEntity(
-        by id: UUID,
-        in context: NSManagedObjectContext
-    ) throws -> CategoryEntity {
-        let request = CategoryEntity.fetchRequest()
-        request.predicate = NSPredicate(format: "id == %@", id as NSUUID)
-        request.fetchLimit = 1
 
-        guard let entity = try context.fetch(request).first else {
-            throw CustomError.categoryNotFoundError
-        }
-        return entity
+    private static func map(model: CategoryModel, to entity: CategoryEntity) {
+        entity.id = model.id
+        entity.name = model.name
+        entity.color = model.color.rawValue
+        entity.type = model.type.rawValue
+        entity.isDefault = model.isDefault
     }
 }

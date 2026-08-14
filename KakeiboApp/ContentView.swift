@@ -14,6 +14,11 @@ struct ContentView: View {
 
     @AppStorage("isAppLockEnabled") private var isAppLockEnabled = false
     @AppStorage("lockWhenAppGoesBackground") private var lockWhenAppGoesBackground = false
+    @AppStorage("appearance") private var appearanceRawValue = AppAppearance.system.rawValue
+
+    private var appearance: AppAppearance {
+        AppAppearance(rawValue: appearanceRawValue) ?? .system
+    }
 
     @State private var selectedTab: TabModel = .home
     @State private var isUnlocked = true
@@ -34,6 +39,22 @@ struct ContentView: View {
         _categoryInputViewModel = StateObject(wrappedValue: factory.categoryInputViewModel)
         _searchViewModel = StateObject(wrappedValue: factory.searchViewModel)
         _categoryListViewModel = StateObject(wrappedValue: factory.categoryListViewModel)
+
+        let appearance = UITabBarAppearance()
+        appearance.configureWithDefaultBackground()
+
+        appearance.stackedLayoutAppearance.normal.iconColor = .label
+        appearance.stackedLayoutAppearance.normal.titleTextAttributes = [
+            .foregroundColor: UIColor.label
+        ]
+
+        appearance.stackedLayoutAppearance.selected.iconColor = .systemBlue
+        appearance.stackedLayoutAppearance.selected.titleTextAttributes = [
+            .foregroundColor: UIColor.systemBlue
+        ]
+
+        UITabBar.appearance().standardAppearance = appearance
+        UITabBar.appearance().scrollEdgeAppearance = appearance
     }
 
     var body: some View {
@@ -75,6 +96,7 @@ struct ContentView: View {
                 homeViewModel.resetDateRangeIfNeeded()
             }
         }
+        .preferredColorScheme(appearance.colorScheme)
     }
 }
 

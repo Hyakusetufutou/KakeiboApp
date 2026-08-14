@@ -6,18 +6,13 @@
 //
 //
 
-//
-//  CategoryStore.swift
-//  KakeiboApp
-//
-
 import Foundation
 import Combine
-import SwiftUI
 
 @MainActor
 protocol CategoryStoreProtocol {
     var categories: AnyPublisher<[CategoryModel], Never> { get }
+    var errorPublisher: AnyPublisher<Error, Never> { get }
 
     func find(id: UUID) -> CategoryModel?
     func add(_ category: CategoryModel) async throws
@@ -28,65 +23,85 @@ protocol CategoryStoreProtocol {
 @MainActor
 final class CategoryStore: CategoryStoreProtocol {
     // MARK: - State
-    @Published private var _categories: [CategoryModel] = []
-    @AppStorage("defaultCategoriesSeeded") private var isSeeded = false
+    @Published private var categoriesInternal: [CategoryModel] = []
 
     var categories: AnyPublisher<[CategoryModel], Never> {
-        $_categories.eraseToAnyPublisher()
+        $categoriesInternal.eraseToAnyPublisher()
+    }
+
+    private let errorSubject = PassthroughSubject<Error, Never>()
+
+    var errorPublisher: AnyPublisher<Error, Never> {
+        errorSubject.eraseToAnyPublisher()
     }
 
     // MARK: - Dependencies
     private let repository: CategoryRepositoryProtocol
 
     // MARK: - Init
-    init(repository: CategoryRepositoryProtocol) {
+    init(
+        repository: CategoryRepositoryProtocol,
+        autoLoad: Bool = true
+    ) {
         self.repository = repository
-        Task {
-            await seedDefaultsIfNeeded()
-            await reload()
+        if autoLoad {
+            Task {
+                do {
+                    try await seedDefaultsIfNeeded()
+                    try await reload()
+                } catch {
+                    errorSubject.send(error)
+                }
+            }
         }
     }
 
     // MARK: - Actions
     func find(id: UUID) -> CategoryModel? {
-        _categories.first { $0.id == id }
+        categoriesInternal.first { $0.id == id }
     }
 
     func add(_ category: CategoryModel) async throws {
-        try await repository.add(category)
-        await reload()
-    }
-
-    func update(_ category: CategoryModel) async throws {
-        try await repository.update(category)
-        await reload()
-    }
-
-    func delete(_ category: CategoryModel) async throws {
-        guard !category.isDefault else { throw CustomError.cannotDeletedefaultCategory }
-        try await repository.delete(category)
-        await reload()
-    }
-
-    // MARK: - Private
-    private func seedDefaultsIfNeeded() async {
-        guard !isSeeded else { return }
-
-        do {
-            for category in CategoryModel.defaults {
-                try await repository.add(category)
-                isSeeded = true
-            }
-        } catch {
-
+        try await mutateAndReload {
+            try await repository.add(category)
         }
     }
 
-    private func reload() async {
-        do {
-            _categories = try await repository.fetchAll()
-        } catch {
-            // エラー時は現在のデータを保持
+    func update(_ category: CategoryModel) async throws {
+        try await mutateAndReload {
+            try await repository.update(category)
+        }
+    }
+
+    func delete(_ category: CategoryModel) async throws {
+        try await mutateAndReload {
+            guard !category.isDefault else {
+                throw CustomError.cannotDeletedefaultCategory
+            }
+            try await repository.delete(category)
+        }
+    }
+
+    // MARK: - Private
+
+    private func reload() async throws {
+        categoriesInternal = try await repository.fetchAll()
+    }
+
+    private func mutateAndReload(_ operation: () async throws -> Void) async throws {
+        try await operation()
+        try await reload()
+    }
+
+    private func seedDefaultsIfNeeded() async throws {
+        let existing = try await repository.fetchAll()
+        let existingIds = Set(existing.map(\.id))
+        let missingDefaults = CategoryModel.defaults.filter { !existingIds.contains($0.id) }
+
+        guard !missingDefaults.isEmpty else { return }
+
+        for category in missingDefaults {
+            try await repository.add(category)
         }
     }
 }

@@ -26,195 +26,115 @@ struct HomeView: View {
 
     var body: some View {
         NavigationStack {
-            ZStack {
-                Color(.systemGroupedBackground)
-                    .ignoresSafeArea()
+            List {
+                dateRangeSection
+                summarySection
+                controlSection
 
-                ScrollView(.vertical, showsIndicators: false) {
-                    LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
-                        Section {
-                            contentSection
-                                .padding(.horizontal, 16)
-                                .padding(.top, 12)
-                                .padding(.bottom, 16)
-                        } header: {
-                            headerView
-                        }
-                    }
-                }
-                .refreshable {
-                    await homeViewModel.reload()
-                }
-
+                HomeTransactionSectionView(
+                    homeViewModel: homeViewModel,
+                    transactionInputViewModel: transactionInputViewModel
+                )
+            }
+            .padding(.horizontal, 16)
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
+            .background(AppTheme.background)
+            .refreshable {
+                await homeViewModel.reload()
+            }
+            .overlay {
                 if homeViewModel.isLoading && homeViewModel.filteredTransactions.isEmpty {
                     ProgressView("読み込み中...")
                         .padding()
                         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
                 }
             }
-            .blur(radius: homeViewModel.showFilterView ? 8 : 0)
-            .disabled(homeViewModel.showFilterView)
-        }
-        .overlay {
-            if homeViewModel.showFilterView {
-                Color(.label)
-                    .opacity(0.15)
-                    .ignoresSafeArea()
-                    .transition(.opacity)
-
-                dateFilterOverlay
-            }
-        }
-        .animation(
-            .spring(response: 0.3, dampingFraction: 0.8),
-            value: homeViewModel.showFilterView
-        )
-        .alert("エラー", isPresented: errorAlertBinding) {
-            Button("OK") {
-                homeViewModel.clearError()
-            }
-        } message: {
-            if let errorMessage = homeViewModel.errorMessage {
-                Text(errorMessage)
-            }
-        }
-    }
-
-    // MARK: - Header View
-
-    private var headerView: some View {
-        VStack(spacing: 0) {
-            HStack(spacing: 12) {
-                if !userName.isEmpty {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("おかえりなさい!")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-
-                        Text(userName)
-                            .font(.body)
-                            .fontWeight(.semibold)
-                    }
-                    .hSpacing(.leading)
-                } else {
-                    Text("ホーム")
-                        .font(.headline)
-                        .hSpacing(.leading)
-                }
-
-                HStack(spacing: 12) {
-                    ActionButton(imageName: "magnifyingglass") {
+            .navigationTitle(userName.isEmpty ? "ホーム" : "おかえりなさい、\(userName)さん")
+            .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
                         searchViewModel.isPresented = true
+                    } label: {
+                        Image(systemName: "magnifyingglass")
                     }
+                    .accessibilityLabel("取引を検索")
+                }
 
-                    ActionButton(imageName: "plus") {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
                         transactionInputViewModel.presentInputView()
+                    } label: {
+                        Image(systemName: "plus")
                     }
+                    .accessibilityLabel("取引を追加")
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-            .background {
-                Color(.systemGroupedBackground)
-                    .shadow(color: Color(.label).opacity(0.08), radius: 2, y: 1)
+            .sheet(isPresented: $homeViewModel.showFilterView) {
+                HomeDateFilterSheetView(homeViewModel: homeViewModel)
+            }
+            .alert("エラー", isPresented: errorAlertBinding) {
+                Button("OK") {
+                    homeViewModel.clearError()
+                }
+            } message: {
+                if let errorMessage = homeViewModel.errorMessage {
+                    Text(errorMessage)
+                }
             }
         }
     }
 
-    // MARK: - Content Section
+    // MARK: - Subviews (HomeView直下にとどめる軽量な表示)
 
-    private var contentSection: some View {
-        VStack(spacing: 12) {
+    private var dateRangeSection: some View {
+        Section {
             Text(
                 "\(format(date: homeViewModel.dateRange.start, format: "yyyy年MM月dd日")) 〜 \(format(date: homeViewModel.dateRange.end, format: "yyyy年MM月dd日"))"
             )
             .font(.caption)
             .foregroundStyle(.secondary)
-            .hSpacing(.leading)
+        }
+        .listRowSeparator(.hidden)
+        .listRowBackground(Color.clear)
+        .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 0, trailing: 0))
+    }
 
+    private var summarySection: some View {
+        Section {
             CardView(
                 income: total(homeViewModel.filteredTransactions, type: .income),
                 expense: total(homeViewModel.filteredTransactions, type: .expense)
             )
+        }
+        .listRowSeparator(.hidden)
+        .listRowBackground(Color.clear)
+        .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+    }
 
+    private var controlSection: some View {
+        Section {
             HStack(spacing: 16) {
-                CustomSegmentedControl(selectedType: $homeViewModel.selectedType)
-
-                ActionButton(imageName: "calendar") {
+                GeometryReader {
+                    CustomSegmentedControl(
+                        selection: $homeViewModel.selectedType,
+                        size: $0.size
+                    )
+                }
+                ActionButton(imageName: "calendar", accessibilityLabel: "期間を絞り込む") {
                     homeViewModel.showFilterView = true
                 }
             }
-
-            if homeViewModel.filteredTransactions.isEmpty {
-                NoTransactionView()
-            } else {
-                transactionList
-            }
+            .padding(.top, 4)
         }
+        .listRowSeparator(.hidden)
+        .listRowBackground(Color.clear)
+        .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 8, trailing: 0))
+        .padding(.vertical, 8)
     }
 
-    // MARK: - Transaction List with Pagination
-
-    private var transactionList: some View {
-        LazyVStack(spacing: 8) {
-            ForEach(homeViewModel.filteredTransactions) { transaction in
-                TransactionCardView(
-                    transaction: transaction,
-                    category: homeViewModel.categoryFind(id: transaction.categoryId),
-                    onDelete: { transaction in
-                        Task {
-                            await homeViewModel.deleteTransaction(transaction)
-                        }
-                    }
-                )
-                .onTapGesture {
-                    transactionInputViewModel.presentInputView(for: transaction)
-                }
-            }
-
-            if homeViewModel.isLoading && !homeViewModel.filteredTransactions.isEmpty {
-                loadingIndicator
-            }
-        }
-    }
-
-    private var loadingIndicator: some View {
-        HStack {
-            Spacer()
-            ProgressView()
-                .padding()
-            Spacer()
-        }
-    }
-
-    // MARK: - Date Filter Overlay
-
-    private var dateFilterOverlay: some View {
-        DateFilterView(
-            start: homeViewModel.startDate,
-            end: homeViewModel.endDate,
-            onSubmit: { start, end in
-                homeViewModel.dateRange = DateRange(start: start, end: end)
-                homeViewModel.showFilterView = false
-            },
-            onClose: {
-                homeViewModel.showFilterView = false
-            }
-        )
-        .transition(
-            .asymmetric(
-                insertion: .scale(scale: 0.95).combined(with: .opacity),
-                removal: .scale(scale: 0.95).combined(with: .opacity)
-            )
-        )
-    }
-
-    // MARK: - Helper Methods
-
-    private func isLastTransaction(_ transaction: TransactionModel) -> Bool {
-        homeViewModel.filteredTransactions.last?.id == transaction.id
-            && homeViewModel.hasMoreData
-    }
+    // MARK: - Helpers
 
     private var errorAlertBinding: Binding<Bool> {
         Binding(
@@ -226,7 +146,8 @@ struct HomeView: View {
 
 #Preview {
     let viewModelFactory = ViewModelFactory()
-    HomeView(
+
+    return HomeView(
         homeViewModel: viewModelFactory.homeViewModel,
         searchViewModel: viewModelFactory.searchViewModel,
         transactionInputViewModel: viewModelFactory.transactionInputViewModel

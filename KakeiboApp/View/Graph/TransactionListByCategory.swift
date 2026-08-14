@@ -22,23 +22,20 @@ struct TransactionListByCategory: View {
     var body: some View {
         Group {
             if let summary = categorySummary {
-                VStack(spacing: 0) {
-                    header(summary)
-                        .padding(.horizontal, 16)
-                    transactionList(summary.transactions)
-                }
+                transactionList(summary)
             } else {
-                EmptyStateView(icon: "tray", message: "取引がありません")
+                VStack {
+                    Spacer()
+                    EmptyStateView(icon: "tray", message: "取引がありません")
+                    Spacer()
+                }
+                .frame(maxWidth: .infinity)
+                .background(AppTheme.background)
             }
         }
-        .background(Color(.systemGroupedBackground))
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                Text(graphViewModel.findCategory(id: categoryID)?.name ?? "")
-                    .font(.title2)
-                    .fontWeight(.bold)
-            }
-        }
+        .background(AppTheme.background)
+        .navigationTitle(graphViewModel.findCategory(id: categoryID)?.name ?? "")
+        .navigationBarTitleDisplayMode(.inline)
         .alert("エラー", isPresented: errorAlertBinding) {
             Button("OK") { graphViewModel.clearError() }
         } message: {
@@ -50,38 +47,56 @@ struct TransactionListByCategory: View {
 
     // MARK: - Components
 
-    private func header(_ summary: CategorySummary) -> some View {
-        HStack {
-            Text("合計金額")
-                .font(.title2)
-                .fontWeight(.bold)
+    private func transactionList(_ summary: CategorySummary) -> some View {
+        List {
+            Section {
+                HStack {
+                    Text("合計金額")
+                        .foregroundStyle(.secondary)
 
-            Spacer()
+                    Spacer()
 
-            Text(currencyString(summary.totalAmount))
-                .font(.title2)
-                .fontWeight(.bold)
-        }
-        .padding(.vertical, 12)
-    }
+                    Text(currencyString(summary.totalAmount))
+                        .font(.headline)
+                        .monospacedDigit()
+                }
+                .padding()
+                .background(
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(AppTheme.cardBackground)
+                        .shadow(color: AppTheme.primaryText.opacity(0.06), radius: 2, y: 1)
+                )
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
+            }
 
-    private func transactionList(_ transactions: [TransactionModel]) -> some View {
-        ScrollView {
-            LazyVStack(spacing: 8) {
-                ForEach(transactions) { transaction in
+            Section {
+                ForEach(summary.transactions) { transaction in
                     TransactionCardView(
                         transaction: transaction,
-                        category: graphViewModel.findCategory(id: transaction.categoryId),
-                        onDelete: onDeleteTransaction
+                        category: graphViewModel.findCategory(id: transaction.categoryId)
                     )
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
+                    .contentShape(Rectangle())
                     .onTapGesture {
                         transactionInputViewModel.presentInputView(for: transaction)
                     }
+                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                        Button(role: .destructive) {
+                            onDeleteTransaction(transaction)
+                        } label: {
+                            Label("", systemImage: "trash")
+                        }
+                    }
                 }
+                .padding(.horizontal, 16)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
         }
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
+        .background(AppTheme.background)
     }
 
     // MARK: - Helper

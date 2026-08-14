@@ -26,18 +26,21 @@ final class SearchViewModel: ObservableObject {
         self.categoryStore = categoryStore
         self.transactionStore = transactionStore
         setupSearchPipeline()
+        bindError()
     }
 
     // MARK: - Public Methods
 
-    func deleteTransaction(_ transaction: TransactionModel) async {
-        isLoading = true
-        defer { isLoading = false }
+    func deleteTransaction(_ transaction: TransactionModel) {
+        Task {
+            isLoading = true
+            defer { isLoading = false }
 
-        do {
-            try await transactionStore.delete(transaction)
-        } catch {
-            errorMessage = "削除に失敗しました: \(error.localizedDescription)"
+            do {
+                try await transactionStore.delete(transaction)
+            } catch {
+                errorMessage = ErrorMapper.message(for: error)
+            }
         }
     }
 
@@ -69,11 +72,26 @@ final class SearchViewModel: ObservableObject {
             return
         }
 
-        searchTask = Task { @MainActor in
-            let results = await transactionStore.search(text: text)
+        searchTask = Task {
+            do {
+                let results = try await transactionStore.search(text: text)
 
-            guard !Task.isCancelled else { return }
-            resultTransactions = results.sorted { $0.date > $1.date }
+                guard !Task.isCancelled else { return }
+                resultTransactions = results
+            } catch is CancellationError {
+
+            } catch {
+                let message = ErrorMapper.message(for: error)
+                self.errorMessage = "検索に失敗しました: \(message)"
+                self.resultTransactions = []
+            }
         }
+    }
+
+    private func bindError() {
+        transactionStore.errorPublisher
+            .map(ErrorMapper.message)
+            .receive(on: DispatchQueue.main)
+            .assign(to: &$errorMessage)
     }
 }

@@ -11,12 +11,10 @@ import CoreData
 // MARK: - Transaction Repository Protocol
 protocol TransactionRepositoryProtocol: Sendable {
     func fetch(
-        from start: Date?,
-        to end: Date?,
-        limit: Int?,
-        offset: Int?
+        from start: Date,
+        to end: Date,
     ) async throws -> [TransactionModel]
-    func search(text: String?) async throws -> [TransactionModel]
+    func search(text: String) async throws -> [TransactionModel]
     func add(_ model: TransactionModel) async throws
     func update(_ model: TransactionModel) async throws
     func delete(_ model: TransactionModel) async throws
@@ -24,145 +22,114 @@ protocol TransactionRepositoryProtocol: Sendable {
 
 // MARK: - Transaction Repository Implementation
 actor TransactionRepository: TransactionRepositoryProtocol {
-    private let container: NSPersistentContainer
+    private let context: NSManagedObjectContext
 
     init(container: NSPersistentContainer = PersistenceController.shared.container) {
-        self.container = container
+        self.context = CoreDataRepositorySupport.makeBackgroundContext(from: container)
     }
 
     func fetch(
-        from start: Date?,
-        to end: Date?,
-        limit: Int?,
-        offset: Int?
+        from start: Date,
+        to end: Date,
     ) async throws -> [TransactionModel] {
-        return try await container.performBackgroundTask { context in
-            let request = TransactionEntity.fetchRequest()
+        try await CoreDataRepositorySupport.perform(on: context) { context in
+            let request: NSFetchRequest<TransactionEntity> = TransactionEntity.fetchRequest()
+            request.relationshipKeyPathsForPrefetching = ["category"]
 
-            // Build predicates
-            var predicates: [NSPredicate] = []
-            if let start = start {
-                predicates.append(NSPredicate(format: "date >= %@", start as NSDate))
-            }
-            if let end = end {
-                predicates.append(NSPredicate(format: "date <= %@", end as NSDate))
-            }
-            if !predicates.isEmpty {
-                request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
-            }
+            request.predicate = NSPredicate(
+                format: "date >= %@ AND date < %@",
+                start as NSDate,
+                end as NSDate
+            )
+            request.sortDescriptors = Self.transactionSortDescriptors
 
-            // Sort by date descending
-            request.sortDescriptors = [
-                NSSortDescriptor(keyPath: \TransactionEntity.date, ascending: false)
-            ]
-
-            // Apply pagination
-            if let limit = limit {
-                request.fetchLimit = limit
-            }
-            if let offset = offset {
-                request.fetchOffset = offset
-            }
-
-            return try context.fetch(request).map { $0.toModel() }
+            return try context.fetch(request).map { try $0.toModel() }
         }
     }
 
-    func search(text: String?) async throws -> [TransactionModel] {
-        return try await container.performBackgroundTask { context in
-            let request = TransactionEntity.fetchRequest()
+    func search(text: String) async throws -> [TransactionModel] {
+        return try await CoreDataRepositorySupport.perform(on: context) { context in
+            let request: NSFetchRequest<TransactionEntity> = TransactionEntity.fetchRequest()
+            request.relationshipKeyPathsForPrefetching = ["category"]
+            request.predicate = NSPredicate(
+                format: "title CONTAINS[c] %@ OR memo CONTAINS[c] %@",
+                text,
+                text
+            )
+            request.sortDescriptors = Self.transactionSortDescriptors
 
-            if let text = text, !text.isEmpty {
-                request.predicate = NSPredicate(
-                    format: "title CONTAINS[c] %@ OR memo CONTAINS[c] %@",
-                    text,
-                    text
-                )
-            }
-
-            request.sortDescriptors = [
-                NSSortDescriptor(keyPath: \TransactionEntity.date, ascending: false)
-            ]
-
-            return try context.fetch(request).map { $0.toModel() }
+            return try context.fetch(request).map { try $0.toModel() }
         }
     }
 
     func add(_ model: TransactionModel) async throws {
-        try await container.performBackgroundTask { context in
-            let category = try self.fetchCategory(by: model.categoryId, in: context)
+        try await CoreDataRepositorySupport.perform(on: context) { context in
+            let category = try CoreDataRepositorySupport.fetchEntity(
+                CategoryEntity.self,
+                by: model.categoryId,
+                in: context
+            )
 
             let entity = TransactionEntity(context: context)
-            entity.id = model.id
-            entity.amount = model.amount
-            entity.date = model.date
-            entity.title = model.title
-            entity.memo = model.memo
-            entity.type = model.type.rawValue
-            entity.createdAt = model.createdAt
-            entity.updatedAt = model.updatedAt
-            entity.category = category
+            Self.map(model: model, to: entity, category: category)
 
-            try context.save()
+            try CoreDataRepositorySupport.save(context)
         }
     }
 
     func update(_ model: TransactionModel) async throws {
-        try await container.performBackgroundTask { context in
-            // Fetch existing transaction
-            let entity = try self.fetchEntity(by: model.id, in: context)
+        try await CoreDataRepositorySupport.perform(on: context) { context in
+            let entity = try CoreDataRepositorySupport.fetchEntity(
+                TransactionEntity.self,
+                by: model.id,
+                in: context
+            )
+            let category = try CoreDataRepositorySupport.fetchEntity(
+                CategoryEntity.self,
+                by: model.categoryId,
+                in: context
+            )
 
-            // Fetch new category
-            let category = try self.fetchCategory(by: model.categoryId, in: context)
+            Self.map(model: model, to: entity, category: category)
 
-            // Update properties
-            entity.amount = model.amount
-            entity.date = model.date
-            entity.title = model.title
-            entity.memo = model.memo
-            entity.type = model.type.rawValue
-            entity.createdAt = model.createdAt
-            entity.updatedAt = model.updatedAt
-            entity.category = category
-
-            try context.save()
+            try CoreDataRepositorySupport.save(context)
         }
     }
 
     func delete(_ model: TransactionModel) async throws {
-        try await container.performBackgroundTask { context in
-            let entity = try self.fetchEntity(by: model.id, in: context)
+        try await CoreDataRepositorySupport.perform(on: context) { context in
+            let entity = try CoreDataRepositorySupport.fetchEntity(
+                TransactionEntity.self,
+                by: model.id,
+                in: context
+            )
             context.delete(entity)
-            try context.save()
+            try CoreDataRepositorySupport.save(context)
         }
     }
 
     // MARK: - Private Helpers
-    private func fetchEntity(
-        by id: UUID,
-        in context: NSManagedObjectContext
-    ) throws -> TransactionEntity {
-        let request = TransactionEntity.fetchRequest()
-        request.predicate = NSPredicate(format: "id == %@", id as NSUUID)
-        request.fetchLimit = 1
 
-        guard let entity = try context.fetch(request).first else {
-            throw CustomError.transactionNotFoundError
-        }
-        return entity
+    private static var transactionSortDescriptors: [NSSortDescriptor] {
+        [
+            NSSortDescriptor(keyPath: \TransactionEntity.date, ascending: false),
+            NSSortDescriptor(keyPath: \TransactionEntity.id, ascending: false),
+        ]
     }
 
-    private func fetchCategory(
-        by id: UUID,
-        in context: NSManagedObjectContext
-    ) throws -> CategoryEntity {
-        let request = CategoryEntity.fetchRequest()
-        request.predicate = NSPredicate(format: "id == %@", id as NSUUID)
-        request.fetchLimit = 1
-
-        guard let category = try context.fetch(request).first else {
-            throw CustomError.categoryNotFoundError
-        }
-        return category
+    private static func map(
+        model: TransactionModel,
+        to entity: TransactionEntity,
+        category: CategoryEntity
+    ) {
+        entity.id = model.id
+        entity.amount = NSDecimalNumber(decimal: model.amount)
+        entity.date = model.date
+        entity.title = model.title
+        entity.memo = model.memo
+        entity.type = model.type.rawValue
+        entity.createdAt = model.createdAt
+        entity.updatedAt = model.updatedAt
+        entity.category = category
     }
 }

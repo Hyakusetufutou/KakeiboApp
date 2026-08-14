@@ -13,17 +13,17 @@ struct CategoryInputView: View {
     @FocusState private var isFocused: Bool
 
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 20) {
             headerView
             nameInputSection
-            colorPickerSection
+            CategoryColorPickerView(selectedColor: $categoryInputViewModel.color)
             actionButtons
         }
         .padding(20)
         .background(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(Color(.systemBackground))
-                .shadow(color: Color(.label).opacity(0.10), radius: 20, y: 10)
+                .fill(AppTheme.background)
+                .shadow(color: Color.black.opacity(0.12), radius: 20, y: 10)
         )
         .padding(.horizontal, 24)
         .alert("エラー", isPresented: errorAlertBinding) {
@@ -37,12 +37,10 @@ struct CategoryInputView: View {
         }
     }
 
-    // MARK: - Components
-
     private var headerView: some View {
         Text(categoryInputViewModel.isEdit ? "カテゴリを編集" : "カテゴリを追加")
             .font(.headline)
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxWidth: .infinity, alignment: .center)
     }
 
     private var nameInputSection: some View {
@@ -56,68 +54,26 @@ struct CategoryInputView: View {
                 .padding(.horizontal, 12)
                 .background(
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(Color(.secondarySystemGroupedBackground))
+                        .fill(AppTheme.secondaryBackground)
                 )
+                .submitLabel(.done)
                 .focused($isFocused)
         }
     }
 
-    private var colorPickerSection: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("カラー")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-
-            LazyVGrid(
-                columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 6),
-                spacing: 12
-            ) {
-                ForEach(AppTheme.categoryColors, id: \.self) { color in
-                    colorButton(color: color)
-                }
-            }
-        }
-    }
-
-    private func colorButton(color: Color) -> some View {
-        Circle()
-            .fill(color)
-            .frame(width: 34, height: 34)
-            .overlay {
-                if color == categoryInputViewModel.color {
-                    Image(systemName: "checkmark")
-                        .font(.caption.bold())
-                        .foregroundStyle(.white)
-                }
-            }
-            .scaleEffect(color == categoryInputViewModel.color ? 1.15 : 1)
-            .animation(
-                .spring(response: 0.35, dampingFraction: 0.7),
-                value: categoryInputViewModel.color
-            )
-            .onTapGesture {
-                categoryInputViewModel.color = color
-            }
-    }
-
     private var actionButtons: some View {
         HStack(spacing: 12) {
-            // キャンセル
             Button {
                 isFocused = false
                 categoryInputViewModel.cancel()
             } label: {
                 Text("キャンセル")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity, minHeight: 50)
-                    .background(
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .fill(Color(.secondarySystemGroupedBackground))
-                    )
-                    .foregroundStyle(.primary)
+                    .frame(maxWidth: .infinity)
             }
+            .buttonStyle(.bordered)
+            .controlSize(.large)
+            .tint(.secondary)
 
-            // 保存・更新
             Button {
                 Task {
                     isFocused = false
@@ -125,15 +81,10 @@ struct CategoryInputView: View {
                 }
             } label: {
                 Text(categoryInputViewModel.isEdit ? "更新" : "作成")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity, minHeight: 50)
-                    .background(
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .fill(Color.accentColor)
-                    )
-                    .foregroundStyle(.white)
-                    .opacity(categoryInputViewModel.name.isEmpty ? 0.5 : 1)
+                    .frame(maxWidth: .infinity)
             }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
             .disabled(categoryInputViewModel.name.isEmpty)
         }
     }
@@ -148,7 +99,7 @@ struct CategoryInputView: View {
 
 #Preview("Light Mode") {
     ZStack {
-        Color(.systemGroupedBackground).ignoresSafeArea()
+        AppTheme.background.ignoresSafeArea()
         CategoryInputView(
             categoryInputViewModel: CategoryInputViewModel(
                 categoryStore: CategoryStore(repository: CategoryRepository())
@@ -160,7 +111,7 @@ struct CategoryInputView: View {
 
 #Preview("Dark Mode") {
     ZStack {
-        Color(.systemGroupedBackground).ignoresSafeArea()
+        AppTheme.background.ignoresSafeArea()
         CategoryInputView(
             categoryInputViewModel: CategoryInputViewModel(
                 categoryStore: CategoryStore(repository: CategoryRepository())

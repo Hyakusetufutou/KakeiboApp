@@ -8,7 +8,7 @@
 
 import Foundation
 
-enum CustomError: Error, Equatable {
+enum CustomError: Equatable, LocalizedError {
     case categoryNotFoundError
     case transactionNotFoundError
     case saveError
@@ -16,7 +16,7 @@ enum CustomError: Error, Equatable {
     case invalidData
     case cannotDeletedefaultCategory
 
-    var description: String {
+    var errorDescription: String? {
         switch self {
         case .categoryNotFoundError:
             return "カテゴリが見つかりません"
@@ -31,5 +31,36 @@ enum CustomError: Error, Equatable {
         case .cannotDeletedefaultCategory:
             return "デフォルトカテゴリのため削除できません"
         }
+    }
+}
+
+enum CategoryMapperError: LocalizedError {
+    case invalidColor
+    case invalidType
+
+    var errorDescription: String? {
+        switch self {
+        case .invalidColor:
+            return "カテゴリの色が無効です"
+        case .invalidType:
+            return "カテゴリの種類が無効です"
+        }
+    }
+}
+
+enum TransactionMapperError: LocalizedError {
+    case invalidType
+
+    var errorDescription: String? {
+        switch self {
+        case .invalidType:
+            return "Transactionの種別が無効です"
+        }
+    }
+}
+
+enum ErrorMapper {
+    static func message(for error: Error) -> String {
+        return error.localizedDescription
     }
 }

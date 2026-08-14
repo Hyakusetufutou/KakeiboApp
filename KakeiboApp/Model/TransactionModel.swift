@@ -12,7 +12,7 @@ struct TransactionModel: Identifiable, Hashable {
     let id: UUID
     let title: String
     let memo: String
-    let amount: Double
+    let amount: Decimal
     let date: Date
     let createdAt: Date
     let updatedAt: Date
@@ -23,9 +23,9 @@ struct TransactionModel: Identifiable, Hashable {
         id: UUID = UUID(),
         title: String,
         memo: String,
-        amount: Double,
+        amount: Decimal,
         date: Date,
-        createAt: Date,
+        createdAt: Date,
         updatedAt: Date,
         type: TransactionType,
         categoryId: UUID
@@ -35,16 +35,18 @@ struct TransactionModel: Identifiable, Hashable {
         self.memo = memo
         self.amount = amount
         self.date = date
-        self.createdAt = createAt
+        self.createdAt = createdAt
         self.updatedAt = updatedAt
         self.type = type
         self.categoryId = categoryId
     }
 }
 
-enum TransactionType: String, CaseIterable {
+enum TransactionType: String, CaseIterable, Identifiable {
     case income = "収入"
     case expense = "支出"
+
+    var id: Self { self }
 
     var imageName: String {
         switch self {
@@ -57,17 +59,20 @@ enum TransactionType: String, CaseIterable {
 }
 
 extension TransactionEntity {
-    func toModel() -> TransactionModel {
-        TransactionModel(
-            id: self.id ?? UUID(),
-            title: self.title ?? "",
-            memo: self.memo ?? "",
-            amount: self.amount,
-            date: self.date ?? Date(),
-            createAt: self.createdAt ?? Date(),
-            updatedAt: self.updatedAt ?? Date(),
-            type: TransactionType(rawValue: self.type ?? "expense") ?? .expense,
-            categoryId: self.category?.id ?? UUID()
+    func toModel() throws -> TransactionModel {
+        guard let type = TransactionType(rawValue: self.type) else {
+            throw TransactionMapperError.invalidType
+        }
+        return TransactionModel(
+            id: id,
+            title: title,
+            memo: memo,
+            amount: self.amount.decimalValue,
+            date: date,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            type: type,
+            categoryId: self.category.id
         )
     }
 }

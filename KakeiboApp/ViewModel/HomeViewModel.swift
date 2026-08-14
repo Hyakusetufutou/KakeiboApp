@@ -19,25 +19,9 @@ final class HomeViewModel: ObservableObject {
     @Published var dateRange: DateRange = DateRange()
     @Published var selectedType: TransactionType = .expense
     @Published var showFilterView = false
-    @Published private(set) var hasMoreData = true
-
-    var startDate: Binding<Date> {
-        Binding(
-            get: { self.dateRange.start },
-            set: { self.dateRange = self.dateRange.withStart($0) }
-        )
-    }
-
-    var endDate: Binding<Date> {
-        Binding(
-            get: { self.dateRange.end },
-            set: { self.dateRange = self.dateRange.withEnd($0) }
-        )
-    }
 
     private let categoryStore: CategoryStoreProtocol
     private let transactionStore: TransactionStoreProtocol
-    private var cancellables = Set<AnyCancellable>()
     private var isDefaultDateRange: Bool {
         let today = Date()
         return Calendar.current.isDate(
@@ -51,7 +35,14 @@ final class HomeViewModel: ObservableObject {
         self.categoryStore = categoryStore
         self.transactionStore = transactionStore
         bindTransactions()
-        bindHasMoreData()
+        bindError()
+        Task {
+            do {
+                try await self.transactionStore.load(from: dateRange.start, to: dateRange.end)
+            } catch {
+                errorMessage = ErrorMapper.message(for: error)
+            }
+        }
     }
 
     // MARK: - Public Methods
@@ -60,31 +51,28 @@ final class HomeViewModel: ObservableObject {
         categoryStore.find(id: id)
     }
 
-    func deleteTransaction(_ transaction: TransactionModel) async {
+    func deleteTransaction(_ transaction: TransactionModel) {
         isLoading = true
         defer { isLoading = false }
 
-        do {
-            try await transactionStore.delete(transaction)
-        } catch {
-            errorMessage = "削除に失敗しました: \(error.localizedDescription)"
+        Task {
+            do {
+                try await transactionStore.delete(transaction)
+            } catch {
+                errorMessage = ErrorMapper.message(for: error)
+            }
         }
-    }
-
-    func loadMore() async {
-        guard hasMoreData else { return }
-
-        isLoading = true
-        defer { isLoading = false }
-
-        await transactionStore.loadMore()
     }
 
     func reload() async {
         isLoading = true
         defer { isLoading = false }
 
-        await transactionStore.reload()
+        do {
+            try await transactionStore.load(from: dateRange.start, to: dateRange.end)
+        } catch {
+            errorMessage = ErrorMapper.message(for: error)
+        }
     }
 
     func clearError() {
@@ -119,9 +107,10 @@ final class HomeViewModel: ObservableObject {
         .assign(to: &$filteredTransactions)
     }
 
-    private func bindHasMoreData() {
-        transactionStore.hasMoreData
+    private func bindError() {
+        transactionStore.errorPublisher
+            .map(ErrorMapper.message)
             .receive(on: DispatchQueue.main)
-            .assign(to: &$hasMoreData)
+            .assign(to: &$errorMessage)
     }
 }
