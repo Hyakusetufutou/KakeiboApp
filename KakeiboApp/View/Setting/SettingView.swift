@@ -14,6 +14,12 @@ struct SettingView: View {
     /// App Lock Properties
     @AppStorage("isAppLockEnabled") private var isAppLockEnabled: Bool = false
     @AppStorage("lockWhenAppGoesBackground") private var lockWhenAppGoesBackground: Bool = false
+    /// ColorScheme
+    @AppStorage("appearance") private var appearanceRawValue = AppAppearance.system.rawValue
+
+    private var appearance: AppAppearance {
+        AppAppearance(rawValue: appearanceRawValue) ?? .system
+    }
 
     var body: some View {
         NavigationStack {
@@ -32,6 +38,16 @@ struct SettingView: View {
                     if isAppLockEnabled {
                         Toggle("バックグラウンド時のロックを許可", isOn: $lockWhenAppGoesBackground)
                     }
+                }
+
+                Section("外観") {
+                    Picker("カラーモード", selection: $appearanceRawValue) {
+                        ForEach(AppAppearance.allCases) { appearance in
+                            Text(appearance.title)
+                                .tag(appearance.rawValue)
+                        }
+                    }
+                    .pickerStyle(SegmentedPickerStyle())
                 }
             }
             .navigationTitle("設定")
