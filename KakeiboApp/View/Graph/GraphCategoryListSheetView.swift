@@ -26,10 +26,13 @@ struct GraphCategoryListSheetView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("完了") {
+                    Button {
                         isPresentCategoryList = false
+                    } label: {
+                        Image(systemName: "checkmark")
+                            .font(.headline)
+                            .foregroundStyle(.primary)
                     }
-                    .fontWeight(.semibold)
                 }
             }
         }

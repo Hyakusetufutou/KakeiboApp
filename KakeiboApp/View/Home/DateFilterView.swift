@@ -24,18 +24,30 @@ struct DateFilterView: View {
             }
             .navigationTitle("期間を選択")
             .navigationBarTitleDisplayMode(.inline)
+            .interactiveDismissDisabled(true)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("キャンセル", action: onClose)
+                    Button {
+                        onClose()
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.headline)
+                            .foregroundStyle(.primary)
+                    }
                 }
 
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("適用") {
+                    Button {
                         onSubmit(start, end)
+                    } label: {
+                        Image(systemName: "checkmark")
+                            .font(.headline)
+                            .foregroundStyle(.primary)
                     }
                     .fontWeight(.semibold)
                 }
             }
+            .background(AppTheme.secondaryBackground)
         }
     }
 
