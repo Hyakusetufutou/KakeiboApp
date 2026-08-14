@@ -52,8 +52,8 @@ struct TransactionCategorySelector: View {
                         .opacity(0.5)
                 }
                 .foregroundStyle(.primary)
-                .frame(height: 44)
-                .background(.background, in: .rect(cornerRadius: 10))
+                .frame(height: 48)
+                .background(AppTheme.secondaryBackground, in: .rect(cornerRadius: 12))
             }
             .buttonStyle(.plain)
             .tint(.primary)

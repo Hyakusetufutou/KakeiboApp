@@ -122,6 +122,7 @@ struct HomeView: View {
                     homeViewModel.showFilterView = true
                 }
             }
+            .padding(.top, 4)
         }
         .listRowSeparator(.hidden)
         .listRowBackground(Color.clear)

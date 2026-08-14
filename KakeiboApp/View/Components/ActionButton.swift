@@ -21,7 +21,7 @@ struct ActionButton: View {
                 .frame(width: 44, height: 44)
                 .background {
                     Capsule()
-                        .fill(.background)
+                        .fill(AppTheme.cardBackground)
                         .shadow(color: AppTheme.primaryText.opacity(0.08), radius: 8, x: 0, y: 1)
                 }
         }

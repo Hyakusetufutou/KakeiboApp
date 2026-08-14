@@ -35,7 +35,7 @@ struct TransactionInputView: View {
                 }
             }
             .scrollIndicators(.hidden)
-            .background(AppTheme.segmentBackground)
+            .background(AppTheme.background)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     cancelButton
@@ -129,7 +129,7 @@ struct TransactionInputView: View {
             .environment(\.locale, Locale(identifier: "ja_JP"))
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
-            .background(.background, in: .rect(cornerRadius: 10))
+            .background(AppTheme.secondaryBackground, in: .rect(cornerRadius: 10))
         }
     }
 
@@ -203,7 +203,7 @@ struct TransactionInputView: View {
             TextField(hint, text: value)
                 .padding(.horizontal, 15)
                 .padding(.vertical, 12)
-                .background(.background, in: .rect(cornerRadius: 10))
+                .background(AppTheme.secondaryBackground, in: .rect(cornerRadius: 10))
                 .keyboardType(keyboardType)
                 .focused($focusedField, equals: field)
         }
