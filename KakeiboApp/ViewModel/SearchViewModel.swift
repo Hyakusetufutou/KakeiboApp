@@ -77,7 +77,7 @@ final class SearchViewModel: ObservableObject {
                 let results = try await transactionStore.search(text: text)
 
                 guard !Task.isCancelled else { return }
-                resultTransactions = results.sorted { $0.date > $1.date }
+                resultTransactions = results
             } catch is CancellationError {
 
             } catch {

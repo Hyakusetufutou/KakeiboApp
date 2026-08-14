@@ -8,11 +8,6 @@
 
 import Foundation
 
-enum StorePagination {
-    static let initialLimit = 100
-    static let loadMoreLimit = 50
-}
-
 enum StoreSupport {
     static func normalizedSearchText(_ text: String?) -> String? {
         guard let text else { return nil }

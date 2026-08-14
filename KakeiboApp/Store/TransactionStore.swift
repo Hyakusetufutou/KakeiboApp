@@ -12,7 +12,6 @@ import Combine
 @MainActor
 protocol TransactionStoreProtocol {
     var transactions: AnyPublisher<[TransactionModel], Never> { get }
-    var hasMoreData: AnyPublisher<Bool, Never> { get }
     var errorPublisher: AnyPublisher<Error, Never> { get }
 
     func load(from start: Date, to end: Date) async throws
@@ -26,14 +25,9 @@ protocol TransactionStoreProtocol {
 final class TransactionStore: TransactionStoreProtocol {
     // MARK: - State
     @Published private var transactionsInternal: [TransactionModel] = []
-    @Published private var hasMoreDataInternal = true
 
     var transactions: AnyPublisher<[TransactionModel], Never> {
         $transactionsInternal.eraseToAnyPublisher()
-    }
-
-    var hasMoreData: AnyPublisher<Bool, Never> {
-        $hasMoreDataInternal.eraseToAnyPublisher()
     }
 
     private(set) var loadedRange: DateRange?
@@ -46,8 +40,6 @@ final class TransactionStore: TransactionStoreProtocol {
 
     // MARK: - Dependencies
     private let repository: TransactionRepositoryProtocol
-    private let initialLimit = StorePagination.initialLimit
-    private var isReloading = false
 
     // MARK: - Init
     init(
@@ -80,10 +72,10 @@ final class TransactionStore: TransactionStoreProtocol {
     }
 
     func search(text: String?) async throws -> [TransactionModel] {
-        guard StoreSupport.normalizedSearchText(text) != nil else {
+        guard let normalizedText = StoreSupport.normalizedSearchText(text) else {
             return []
         }
-        return try await repository.search(text: text)
+        return try await repository.search(text: normalizedText)
     }
 
     // MARK: - Private

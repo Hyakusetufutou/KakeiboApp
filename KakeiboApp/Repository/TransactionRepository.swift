@@ -14,7 +14,7 @@ protocol TransactionRepositoryProtocol: Sendable {
         from start: Date,
         to end: Date,
     ) async throws -> [TransactionModel]
-    func search(text: String?) async throws -> [TransactionModel]
+    func search(text: String) async throws -> [TransactionModel]
     func add(_ model: TransactionModel) async throws
     func update(_ model: TransactionModel) async throws
     func delete(_ model: TransactionModel) async throws
@@ -47,18 +47,14 @@ actor TransactionRepository: TransactionRepositoryProtocol {
         }
     }
 
-    func search(text: String?) async throws -> [TransactionModel] {
-        guard let normalizedText = StoreSupport.normalizedSearchText(text) else {
-            return []
-        }
-
+    func search(text: String) async throws -> [TransactionModel] {
         return try await CoreDataRepositorySupport.perform(on: context) { context in
             let request: NSFetchRequest<TransactionEntity> = TransactionEntity.fetchRequest()
             request.relationshipKeyPathsForPrefetching = ["category"]
             request.predicate = NSPredicate(
                 format: "title CONTAINS[c] %@ OR memo CONTAINS[c] %@",
-                normalizedText,
-                normalizedText
+                text,
+                text
             )
             request.sortDescriptors = Self.transactionSortDescriptors
 
