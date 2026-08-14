@@ -107,8 +107,15 @@ struct GraphView: View {
                     onNextMonth: { graphViewModel.changeMonth(by: 1) }
                 )
 
-                CustomSegmentedControl(selectedType: $graphViewModel.selectedType)
-                    .animation(.snappy, value: graphViewModel.selectedType)
+                VStack {
+                    GeometryReader {
+                        CustomSegmentedControl(
+                            selection: $graphViewModel.selectedType,
+                            size: $0.size
+                        )
+                    }
+                }
+                .frame(height: 44)
             }
             .padding(.horizontal, 16)
             .padding(.top, 8)

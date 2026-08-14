@@ -116,8 +116,12 @@ struct HomeView: View {
     private var controlSection: some View {
         Section {
             HStack(spacing: 16) {
-                CustomSegmentedControl(selectedType: $homeViewModel.selectedType)
-
+                GeometryReader {
+                    CustomSegmentedControl(
+                        selection: $homeViewModel.selectedType,
+                        size: $0.size
+                    )
+                }
                 ActionButton(imageName: "calendar", accessibilityLabel: "期間を絞り込む") {
                     homeViewModel.showFilterView = true
                 }

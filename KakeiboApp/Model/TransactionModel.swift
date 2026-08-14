@@ -42,9 +42,11 @@ struct TransactionModel: Identifiable, Hashable {
     }
 }
 
-enum TransactionType: String, CaseIterable {
+enum TransactionType: String, CaseIterable, Identifiable {
     case income = "収入"
     case expense = "支出"
+
+    var id: Self { self }
 
     var imageName: String {
         switch self {

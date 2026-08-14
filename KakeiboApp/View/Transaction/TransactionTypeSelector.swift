@@ -28,9 +28,15 @@ struct TransactionTypeSelector: View {
                         .frame(maxWidth: .infinity)
                         .background {
                             if transactionType == type {
-                                RoundedRectangle(cornerRadius: 10)
-                                    .fill(AppTheme.segmentBackground)
-                                    .matchedGeometryEffect(id: "CATEGORYTYPE", in: animation)
+                                if #available(iOS 26.0, *) {
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .fill(AppTheme.segmentBackground)
+                                        .matchedGeometryEffect(id: "CATEGORYTYPE", in: animation)
+                                } else {
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .fill(AppTheme.segmentBackground)
+                                        .matchedGeometryEffect(id: "CATEGORYTYPE", in: animation)
+                                }
                             }
                         }
                         .contentShape(RoundedRectangle(cornerRadius: 10))
