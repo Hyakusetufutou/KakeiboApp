@@ -98,8 +98,8 @@ final class GraphViewModel: ObservableObject {
                     transactions: transactions,
                     categories: categories,
                     type: selectedType,
-                    startDate: range.start,
-                    endDate: range.end
+                    startDate: range.startDate,
+                    endDate: range.endDate
                 ) ?? []
         }
         .receive(on: DispatchQueue.main)
@@ -114,7 +114,7 @@ final class GraphViewModel: ObservableObject {
         endDate: Date
     ) -> [CategorySummary] {
         let filtered = transactions.filter {
-            startDate <= $0.date && $0.date <= endDate && $0.type == type
+            startDate <= $0.date && $0.date < endDate && $0.type == type
         }
 
         return

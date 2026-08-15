@@ -76,3 +76,8 @@ extension TransactionEntity {
         )
     }
 }
+
+struct TransactionSummary {
+    let income: Decimal
+    let expense: Decimal
+}

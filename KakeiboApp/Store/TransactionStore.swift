@@ -60,15 +60,21 @@ final class TransactionStore: TransactionStoreProtocol {
     }
 
     func add(_ transaction: TransactionModel) async throws {
-        try await repository.add(transaction)
+        try await mutateAndReload {
+            try await repository.add(transaction)
+        }
     }
 
     func update(_ transaction: TransactionModel) async throws {
-        try await repository.update(transaction)
+        try await mutateAndReload {
+            try await repository.update(transaction)
+        }
     }
 
     func delete(_ transaction: TransactionModel) async throws {
-        try await repository.delete(transaction)
+        try await mutateAndReload {
+            try await repository.delete(transaction)
+        }
     }
 
     func search(text: String?) async throws -> [TransactionModel] {
@@ -91,6 +97,11 @@ final class TransactionStore: TransactionStoreProtocol {
         } catch {
             errorSubject.send(error)
         }
+    }
+
+    private func mutateAndReload(_ operation: () async throws -> Void) async throws {
+        try await operation()
+        await load()
     }
 
     private func updateLoadedRange(from start: Date, to end: Date) -> DateRange {

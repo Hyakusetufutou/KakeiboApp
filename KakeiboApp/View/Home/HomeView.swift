@@ -104,8 +104,8 @@ struct HomeView: View {
     private var summarySection: some View {
         Section {
             CardView(
-                income: total(homeViewModel.filteredTransactions, type: .income),
-                expense: total(homeViewModel.filteredTransactions, type: .expense)
+                income: homeViewModel.transactionSummary.income,
+                expense: homeViewModel.transactionSummary.expense
             )
         }
         .listRowSeparator(.hidden)

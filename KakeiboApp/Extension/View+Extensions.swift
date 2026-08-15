@@ -49,13 +49,6 @@ extension View {
         return locale.currencySymbol ?? ""
     }
 
-    nonisolated func total(_ transactions: [TransactionModel], type: TransactionType) -> Decimal {
-        return transactions.filter({ $0.type == type })
-            .reduce(Decimal.zero) { partialResult, transaction in
-                return partialResult + transaction.amount
-            }
-    }
-
     @ViewBuilder
     func optionalGeometryGroup() -> some View {
         if #available(iOS 17, *) {
