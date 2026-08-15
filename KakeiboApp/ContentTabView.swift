@@ -1,5 +1,5 @@
 //
-//  ContentView.swift
+//  ContentTabView.swift
 //  KakeiboApp
 //
 //  Created by Hyakusetufutou on 2025/09/07
@@ -9,7 +9,7 @@
 import SwiftUI
 import CoreData
 
-struct ContentView: View {
+struct ContentTabView: View {
     @Environment(\.scenePhase) private var scenePhase
 
     @AppStorage("isAppLockEnabled") private var isAppLockEnabled = false
@@ -101,7 +101,7 @@ struct ContentView: View {
     }
 }
 
-extension ContentView {
+extension ContentTabView {
     fileprivate var mainTabView: some View {
         TabView(selection: $selectedTab) {
             HomeView(
@@ -143,7 +143,7 @@ extension ContentView {
     }
 }
 
-extension ContentView {
+extension ContentTabView {
     fileprivate var shouldShowLockScreen: Bool {
         isAppLockEnabled && !isUnlocked
     }
@@ -164,7 +164,7 @@ extension ContentView {
 }
 
 #Preview {
-    ContentView(factory: ViewModelFactory())
+    ContentTabView(factory: ViewModelFactory())
         .environmentObject(ViewModelFactory())
         .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
 }
