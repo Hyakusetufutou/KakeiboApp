@@ -19,7 +19,11 @@ final class HomeViewModel: ObservableObject {
     @Published var dateRange: DateRange = DateRange()
     @Published var selectedType: TransactionType = .expense
     @Published var showFilterView = false
-    
+    @Published private(set) var transactionSummary: TransactionSummary = TransactionSummary(
+        income: 0,
+        expense: 0
+    )
+
     private let categoryStore: CategoryStoreProtocol
     private let transactionStore: TransactionStoreProtocol
     private var isDefaultDateRange: Bool {
@@ -90,20 +94,43 @@ final class HomeViewModel: ObservableObject {
     // MARK: - Private Methods
 
     private func bindTransactions() {
-        Publishers.CombineLatest3(
-            transactionStore.transactions,
-            $dateRange,
+        let filtered =
+            Publishers.CombineLatest(
+                transactionStore.transactions,
+                $dateRange
+            )
+            .map { transactions, range in
+                transactions.filter {
+                    range.startDate <= $0.date && $0.date < range.endDate
+                }
+            }
+            .share()
+
+        filtered
+            .map { transactions in
+                TransactionSummary(
+                    income:
+                        transactions
+                        .filter { $0.type == .income }
+                        .reduce(0) { $0 + $1.amount },
+
+                    expense:
+                        transactions
+                        .filter { $0.type == .expense }
+                        .reduce(0) { $0 + $1.amount }
+                )
+            }
+            .assign(to: &$transactionSummary)
+
+        Publishers.CombineLatest(
+            filtered,
             $selectedType
         )
-        .map { transactions, range, selectedType in
+        .map { transactions, selectedType in
             transactions
-                .filter {
-                    range.startDate <= $0.date && $0.date < range.endDate
-                        && $0.type == selectedType
-                }
+                .filter { $0.type == selectedType }
                 .sorted { $0.date > $1.date }
         }
-        .receive(on: DispatchQueue.main)
         .assign(to: &$filteredTransactions)
     }
 
