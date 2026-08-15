@@ -250,7 +250,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\n\n# フォーマットしたいフォルダを指定\nTARGET_DIR=\"$HOME/workspace/swift/develop/KakeiboApp\"\n\n# Xcode内蔵のswift-formatを使用してフォーマットを実行\nif xcrun --find swift-format >/dev/null; then\n  xcrun swift-format format --in-place --recursive \"$TARGET_DIR\"\n  xcrun swift-format lint --recursive \"$TARGET_DIR\"\nelse\n  echo \"warning: Xcodeにswift-formatが見つかりません。Xcode 16以降を使用してください。\"\nfi\n\n";
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\n\n# フォーマットしたいフォルダを指定\nset -e\n\nPROJECT_DIR=\"${SRCROOT}\"\n\n# Xcode内蔵のswift-formatを使用してフォーマットを実行\nif xcrun --find swift-format >/dev/null 2>&1; then\n    xcrun swift-format format \\\n        --in-place \\\n        --recursive \\\n        \"$PROJECT_DIR\"\n\n    xcrun swift-format lint \\\n        --recursive \\\n        \"$PROJECT_DIR\"\nelse\n    echo \"warning: swift-format が見つかりません。\"\nfi\n\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 

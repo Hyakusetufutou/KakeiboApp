@@ -93,17 +93,12 @@ final class TransactionInputViewModel: ObservableObject {
             return
         }
 
-        // Create transaction model
-        guard let transaction = createTransaction() else {
-            errorMessage = "トランザクションの作成に失敗しました"
-            return
-        }
-
         // Save transaction
         isLoading = true
         defer { isLoading = false }
 
         do {
+            let transaction = try createTransaction()
             if isEdit {
                 try await transactionStore.update(transaction)
             } else {
@@ -173,16 +168,16 @@ final class TransactionInputViewModel: ObservableObject {
         errorMessage = nil
     }
 
-    private func createTransaction() -> TransactionModel? {
+    private func createTransaction() throws -> TransactionModel {
         guard let amountValue = Decimal(string: amount),
             let categoryId = selectedCategoryId
         else {
-            return nil
+            throw CustomError.invalidData
         }
 
         let now = Date()
 
-        return TransactionModel(
+        return try TransactionModel(
             id: id,
             title: title.trimmingCharacters(in: .whitespacesAndNewlines),
             memo: memo.trimmingCharacters(in: .whitespacesAndNewlines),

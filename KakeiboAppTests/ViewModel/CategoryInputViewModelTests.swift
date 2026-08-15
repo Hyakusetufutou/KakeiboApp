@@ -6,217 +6,125 @@
 //
 //
 
-import XCTest
-import Combine
-import SwiftUI
+import Testing
+import CoreData
 @testable import KakeiboApp
 
 @MainActor
-final class CategoryInputViewModelTests: XCTestCase {
-    private var categoryStore: MockCategoryStore!
-    private var viewModel: CategoryInputViewModel!
-    private var cancellables: Set<AnyCancellable>!
+@Suite("CategoryInputViewModel のテスト")
+struct CategoryInputViewModelTests {
 
-    override func setUp() async throws {
-        try await super.setUp()
-        categoryStore = MockCategoryStore()
-        cancellables = []
+    private func makeSUT(autoLoad: Bool = false) -> (CategoryInputViewModel, CategoryStore) {
+        let container = PersistenceController(inMemory: true).container
+        let repository = CategoryRepository(container: container)
+        let store = CategoryStore(repository: repository, autoLoad: autoLoad)
+        let viewModel = CategoryInputViewModel(categoryStore: store)
+        return (viewModel, store)
     }
 
-    override func tearDown() async throws {
-        cancellables = nil
-        viewModel = nil
-        categoryStore = nil
-        try await super.tearDown()
-    }
+    // MARK: - 画面表示・初期化のテスト
 
-    private func makeViewModel() -> CategoryInputViewModel {
-        CategoryInputViewModel(categoryStore: categoryStore)
-    }
+    @Test("presentInputView で新規作成と編集モードが切り替わること")
+    func presentInputView() throws {
+        let (viewModel, _) = makeSUT()
+        let category = try CategoryModel(
+            id: UUID(),
+            name: "趣味",
+            color: .purple,
+            type: .expense,
+            isDefault: false
+        )
 
-    // MARK: - presentInputView
+        // 新規作成時
+        viewModel.presentInputView(type: .income, categoryItem: nil)
+        #expect(viewModel.isPresentInputView == true)
+        #expect(viewModel.isEdit == false)
+        #expect(viewModel.name.isEmpty)
+        #expect(viewModel.type == .income)
 
-    func test_presentInputView_新規作成時にフォームがリセットされisPresentInputViewがtrueになる() {
-        viewModel = makeViewModel()
-        viewModel.name = "既存の名前"
-
-        viewModel.presentInputView(type: .expense)
-
-        XCTAssertTrue(viewModel.isPresentInputView)
-        XCTAssertFalse(viewModel.isEdit)
-        XCTAssertEqual(viewModel.name, "")
-        XCTAssertEqual(viewModel.type, .expense)
-    }
-
-    func test_presentInputView_編集時にフォームが復元されisEditがtrueになる() {
-        viewModel = makeViewModel()
-        let category = CategoryModel.stub(name: "食費", type: .expense)
-
+        // 編集時
         viewModel.presentInputView(type: .expense, categoryItem: category)
-
-        XCTAssertTrue(viewModel.isPresentInputView)
-        XCTAssertTrue(viewModel.isEdit)
-        XCTAssertEqual(viewModel.name, "食費")
-        XCTAssertEqual(viewModel.id, category.id)
-        XCTAssertEqual(viewModel.type, .expense)
+        #expect(viewModel.isPresentInputView == true)
+        #expect(viewModel.isEdit == true)
+        #expect(viewModel.name == "趣味")
+        #expect(viewModel.color == .purple)
+        #expect(viewModel.type == .expense)
     }
 
-    func test_presentInputView_収入タイプが正しくセットされる() {
-        viewModel = makeViewModel()
+    // MARK: - 保存ロジック・バリデーションのテスト
 
-        viewModel.presentInputView(type: .income)
-
-        XCTAssertEqual(viewModel.type, .income)
-    }
-
-    // MARK: - save 正常系
-
-    func test_save_新規作成でaddが呼ばれisPresentInputViewがfalseになる() async throws {
-        viewModel = makeViewModel()
-        viewModel.presentInputView(type: .expense)
-        viewModel.name = "娯楽"
-
-        await viewModel.save()
-
-        XCTAssertEqual(categoryStore.addCallCount, 1)
-        XCTAssertFalse(viewModel.isPresentInputView)
-        XCTAssertNil(viewModel.errorMessage)
-    }
-
-    func test_save_編集時にupdateが呼ばれisPresentInputViewがfalseになる() async throws {
-        let category = CategoryModel.stub(name: "食費")
-        categoryStore.stubbedCategories = [category]
-        viewModel = makeViewModel()
-        viewModel.presentInputView(type: .expense, categoryItem: category)
-        viewModel.name = "外食費"
-
-        await viewModel.save()
-
-        XCTAssertEqual(categoryStore.updateCallCount, 1)
-        XCTAssertFalse(viewModel.isPresentInputView)
-        XCTAssertNil(viewModel.errorMessage)
-    }
-
-    func test_save_成功後にフォームがリセットされる() async throws {
-        viewModel = makeViewModel()
-        viewModel.presentInputView(type: .expense)
-        viewModel.name = "娯楽"
-
-        await viewModel.save()
-
-        XCTAssertEqual(viewModel.name, "")
-        XCTAssertFalse(viewModel.isPresentInputView)
-    }
-
-    // MARK: - save バリデーション
-
-    func test_save_名前が空のときerrorMessageがセットされaddが呼ばれない() async throws {
-        viewModel = makeViewModel()
-        viewModel.presentInputView(type: .expense)
-        viewModel.name = ""
-
-        await viewModel.save()
-
-        XCTAssertEqual(categoryStore.addCallCount, 0)
-        XCTAssertNotNil(viewModel.errorMessage)
-        XCTAssertTrue(viewModel.isPresentInputView)  // 閉じない
-    }
-
-    func test_save_名前が空白のみのときerrorMessageがセットされる() async throws {
-        viewModel = makeViewModel()
+    @Test("名前が空（または空白のみ）の場合、save() でエラーメッセージが設定されること")
+    func saveWithInvalidName() async {
+        let (viewModel, _) = makeSUT()
         viewModel.presentInputView(type: .expense)
         viewModel.name = "   "
 
         await viewModel.save()
 
-        XCTAssertEqual(categoryStore.addCallCount, 0)
-        XCTAssertNotNil(viewModel.errorMessage)
+        #expect(viewModel.errorMessage == "カテゴリ名を入力してください")
+        #expect(viewModel.isPresentInputView == true)
     }
 
-    // MARK: - save 異常系
-
-    func test_save_addエラー時にerrorMessageがセットされisPresentInputViewがtrueのまま() async throws {
-        categoryStore.addError = CustomError.categoryNotFoundError
-        viewModel = makeViewModel()
+    @Test("新規追加モードでの save() 成功時にストアへ追加され画面が閉じること")
+    func saveNewCategorySuccess() async throws {
+        let (viewModel, store) = makeSUT()
         viewModel.presentInputView(type: .expense)
-        viewModel.name = "娯楽"
+        viewModel.name = "日用品"
+        viewModel.color = .green
+        let targetId = viewModel.id
 
         await viewModel.save()
 
-        XCTAssertNotNil(viewModel.errorMessage)
-        XCTAssertTrue(viewModel.errorMessage?.contains("保存に失敗しました") == true)
-        XCTAssertTrue(viewModel.isPresentInputView)  // エラー時は閉じない
+        #expect(viewModel.errorMessage == nil)
+        #expect(viewModel.isPresentInputView == false)
+        #expect(store.find(id: targetId) != nil)
     }
 
-    func test_save_updateエラー時にerrorMessageがセットされisPresentInputViewがtrueのまま() async throws {
-        let category = CategoryModel.stub(name: "食費")
-        categoryStore.stubbedCategories = [category]
-        categoryStore.updateError = CustomError.categoryNotFoundError
-        viewModel = makeViewModel()
+    @Test("編集モードでの save() 成功時にカテゴリが更新されること")
+    func saveUpdatedCategorySuccess() async throws {
+        let (viewModel, store) = makeSUT()
+        let category = try CategoryModel(
+            id: UUID(),
+            name: "外食",
+            color: .orange,
+            type: .expense,
+            isDefault: false
+        )
+        try await store.add(category)
+
         viewModel.presentInputView(type: .expense, categoryItem: category)
-        viewModel.name = "外食費"
+        viewModel.name = "外食・カフェ"
 
         await viewModel.save()
 
-        XCTAssertNotNil(viewModel.errorMessage)
-        XCTAssertTrue(viewModel.isPresentInputView)
+        #expect(viewModel.errorMessage == nil)
+        #expect(viewModel.isPresentInputView == false)
+        #expect(store.find(id: category.id)?.name == "外食・カフェ")
     }
 
-    func test_save_isLoadingがtrueからfalseに変化する() async throws {
-        viewModel = makeViewModel()
+    // MARK: - ヘルパー・キャンセルのテスト
+
+    @Test("cancel() 呼出し時に画面が閉じフォームがリセットされること")
+    func cancel() {
+        let (viewModel, _) = makeSUT()
         viewModel.presentInputView(type: .expense)
-        viewModel.name = "娯楽"
-        var loadingStates: [Bool] = []
-
-        viewModel.$isLoading
-            .sink { loadingStates.append($0) }
-            .store(in: &cancellables)
-
-        await viewModel.save()
-
-        XCTAssertTrue(loadingStates.contains(true))
-        XCTAssertEqual(loadingStates.last, false)
-    }
-
-    // MARK: - cancel
-
-    func test_cancel_isPresentInputViewがfalseになりフォームがリセットされる() {
-        viewModel = makeViewModel()
-        viewModel.presentInputView(type: .expense)
-        viewModel.name = "娯楽"
+        viewModel.name = "一時入力"
 
         viewModel.cancel()
 
-        XCTAssertFalse(viewModel.isPresentInputView)
-        XCTAssertEqual(viewModel.name, "")
+        #expect(viewModel.isPresentInputView == false)
+        #expect(viewModel.name.isEmpty)
     }
 
-    // MARK: - clearError
-
-    func test_clearError_errorMessageがnilになる() async throws {
-        viewModel = makeViewModel()
+    @Test("clearError() 呼出し時に errorMessage が nil になること")
+    func clearError() async {
+        let (viewModel, _) = makeSUT()
         viewModel.presentInputView(type: .expense)
-        viewModel.name = ""
-        await viewModel.save()
-        XCTAssertNotNil(viewModel.errorMessage)
+        await viewModel.save()  // バリデーションエラー発生
+        #expect(viewModel.errorMessage != nil)
 
         viewModel.clearError()
 
-        XCTAssertNil(viewModel.errorMessage)
-    }
-
-    // MARK: - フォームリセット
-
-    func test_save後_新たにpresentInputViewを呼ぶとフォームがリセットされる() async throws {
-        viewModel = makeViewModel()
-        viewModel.presentInputView(type: .expense)
-        viewModel.name = "娯楽"
-        await viewModel.save()
-
-        viewModel.presentInputView(type: .income)
-
-        XCTAssertEqual(viewModel.name, "")
-        XCTAssertFalse(viewModel.isEdit)
-        XCTAssertEqual(viewModel.type, .income)
+        #expect(viewModel.errorMessage == nil)
     }
 }

@@ -15,7 +15,7 @@ struct KakeiboAppApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView(factory: appViewModel)
+            ContentTabView(factory: appViewModel)
                 .environment(\.managedObjectContext, persistenceController.container.viewContext)
         }
     }

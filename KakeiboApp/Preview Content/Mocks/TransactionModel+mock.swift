@@ -8,8 +8,9 @@
 
 import Foundation
 
+//swift-format-ignore
 extension TransactionModel {
-    static let mock1 = TransactionModel(
+    static let mock1 = try! TransactionModel(
         title: "食費",
         memo: "お肉代",
         amount: Decimal(1000),
@@ -19,7 +20,7 @@ extension TransactionModel {
         type: .expense,
         categoryId: CategoryModel.mock1.id
     )
-    static let mock2 = TransactionModel(
+    static let mock2 = try! TransactionModel(
         title: "給料",
         memo: "給料",
         amount: Decimal(200000),
@@ -29,7 +30,7 @@ extension TransactionModel {
         type: .income,
         categoryId: CategoryModel.mock3.id
     )
-    static let mock3 = TransactionModel(
+    static let mock3 = try! TransactionModel(
         title: "ティッシュ",
         memo: "ティッシュ",
         amount: Decimal(500),

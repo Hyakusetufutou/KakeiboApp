@@ -29,7 +29,11 @@ struct TransactionModel: Identifiable, Hashable {
         updatedAt: Date,
         type: TransactionType,
         categoryId: UUID
-    ) {
+    ) throws {
+        guard !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw CustomError.invalidData
+        }
+        guard amount >= 0 else { throw CustomError.invalidData }
         self.id = id
         self.title = title
         self.memo = memo
@@ -63,7 +67,7 @@ extension TransactionEntity {
         guard let type = TransactionType(rawValue: self.type) else {
             throw TransactionMapperError.invalidType
         }
-        return TransactionModel(
+        return try TransactionModel(
             id: id,
             title: title,
             memo: memo,

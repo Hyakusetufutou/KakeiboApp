@@ -8,7 +8,7 @@
 
 import Foundation
 
-struct DateRange {
+struct DateRange: Equatable {
     let start: Date
     let end: Date
 
@@ -31,7 +31,7 @@ struct DateRange {
     }
 
     func contains(_ date: Date) -> Bool {
-        return date >= start && date <= end
+        return date >= startDate && date < endDate
     }
 
     func withStart(_ newStart: Date) -> DateRange {

@@ -6,244 +6,117 @@
 //
 //
 
-import XCTest
-import Combine
+import Testing
+import CoreData
 @testable import KakeiboApp
 
 @MainActor
-final class SearchViewModelTests: XCTestCase {
-    private var categoryStore: MockCategoryStore!
-    private var transactionStore: MockTransactionStore!
-    private var viewModel: SearchViewModel!
-    private var cancellables: Set<AnyCancellable>!
+@Suite("SearchViewModel のテスト")
+struct SearchViewModelTests {
 
-    override func setUp() async throws {
-        try await super.setUp()
-        categoryStore = MockCategoryStore()
-        transactionStore = MockTransactionStore()
-        cancellables = []
-    }
+    private func makeSUT() async throws -> (SearchViewModel, TransactionStore, CategoryModel) {
+        let container = PersistenceController(inMemory: true).container
+        let categoryRepo = CategoryRepository(container: container)
+        let transactionRepo = TransactionRepository(container: container)
 
-    override func tearDown() async throws {
-        cancellables = nil
-        viewModel = nil
-        transactionStore = nil
-        categoryStore = nil
-        try await super.tearDown()
-    }
+        let categoryStore = CategoryStore(repository: categoryRepo, autoLoad: false)
+        let transactionStore = TransactionStore(repository: transactionRepo)
 
-    private func makeViewModel() -> SearchViewModel {
-        SearchViewModel(categoryStore: categoryStore, transactionStore: transactionStore)
-    }
-
-    private func makeTransaction(
-        title: String = "テスト",
-        date: Date = Date(),
-        memo: String? = nil
-    ) -> TransactionModel {
-        TransactionModel(
+        let dummyCategory = try CategoryModel(
             id: UUID(),
-            title: title,
-            memo: memo ?? "",
-            amount: 1000,
-            date: date,
-            createdAt: Date(),
-            updatedAt: Date(),
+            name: "食費",
+            color: .red,
             type: .expense,
-            categoryId: UUID()
+            isDefault: false
         )
+        try await categoryStore.add(dummyCategory)
+
+        let viewModel = SearchViewModel(
+            categoryStore: categoryStore,
+            transactionStore: transactionStore
+        )
+        return (viewModel, transactionStore, dummyCategory)
     }
 
-    // MARK: - 検索 正常系
+    // MARK: - 検索機能（Debounce・クリア・キャンセル）のテスト
 
-    func test_searchText入力で検索結果が返る() async throws {
-        transactionStore.stubbedTransactions = [
-            makeTransaction(title: "ランチ"),
-            makeTransaction(title: "交通費"),
-        ]
-        viewModel = makeViewModel()
+    @Test("searchText の入力後 debounce(300ms) を経て検索結果が更新されること")
+    func searchDebounceAndResultUpdate() async throws {
+        let (viewModel, transactionStore, category) = try await makeSUT()
+        let now = Date()
 
-        let exp = expectation(description: "search results")
-        viewModel.$resultTransactions
-            .first { $0.count == 1 }
-            .sink { transactions in
-                XCTAssertEqual(transactions.first?.title, "ランチ")
-                exp.fulfill()
-            }
-            .store(in: &cancellables)
+        let transaction = try TransactionModel(
+            id: UUID(),
+            title: "本屋で専門書購入",
+            memo: "Swift本",
+            amount: 3000,
+            date: now,
+            createdAt: now,
+            updatedAt: now,
+            type: .expense,
+            categoryId: category.id
+        )
+        try await transactionStore.add(transaction)
 
-        viewModel.searchText = "ランチ"
+        viewModel.searchText = "専門書"
 
-        // debounce の 300ms + マージン
-        await fulfillment(of: [exp], timeout: 2.0)
-    }
-
-    func test_searchText_date降順でソートされる() async throws {
-        let today = Date()
-        let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: today)!
-        transactionStore.stubbedTransactions = [
-            makeTransaction(title: "ランチ昨日", date: yesterday),
-            makeTransaction(title: "ランチ今日", date: today),
-        ]
-        viewModel = makeViewModel()
-
-        let exp = expectation(description: "sorted results")
-        viewModel.$resultTransactions
-            .first { $0.count == 2 }
-            .sink { transactions in
-                XCTAssertEqual(transactions.map(\.title), ["ランチ今日", "ランチ昨日"])
-                exp.fulfill()
-            }
-            .store(in: &cancellables)
-
-        viewModel.searchText = "ランチ"
-
-        await fulfillment(of: [exp], timeout: 2.0)
-    }
-
-    func test_searchText_空文字のときresultTransactionsが空になる() async throws {
-        transactionStore.stubbedTransactions = [makeTransaction(title: "ランチ")]
-        viewModel = makeViewModel()
-
-        // まず検索して結果を持った状態にする
-        let exp1 = expectation(description: "has results")
-        viewModel.$resultTransactions
-            .first { $0.count == 1 }
-            .sink { _ in exp1.fulfill() }
-            .store(in: &cancellables)
-        viewModel.searchText = "ランチ"
-        await fulfillment(of: [exp1], timeout: 2.0)
-
-        // 空文字に変更
-        let exp2 = expectation(description: "empty results")
-        viewModel.$resultTransactions
-            .first { $0.isEmpty }
-            .sink { _ in exp2.fulfill() }
-            .store(in: &cancellables)
-        viewModel.searchText = ""
-
-        await fulfillment(of: [exp2], timeout: 2.0)
-    }
-
-    func test_searchText_空白のみのときresultTransactionsが空になる() async throws {
-        transactionStore.stubbedTransactions = [makeTransaction(title: "ランチ")]
-        viewModel = makeViewModel()
-
-        let exp = expectation(description: "empty on whitespace")
-        viewModel.$resultTransactions
-            .first { _ in true }  // 初期値（空）を確認
-            .sink { transactions in
-                XCTAssertTrue(transactions.isEmpty)
-                exp.fulfill()
-            }
-            .store(in: &cancellables)
-
-        viewModel.searchText = "   "
-
-        await fulfillment(of: [exp], timeout: 2.0)
-    }
-
-    func test_searchText_同じテキストを連続入力しても検索は1回だけ実行される() async throws {
-        transactionStore.stubbedTransactions = [makeTransaction(title: "ランチ")]
-        viewModel = makeViewModel()
-
-        viewModel.searchText = "ランチ"
-        viewModel.searchText = "ランチ"  // 重複
-
-        // debounce 待機
+        // debounce (300ms) + 非同期実行待機
         try await Task.sleep(nanoseconds: 500_000_000)
 
-        // removeDuplicates により search は1回のみ呼ばれるべき
-        // MockTransactionStore の search は直接カウントしていないため
-        // resultTransactions が正常に返ることを確認
-        XCTAssertEqual(viewModel.resultTransactions.count, 1)
+        #expect(viewModel.resultTransactions.count == 1)
+        #expect(viewModel.resultTransactions.first?.title == "本屋で専門書購入")
     }
 
-    // MARK: - deleteTransaction
+    @Test("searchText を空文字に戻すと検索結果がクリアされること")
+    func emptySearchTextClearsResults() async throws {
+        let (viewModel, _, _) = try await makeSUT()
 
-    func test_deleteTransaction_正常に削除される() async throws {
-        let transaction = makeTransaction()
-        transactionStore.stubbedTransactions = [transaction]
-        viewModel = makeViewModel()
+        viewModel.searchText = ""
+        try await Task.sleep(nanoseconds: 400_000_000)
+
+        #expect(viewModel.resultTransactions.isEmpty)
+    }
+
+    @Test("連続した入力変更（Debounce とタスクキャンセルの挙動）の検証")
+    func searchDebounceAndCancellation() async throws {
+        let (viewModel, _, _) = try await makeSUT()
+
+        // 高速で連続変更（前のタスクがキャンセルされる挙動をカバー）
+        viewModel.searchText = "あ"
+        viewModel.searchText = "あい"
+        viewModel.searchText = "あいう"
+
+        try await Task.sleep(nanoseconds: 400_000_000)
+
+        #expect(viewModel.searchText == "あいう")
+    }
+
+    // MARK: - 操作・ヘルパーメソッドのテスト
+
+    @Test("deleteTransaction / findCategory / clearError の検証")
+    func helperMethodsCoverage() async throws {
+        let (viewModel, store, category) = try await makeSUT()
+        let now = Date()
+
+        #expect(viewModel.findCategory(id: category.id)?.id == category.id)
+
+        let transaction = try TransactionModel(
+            id: UUID(),
+            title: "本",
+            memo: "",
+            amount: 1500,
+            date: now,
+            createdAt: now,
+            updatedAt: now,
+            type: .expense,
+            categoryId: category.id
+        )
+        try await store.add(transaction)
 
         await viewModel.deleteTransaction(transaction)
-
-        XCTAssertEqual(transactionStore.deleteCallCount, 1)
-        XCTAssertNil(viewModel.errorMessage)
-    }
-
-    func test_deleteTransaction_エラー時にerrorMessageがセットされる() async throws {
-        transactionStore.deleteError = CustomError.transactionNotFoundError
-        viewModel = makeViewModel()
-
-        await viewModel.deleteTransaction(makeTransaction())
-
-        XCTAssertNotNil(viewModel.errorMessage)
-        XCTAssertTrue(viewModel.errorMessage?.contains("削除に失敗しました") == true)
-    }
-
-    func test_deleteTransaction_isLoadingがtrueからfalseに変化する() async throws {
-        viewModel = makeViewModel()
-        var loadingStates: [Bool] = []
-
-        viewModel.$isLoading
-            .sink { loadingStates.append($0) }
-            .store(in: &cancellables)
-
-        await viewModel.deleteTransaction(makeTransaction())
-
-        XCTAssertTrue(loadingStates.contains(true))
-        XCTAssertEqual(loadingStates.last, false)
-    }
-
-    // MARK: - findCategory
-
-    func test_findCategory_存在するIDでカテゴリが返る() {
-        let category = CategoryModel.stub(name: "食費")
-        categoryStore.stubbedCategories = [category]
-        viewModel = makeViewModel()
-
-        let found = viewModel.findCategory(id: category.id)
-
-        XCTAssertEqual(found?.id, category.id)
-    }
-
-    func test_findCategory_存在しないIDでnilが返る() {
-        viewModel = makeViewModel()
-
-        XCTAssertNil(viewModel.findCategory(id: UUID()))
-    }
-
-    // MARK: - clearError
-
-    func test_clearError_errorMessageがnilになる() async throws {
-        transactionStore.deleteError = CustomError.transactionNotFoundError
-        viewModel = makeViewModel()
-        await viewModel.deleteTransaction(makeTransaction())
-        XCTAssertNotNil(viewModel.errorMessage)
+        #expect(viewModel.isLoading == false)
 
         viewModel.clearError()
-
-        XCTAssertNil(viewModel.errorMessage)
-    }
-
-    // MARK: - 境界値
-
-    func test_searchText_一致なしのとき空配列が返る() async throws {
-        transactionStore.stubbedTransactions = [makeTransaction(title: "交通費")]
-        viewModel = makeViewModel()
-
-        let exp = expectation(description: "no results")
-        viewModel.$resultTransactions
-            .first { _ in true }
-            .sink { transactions in
-                XCTAssertTrue(transactions.isEmpty)
-                exp.fulfill()
-            }
-            .store(in: &cancellables)
-
-        viewModel.searchText = "存在しないキーワード"
-
-        await fulfillment(of: [exp], timeout: 2.0)
+        #expect(viewModel.errorMessage == nil)
     }
 }

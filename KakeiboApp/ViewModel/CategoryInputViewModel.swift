@@ -52,19 +52,19 @@ final class CategoryInputViewModel: ObservableObject {
 
         clearError()
 
-        let category = CategoryModel(
-            id: id,
-            name: name,
-            color: color,
-            type: type,
-            isDefault: isDefault
-        )
-
         isLoading = true
         defer { isLoading = false }
 
         // ストア側のエラーを一度クリアしてから実行
         do {
+            let category = try CategoryModel(
+                id: id,
+                name: name,
+                color: color,
+                type: type,
+                isDefault: isDefault
+            )
+
             if isEdit {
                 try await categoryStore.update(category)
             } else {
