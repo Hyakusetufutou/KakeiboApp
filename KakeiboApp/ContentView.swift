@@ -94,6 +94,7 @@ struct ContentView: View {
             } else if phase == .active {
                 calendarViewModel.resetDateRangeIfNeeded()
                 homeViewModel.resetDateRangeIfNeeded()
+                graphViewModel.resetDateRangeIfNeeded()
             }
         }
         .preferredColorScheme(appearance.colorScheme)

@@ -30,6 +30,15 @@ final class GraphViewModel: ObservableObject {
         selectedType == .income ? "収入合計" : "支出合計"
     }
 
+    private var isDefaultDateRange: Bool {
+        let today = Date()
+        return Calendar.current.isDate(
+            dateRange.start,
+            equalTo: today.startOfMonth,
+            toGranularity: .day
+        ) && Calendar.current.isDate(dateRange.end, equalTo: today.endOfMonth, toGranularity: .day)
+    }
+
     // MARK: - Dependencies
     private let categoryStore: CategoryStoreProtocol
     private let transactionStore: TransactionStoreProtocol
@@ -48,16 +57,14 @@ final class GraphViewModel: ObservableObject {
         categoryStore.find(id: id)
     }
 
-    func deleteTransaction(_ transaction: TransactionModel) {
-        Task {
-            isLoading = true
-            defer { isLoading = false }
+    func deleteTransaction(_ transaction: TransactionModel) async {
+        isLoading = true
+        defer { isLoading = false }
 
-            do {
-                try await transactionStore.delete(transaction)
-            } catch {
-                errorMessage = ErrorMapper.message(for: error)
-            }
+        do {
+            try await transactionStore.delete(transaction)
+        } catch {
+            errorMessage = ErrorMapper.message(for: error)
         }
     }
 
@@ -81,6 +88,14 @@ final class GraphViewModel: ObservableObject {
 
     func clearError() {
         errorMessage = nil
+    }
+
+    func resetDateRangeIfNeeded(now: Date = Date()) {
+        guard isDefaultDateRange else { return }
+
+        guard !Calendar.current.isDate(now, equalTo: dateRange.startDate, toGranularity: .month)
+        else { return }
+        dateRange = DateRange()
     }
 
     // MARK: - Private Methods

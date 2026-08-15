@@ -32,7 +32,9 @@ struct CategoryRowView: View {
         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
             if !category.isDefault {
                 Button(role: .destructive) {
-                    categoryListViewModel.delete(category)
+                    Task {
+                        await categoryListViewModel.delete(category)
+                    }
                 } label: {
                     Label("", systemImage: "trash")
                 }

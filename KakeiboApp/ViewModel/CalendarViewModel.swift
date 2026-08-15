@@ -39,16 +39,14 @@ final class CalendarViewModel: ObservableObject {
         dateRange = DateRange(start: newDate.startOfMonth, end: newDate.endOfMonth)
     }
 
-    func delete(_ transaction: TransactionModel) {
-        Task {
-            isLoading = true
-            defer { isLoading = false }
+    func delete(_ transaction: TransactionModel) async {
+        isLoading = true
+        defer { isLoading = false }
 
-            do {
-                try await transactionStore.delete(transaction)
-            } catch {
-                errorMessage = ErrorMapper.message(for: error)
-            }
+        do {
+            try await transactionStore.delete(transaction)
+        } catch {
+            errorMessage = ErrorMapper.message(for: error)
         }
     }
 
@@ -74,7 +72,7 @@ final class CalendarViewModel: ObservableObject {
     func resetDateRangeIfNeeded() {
         let today = Date()
 
-        guard !Calendar.current.isDate(today, equalTo: dateRange.start, toGranularity: .month)
+        guard !Calendar.current.isDate(today, equalTo: dateRange.startDate, toGranularity: .month)
         else { return }
         dateRange = DateRange()
     }

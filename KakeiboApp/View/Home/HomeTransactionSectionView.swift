@@ -22,7 +22,7 @@ struct HomeTransactionSectionView: View {
                 ForEach(homeViewModel.filteredTransactions) { transaction in
                     TransactionCardView(
                         transaction: transaction,
-                        category: homeViewModel.categoryFind(id: transaction.categoryId)
+                        category: homeViewModel.findCategory(id: transaction.categoryId)
                     )
                     .listRowSeparator(.hidden)
                     .listRowBackground(Color.clear)
@@ -33,7 +33,9 @@ struct HomeTransactionSectionView: View {
                     }
                     .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                         Button(role: .destructive) {
-                            homeViewModel.deleteTransaction(transaction)
+                            Task {
+                                await homeViewModel.deleteTransaction(transaction)
+                            }
                         } label: {
                             Label("", systemImage: "trash")
                         }

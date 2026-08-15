@@ -31,16 +31,14 @@ final class SearchViewModel: ObservableObject {
 
     // MARK: - Public Methods
 
-    func deleteTransaction(_ transaction: TransactionModel) {
-        Task {
-            isLoading = true
-            defer { isLoading = false }
+    func deleteTransaction(_ transaction: TransactionModel) async {
+        isLoading = true
+        defer { isLoading = false }
 
-            do {
-                try await transactionStore.delete(transaction)
-            } catch {
-                errorMessage = ErrorMapper.message(for: error)
-            }
+        do {
+            try await transactionStore.delete(transaction)
+        } catch {
+            errorMessage = ErrorMapper.message(for: error)
         }
     }
 
