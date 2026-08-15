@@ -84,6 +84,7 @@ struct CategoryModel: Identifiable, Hashable {
     }
 }
 
+// swift-format-ignore
 extension CategoryModel {
     static let defaults: [CategoryModel] = [
         // 支出

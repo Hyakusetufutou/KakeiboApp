@@ -8,6 +8,7 @@
 
 import Foundation
 
+//swift-format-ignore
 extension CategoryModel {
     static let mock1 = try! CategoryModel(name: "食費", color: .blue, type: .expense, isDefault: true)
     static let mock2 = try! CategoryModel(

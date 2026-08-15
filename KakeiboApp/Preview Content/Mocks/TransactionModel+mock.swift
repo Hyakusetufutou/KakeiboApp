@@ -8,6 +8,7 @@
 
 import Foundation
 
+//swift-format-ignore
 extension TransactionModel {
     static let mock1 = try! TransactionModel(
         title: "食費",
