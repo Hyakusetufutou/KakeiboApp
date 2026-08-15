@@ -19,7 +19,7 @@ final class HomeViewModel: ObservableObject {
     @Published var dateRange: DateRange = DateRange()
     @Published var selectedType: TransactionType = .expense
     @Published var showFilterView = false
-
+    
     private let categoryStore: CategoryStoreProtocol
     private let transactionStore: TransactionStoreProtocol
     private var isDefaultDateRange: Bool {
@@ -98,7 +98,7 @@ final class HomeViewModel: ObservableObject {
         .map { transactions, range, selectedType in
             transactions
                 .filter {
-                    range.start <= $0.date && $0.date <= range.end
+                    range.startDate <= $0.date && $0.date < range.endDate
                         && $0.type == selectedType
                 }
                 .sorted { $0.date > $1.date }

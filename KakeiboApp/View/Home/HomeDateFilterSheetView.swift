@@ -18,6 +18,9 @@ struct HomeDateFilterSheetView: View {
             onSubmit: { start, end in
                 homeViewModel.dateRange = DateRange(start: start, end: end)
                 homeViewModel.showFilterView = false
+                Task {
+                    await homeViewModel.reload()
+                }
             },
             onClose: {
                 homeViewModel.showFilterView = false
