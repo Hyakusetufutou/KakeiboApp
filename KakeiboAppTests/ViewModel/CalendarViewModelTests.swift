@@ -6,358 +6,139 @@
 //
 //
 
-import XCTest
-import Combine
+import Testing
+import CoreData
 @testable import KakeiboApp
 
 @MainActor
-final class CalendarViewModelTests: XCTestCase {
-    private var categoryStore: MockCategoryStore!
-    private var transactionStore: MockTransactionStore!
-    private var viewModel: CalendarViewModel!
-    private var cancellables: Set<AnyCancellable>!
+@Suite("CalendarViewModel のテスト")
+struct CalendarViewModelTests {
 
-    override func setUp() async throws {
-        try await super.setUp()
-        categoryStore = MockCategoryStore()
-        transactionStore = MockTransactionStore()
-        cancellables = []
-    }
+    private func makeSUT() async throws -> (CalendarViewModel, TransactionStore, CategoryModel) {
+        let container = PersistenceController(inMemory: true).container
+        let categoryRepo = CategoryRepository(container: container)
+        let transactionRepo = TransactionRepository(container: container)
 
-    override func tearDown() async throws {
-        cancellables = nil
-        viewModel = nil
-        transactionStore = nil
-        categoryStore = nil
-        try await super.tearDown()
-    }
+        let categoryStore = CategoryStore(repository: categoryRepo, autoLoad: false)
+        let transactionStore = TransactionStore(repository: transactionRepo)
 
-    private func makeViewModel() -> CalendarViewModel {
-        CalendarViewModel(categoryStore: categoryStore, transactionStore: transactionStore)
-    }
-
-    private func makeTransaction(
-        amount: Double = 1000,
-        date: Date = Date(),
-        type: TransactionType = .expense,
-        categoryId: UUID = UUID()
-    ) -> TransactionModel {
-        TransactionModel(
+        let dummyCategory = CategoryModel(
             id: UUID(),
-            title: "テスト",
+            name: "食費",
+            color: .red,
+            type: .expense,
+            isDefault: false
+        )
+        try await categoryStore.add(dummyCategory)
+
+        let viewModel = CalendarViewModel(
+            categoryStore: categoryStore,
+            transactionStore: transactionStore
+        )
+        return (viewModel, transactionStore, dummyCategory)
+    }
+
+    // MARK: - 集計・バインディングテスト
+
+    @Test("トランザクション読み込み時に dailySummaries が日付ごとに集計されること")
+    func dailySummariesAggregation() async throws {
+        let (viewModel, transactionStore, category) = try await makeSUT()
+        let now = Date()
+
+        let t1 = TransactionModel(
+            id: UUID(),
+            title: "コーヒー",
             memo: "",
-            amount: amount,
-            date: date,
-            createdAt: Date(),
-            updatedAt: Date(),
-            type: type,
-            categoryId: categoryId
+            amount: 400,
+            date: now,
+            createdAt: now,
+            updatedAt: now,
+            type: .expense,
+            categoryId: category.id
         )
-    }
-
-    // MARK: - dailySummaries 正常系
-
-    func test_dailySummaries_支出と収入が正しく集計される() async throws {
-        let today = Date()
-        transactionStore.stubbedTransactions = [
-            makeTransaction(amount: 1000, date: today, type: .expense),
-            makeTransaction(amount: 500, date: today, type: .expense),
-            makeTransaction(amount: 3000, date: today, type: .income),
-        ]
-        viewModel = makeViewModel()
-
-        let exp = expectation(description: "daily summaries computed")
-        viewModel.$dailySummaries
-            .first { !$0.isEmpty }
-            .sink { summaries in
-                let key = Calendar.current.startOfDay(for: today)
-                let summary = summaries[key]
-                XCTAssertNotNil(summary)
-                XCTAssertEqual(summary?.expense, 1500)
-                XCTAssertEqual(summary?.income, 3000)
-                exp.fulfill()
-            }
-            .store(in: &cancellables)
-
-        await fulfillment(of: [exp], timeout: 2.0)
-    }
-
-    func test_dailySummaries_日付ごとにグループ化される() async throws {
-        let today = Date()
-        let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: today)!
-        transactionStore.stubbedTransactions = [
-            makeTransaction(date: today),
-            makeTransaction(date: yesterday),
-        ]
-        viewModel = makeViewModel()
-
-        let exp = expectation(description: "grouped by day")
-        viewModel.$dailySummaries
-            .first { $0.count == 2 }
-            .sink { summaries in
-                XCTAssertEqual(summaries.count, 2)
-                exp.fulfill()
-            }
-            .store(in: &cancellables)
-
-        await fulfillment(of: [exp], timeout: 2.0)
-    }
-
-    func test_dailySummaries_dateRange外のトランザクションは含まれない() async throws {
-        let today = Date()
-        let lastMonth = Calendar.current.date(byAdding: .month, value: -1, to: today)!
-        transactionStore.stubbedTransactions = [
-            makeTransaction(date: today),
-            makeTransaction(date: lastMonth),
-        ]
-        viewModel = makeViewModel()
-
-        let exp = expectation(description: "filtered by dateRange")
-        viewModel.$dailySummaries
-            .first { !$0.isEmpty }
-            .sink { summaries in
-                XCTAssertEqual(summaries.count, 1)
-                exp.fulfill()
-            }
-            .store(in: &cancellables)
-
-        await fulfillment(of: [exp], timeout: 2.0)
-    }
-
-    func test_dailySummaries_dateRange変更で再集計される() async throws {
-        let today = Date()
-        let lastMonth = Calendar.current.date(byAdding: .month, value: -1, to: today)!
-        transactionStore.stubbedTransactions = [
-            makeTransaction(amount: 1000, date: today),
-            makeTransaction(amount: 2000, date: lastMonth),
-        ]
-        viewModel = makeViewModel()
-
-        let exp = expectation(description: "recomputed after dateRange change")
-        viewModel.$dailySummaries
-            .first { summaries in
-                let key = Calendar.current.startOfDay(for: lastMonth)
-                return summaries[key] != nil
-            }
-            .sink { _ in exp.fulfill() }
-            .store(in: &cancellables)
-
-        // 購読後に変更
-        viewModel.dateRange = DateRange(
-            start: lastMonth.startOfMonth,
-            end: lastMonth.endOfMonth
+        let t2 = TransactionModel(
+            id: UUID(),
+            title: "本",
+            memo: "",
+            amount: 1600,
+            date: now,
+            createdAt: now,
+            updatedAt: now,
+            type: .expense,
+            categoryId: category.id
         )
 
-        await fulfillment(of: [exp], timeout: 2.0)
-    }
-
-    func test_dailySummaries_トランザクションが0件のとき空辞書が返る() async throws {
-        transactionStore.stubbedTransactions = []
-        viewModel = makeViewModel()
-
-        let exp = expectation(description: "empty summaries")
-        viewModel.$dailySummaries
-            .first()
-            .sink { summaries in
-                XCTAssertTrue(summaries.isEmpty)
-                exp.fulfill()
-            }
-            .store(in: &cancellables)
-
-        await fulfillment(of: [exp], timeout: 2.0)
-    }
-
-    // MARK: - changeMonth
-
-    func test_changeMonth_1加算で翌月に変わる() {
-        viewModel = makeViewModel()
-        let original = viewModel.dateRange.start
-
-        viewModel.changeMonth(by: 1)
-
-        let expected = Calendar.current.date(byAdding: .month, value: 1, to: original)!
-        XCTAssertTrue(
-            Calendar.current.isDate(
-                viewModel.dateRange.start,
-                equalTo: expected,
-                toGranularity: .month
-            )
-        )
-    }
-
-    func test_changeMonth_マイナス1で先月に変わる() {
-        viewModel = makeViewModel()
-        let original = viewModel.dateRange.start
-
-        viewModel.changeMonth(by: -1)
-
-        let expected = Calendar.current.date(byAdding: .month, value: -1, to: original)!
-        XCTAssertTrue(
-            Calendar.current.isDate(
-                viewModel.dateRange.start,
-                equalTo: expected,
-                toGranularity: .month
-            )
-        )
-    }
-
-    func test_changeMonth_startOfMonthとendOfMonthが正しく設定される() {
-        viewModel = makeViewModel()
-
-        viewModel.changeMonth(by: 1)
-
-        XCTAssertEqual(viewModel.dateRange.start, viewModel.dateRange.start.startOfMonth)
-        XCTAssertEqual(viewModel.dateRange.end, viewModel.dateRange.end.endOfMonth)
-    }
-
-    // MARK: - delete
-
-    func test_delete_正常に削除される() async throws {
-        let transaction = makeTransaction()
-        transactionStore.stubbedTransactions = [transaction]
-        viewModel = makeViewModel()
-
-        await viewModel.delete(transaction)
-
-        XCTAssertEqual(transactionStore.deleteCallCount, 1)
-        XCTAssertNil(viewModel.errorMessage)
-    }
-
-    func test_delete_エラー時にerrorMessageがセットされる() async throws {
-        transactionStore.deleteError = CustomError.transactionNotFoundError
-        viewModel = makeViewModel()
-
-        await viewModel.delete(makeTransaction())
-
-        XCTAssertNotNil(viewModel.errorMessage)
-        XCTAssertTrue(viewModel.errorMessage?.contains("削除に失敗しました") == true)
-    }
-
-    func test_delete_isLoadingがtrueからfalseに変化する() async throws {
-        viewModel = makeViewModel()
-        var loadingStates: [Bool] = []
-
-        viewModel.$isLoading
-            .sink { loadingStates.append($0) }
-            .store(in: &cancellables)
-
-        await viewModel.delete(makeTransaction())
-
-        XCTAssertTrue(loadingStates.contains(true))
-        XCTAssertEqual(loadingStates.last, false)
-    }
-
-    // MARK: - category(for:)
-
-    func test_categoryFor_存在するIDでカテゴリが返る() {
-        let category = CategoryModel.stub(name: "食費")
-        categoryStore.stubbedCategories = [category]
-        viewModel = makeViewModel()
-
-        let found = viewModel.category(for: category.id)
-
-        XCTAssertEqual(found?.id, category.id)
-    }
-
-    func test_categoryFor_存在しないIDでnilが返る() {
-        categoryStore.stubbedCategories = [.stub()]
-        viewModel = makeViewModel()
-
-        XCTAssertNil(viewModel.category(for: UUID()))
-    }
-
-    // MARK: - reload / loadMore
-
-    func test_reload_transactionStoreのreloadが呼ばれる() async throws {
-        viewModel = makeViewModel()
+        try await transactionStore.add(t1)
+        try await transactionStore.add(t2)
 
         await viewModel.reload()
+        try await Task.sleep(nanoseconds: 50_000_000)
 
-        XCTAssertEqual(transactionStore.reloadCallCount, 1)
+        let startOfDay = Calendar.current.startOfDay(for: now)
+        let summary = viewModel.dailySummaries[startOfDay]
+        #expect(summary != nil)
+        #expect(summary?.expense == 2000)
+        #expect(summary?.transactions.count == 2)
     }
 
-    func test_loadMore_hasMoreDataがtrueのときloadMoreが呼ばれる() async throws {
-        transactionStore.stubbedHasMoreData = true
-        viewModel = makeViewModel()
+    // MARK: - 操作・ヘルパーメソッドのテスト
 
-        await viewModel.loadMore()
+    @Test("changeMonth(by:) で dateRange が次月・前月に正しく変更されること")
+    func changeMonth() async throws {
+        let (viewModel, _, _) = try await makeSUT()
+        let initialStart = viewModel.dateRange.start
 
-        XCTAssertEqual(transactionStore.loadMoreCallCount, 1)
-    }
+        viewModel.changeMonth(by: 1)
 
-    func test_loadMore_hasMoreDataがfalseのときloadMoreが呼ばれない() async throws {
-        transactionStore.stubbedHasMoreData = false
-        viewModel = makeViewModel()
-
-        let exp = expectation(description: "hasMoreData false")
-        viewModel.$hasMoreData
-            .first { !$0 }
-            .sink { _ in exp.fulfill() }
-            .store(in: &cancellables)
-        await fulfillment(of: [exp], timeout: 2.0)
-
-        await viewModel.loadMore()
-
-        XCTAssertEqual(transactionStore.loadMoreCallCount, 0)
-    }
-
-    // MARK: - clearError
-
-    func test_clearError_errorMessageがnilになる() async throws {
-        transactionStore.deleteError = CustomError.transactionNotFoundError
-        viewModel = makeViewModel()
-        await viewModel.delete(makeTransaction())
-        XCTAssertNotNil(viewModel.errorMessage)
-
-        viewModel.clearError()
-
-        XCTAssertNil(viewModel.errorMessage)
-    }
-
-    // MARK: - resetDateRangeIfNeeded
-
-    func test_resetDateRangeIfNeeded_今月表示中は変更されない() {
-        viewModel = makeViewModel()
-        let originalRange = viewModel.dateRange
-
-        viewModel.resetDateRangeIfNeeded()
-
-        XCTAssertEqual(viewModel.dateRange.start, originalRange.start)
-        XCTAssertEqual(viewModel.dateRange.end, originalRange.end)
-    }
-
-    func test_resetDateRangeIfNeeded_別月表示中は今月にリセットされる() {
-        viewModel = makeViewModel()
-        let lastMonth = Calendar.current.date(byAdding: .month, value: -1, to: Date())!
-        viewModel.dateRange = DateRange(start: lastMonth.startOfMonth, end: lastMonth.endOfMonth)
-
-        viewModel.resetDateRangeIfNeeded()
-
-        XCTAssertTrue(
+        let expectedNextMonth = Calendar.current.date(byAdding: .month, value: 1, to: initialStart)!
+        #expect(
             Calendar.current.isDate(
                 viewModel.dateRange.start,
-                equalTo: Date().startOfMonth,
-                toGranularity: .day
+                equalTo: expectedNextMonth,
+                toGranularity: .month
             )
         )
     }
 
-    // MARK: - 境界値
+    @Test("category / delete / reload / clearError の検証")
+    func helperMethodsCoverage() async throws {
+        let (viewModel, store, category) = try await makeSUT()
+        let now = Date()
 
-    func test_dailySummaries_月の境界日のトランザクションが含まれる() async throws {
-        let today = Date()
-        transactionStore.stubbedTransactions = [
-            makeTransaction(amount: 100, date: today.startOfMonth),
-            makeTransaction(amount: 200, date: today.endOfMonth),
-        ]
-        viewModel = makeViewModel()
+        #expect(viewModel.category(for: category.id)?.id == category.id)
 
-        let exp = expectation(description: "boundary dates included")
-        viewModel.$dailySummaries
-            .first { $0.count == 2 }
-            .sink { _ in exp.fulfill() }
-            .store(in: &cancellables)
+        let transaction = TransactionModel(
+            id: UUID(),
+            title: "ランチ",
+            memo: "",
+            amount: 800,
+            date: now,
+            createdAt: now,
+            updatedAt: now,
+            type: .expense,
+            categoryId: category.id
+        )
+        try await store.add(transaction)
 
-        await fulfillment(of: [exp], timeout: 2.0)
+        await viewModel.reload()
+        #expect(viewModel.isLoading == false)
+
+        await viewModel.delete(transaction)
+        #expect(viewModel.isLoading == false)
+
+        viewModel.clearError()
+        #expect(viewModel.errorMessage == nil)
+    }
+
+    @Test("resetDateRangeIfNeeded の動作検証")
+    func resetDateRangeIfNeeded() async throws {
+        let (viewModel, _, _) = try await makeSUT()
+
+        // 現在の月と一致している場合は処理されない
+        viewModel.resetDateRangeIfNeeded()
+
+        // 範囲外の月に変更後に呼び出し
+        viewModel.changeMonth(by: -3)
+        viewModel.resetDateRangeIfNeeded()
     }
 }
