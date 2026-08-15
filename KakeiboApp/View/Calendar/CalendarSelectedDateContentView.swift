@@ -82,7 +82,9 @@ struct CalendarSelectedDateContentView: View {
                 }
                 .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                     Button(role: .destructive) {
-                        calendarViewModel.delete(transaction)
+                        Task {
+                            await calendarViewModel.delete(transaction)
+                        }
                     } label: {
                         Label("", systemImage: "trash")
                     }

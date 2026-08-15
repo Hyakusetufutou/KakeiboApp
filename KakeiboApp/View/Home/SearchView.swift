@@ -76,7 +76,9 @@ struct SearchView: View {
                 }
                 .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                     Button(role: .destructive) {
-                        searchViewModel.deleteTransaction(transaction)
+                        Task {
+                            await searchViewModel.deleteTransaction(transaction)
+                        }
                     } label: {
                         Label("", systemImage: "trash")
                     }

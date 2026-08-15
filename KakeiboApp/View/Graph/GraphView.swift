@@ -73,7 +73,9 @@ struct GraphView: View {
                     transactionInputViewModel: transactionInputViewModel,
                     categoryID: categoryID,
                     onDeleteTransaction: { transaction in
-                        graphViewModel.deleteTransaction(transaction)
+                        Task {
+                            await graphViewModel.deleteTransaction(transaction)
+                        }
                     }
                 )
             }

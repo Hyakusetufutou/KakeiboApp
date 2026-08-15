@@ -169,7 +169,7 @@ final class HomeViewModelTests: XCTestCase {
         categoryStore.stubbedCategories = [category]
         viewModel = makeViewModel()
 
-        let found = viewModel.categoryFind(id: category.id)
+        let found = viewModel.findCategory(id: category.id)
 
         XCTAssertEqual(found?.id, category.id)
     }
@@ -178,7 +178,7 @@ final class HomeViewModelTests: XCTestCase {
         categoryStore.stubbedCategories = [.stub()]
         viewModel = makeViewModel()
 
-        let found = viewModel.categoryFind(id: UUID())
+        let found = viewModel.findCategory(id: UUID())
 
         XCTAssertNil(found)
     }

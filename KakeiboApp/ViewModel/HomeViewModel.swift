@@ -51,20 +51,18 @@ final class HomeViewModel: ObservableObject {
 
     // MARK: - Public Methods
 
-    func categoryFind(id: UUID) -> CategoryModel? {
+    func findCategory(id: UUID) -> CategoryModel? {
         categoryStore.find(id: id)
     }
 
-    func deleteTransaction(_ transaction: TransactionModel) {
+    func deleteTransaction(_ transaction: TransactionModel) async {
         isLoading = true
         defer { isLoading = false }
 
-        Task {
-            do {
-                try await transactionStore.delete(transaction)
-            } catch {
-                errorMessage = ErrorMapper.message(for: error)
-            }
+        do {
+            try await transactionStore.delete(transaction)
+        } catch {
+            errorMessage = ErrorMapper.message(for: error)
         }
     }
 
@@ -86,7 +84,7 @@ final class HomeViewModel: ObservableObject {
     func resetDateRangeIfNeeded(now: Date = Date()) {
         guard isDefaultDateRange else { return }
 
-        guard !Calendar.current.isDate(now, equalTo: dateRange.start, toGranularity: .month)
+        guard !Calendar.current.isDate(now, equalTo: dateRange.startDate, toGranularity: .month)
         else { return }
         dateRange = DateRange()
     }

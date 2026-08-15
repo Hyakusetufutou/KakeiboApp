@@ -27,13 +27,11 @@ final class CategoryListViewModel: ObservableObject {
 
     // MARK: - Public Methods
 
-    func delete(_ category: CategoryModel) {
-        Task {
-            do {
-                try await categoryStore.delete(category)
-            } catch {
-                errorMessage = ErrorMapper.message(for: error)
-            }
+    func delete(_ category: CategoryModel) async {
+        do {
+            try await categoryStore.delete(category)
+        } catch {
+            errorMessage = ErrorMapper.message(for: error)
         }
     }
 
