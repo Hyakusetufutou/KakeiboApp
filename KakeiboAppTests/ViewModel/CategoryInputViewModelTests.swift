@@ -25,9 +25,9 @@ struct CategoryInputViewModelTests {
     // MARK: - 画面表示・初期化のテスト
 
     @Test("presentInputView で新規作成と編集モードが切り替わること")
-    func presentInputView() {
+    func presentInputView() throws {
         let (viewModel, _) = makeSUT()
-        let category = CategoryModel(
+        let category = try CategoryModel(
             id: UUID(),
             name: "趣味",
             color: .purple,
@@ -83,7 +83,7 @@ struct CategoryInputViewModelTests {
     @Test("編集モードでの save() 成功時にカテゴリが更新されること")
     func saveUpdatedCategorySuccess() async throws {
         let (viewModel, store) = makeSUT()
-        let category = CategoryModel(
+        let category = try CategoryModel(
             id: UUID(),
             name: "外食",
             color: .orange,

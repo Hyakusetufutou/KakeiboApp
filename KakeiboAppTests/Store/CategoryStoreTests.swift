@@ -44,7 +44,7 @@ struct CategoryStoreTests {
     func addAndFindCategory() async throws {
         // Given
         let (store, _) = makeSUT(autoLoad: false)
-        let category = CategoryModel(
+        let category = try CategoryModel(
             id: UUID(),
             name: "食費",
             color: .red,
@@ -65,7 +65,7 @@ struct CategoryStoreTests {
     func deleteDefaultCategoryThrowsError() async throws {
         // Given
         let (store, _) = makeSUT(autoLoad: false)
-        let defaultCategory = CategoryModel(
+        let defaultCategory = try CategoryModel(
             id: UUID(),
             name: "固定費",
             color: .blue,
@@ -84,7 +84,7 @@ struct CategoryStoreTests {
     func deleteCustomCategorySuccess() async throws {
         // Given
         let (store, _) = makeSUT(autoLoad: false)
-        let customCategory = CategoryModel(
+        let customCategory = try CategoryModel(
             id: UUID(),
             name: "趣味",
             color: .green,
@@ -104,7 +104,7 @@ struct CategoryStoreTests {
     func updateCustomCategorySuccess() async throws {
         // Given
         let (store, _) = makeSUT(autoLoad: false)
-        let customCategory = CategoryModel(
+        let customCategory = try CategoryModel(
             id: UUID(),
             name: "趣味",
             color: .green,
@@ -114,7 +114,7 @@ struct CategoryStoreTests {
         try await store.add(customCategory)
 
         // When
-        let updateCategory = CategoryModel(
+        let updateCategory = try CategoryModel(
             id: customCategory.id,
             name: "将棋",
             color: .blue,

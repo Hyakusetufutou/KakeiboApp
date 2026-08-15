@@ -25,7 +25,7 @@ struct CategoryListViewModelTests {
     @Test("Store のカテゴリ変更が categories にバインドされること")
     func categoriesBinding() async throws {
         let (viewModel, store) = makeSUT()
-        let category = CategoryModel(
+        let category = try CategoryModel(
             id: UUID(),
             name: "交通費",
             color: .blue,
@@ -43,7 +43,7 @@ struct CategoryListViewModelTests {
     @Test("デフォルトカテゴリ削除時のエラーハンドリングと clearError() の検証")
     func deleteErrorAndClearError() async throws {
         let (viewModel, store) = makeSUT()
-        let defaultCategory = CategoryModel(
+        let defaultCategory = try CategoryModel(
             id: UUID(),
             name: "固定費",
             color: .red,

@@ -24,7 +24,7 @@ struct CategoryRepositoryTests {
     func addAndFetch() async throws {
         // Given
         let (repository, _) = makeSUT()
-        let model = CategoryModel(
+        let model = try CategoryModel(
             id: UUID(),
             name: "食費",
             color: .red,
@@ -48,21 +48,21 @@ struct CategoryRepositoryTests {
     func fetchAllSortedByName() async throws {
         // Given
         let (repository, _) = makeSUT()
-        let categoryA = CategoryModel(
+        let categoryA = try CategoryModel(
             id: UUID(),
             name: "日用品",
             color: .blue,
             type: .expense,
             isDefault: false
         )
-        let categoryB = CategoryModel(
+        let categoryB = try CategoryModel(
             id: UUID(),
             name: "食費",
             color: .red,
             type: .expense,
             isDefault: false
         )
-        let categoryC = CategoryModel(
+        let categoryC = try CategoryModel(
             id: UUID(),
             name: "交通費",
             color: .green,
@@ -89,7 +89,7 @@ struct CategoryRepositoryTests {
     func updateCategory() async throws {
         // Given
         let (repository, _) = makeSUT()
-        let initialModel = CategoryModel(
+        let initialModel = try CategoryModel(
             id: UUID(),
             name: "外食",
             color: .orange,
@@ -99,7 +99,7 @@ struct CategoryRepositoryTests {
         try await repository.add(initialModel)
 
         // When
-        let updatedModel = CategoryModel(
+        let updatedModel = try CategoryModel(
             id: initialModel.id,
             name: "外食・カフェ",
             color: .yellow,
@@ -119,7 +119,7 @@ struct CategoryRepositoryTests {
     func deleteCategory() async throws {
         // Given
         let (repository, _) = makeSUT()
-        let model = CategoryModel(
+        let model = try CategoryModel(
             id: UUID(),
             name: "趣味",
             color: .purple,

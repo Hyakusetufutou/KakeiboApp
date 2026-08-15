@@ -22,7 +22,7 @@ struct SearchViewModelTests {
         let categoryStore = CategoryStore(repository: categoryRepo, autoLoad: false)
         let transactionStore = TransactionStore(repository: transactionRepo)
 
-        let dummyCategory = CategoryModel(
+        let dummyCategory = try CategoryModel(
             id: UUID(),
             name: "食費",
             color: .red,
@@ -45,7 +45,7 @@ struct SearchViewModelTests {
         let (viewModel, transactionStore, category) = try await makeSUT()
         let now = Date()
 
-        let transaction = TransactionModel(
+        let transaction = try TransactionModel(
             id: UUID(),
             title: "本屋で専門書購入",
             memo: "Swift本",
@@ -100,7 +100,7 @@ struct SearchViewModelTests {
 
         #expect(viewModel.findCategory(id: category.id)?.id == category.id)
 
-        let transaction = TransactionModel(
+        let transaction = try TransactionModel(
             id: UUID(),
             title: "本",
             memo: "",

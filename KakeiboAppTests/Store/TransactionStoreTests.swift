@@ -20,7 +20,7 @@ struct TransactionStoreTests {
         let categoryRepository = CategoryRepository(container: container)
         let transactionRepository = TransactionRepository(container: container)
 
-        let dummyCategory = CategoryModel(
+        let dummyCategory = try CategoryModel(
             id: UUID(),
             name: "食費",
             color: .red,
@@ -43,7 +43,7 @@ struct TransactionStoreTests {
         let start = calendar.date(byAdding: .day, value: -1, to: now)!
         let end = calendar.date(byAdding: .day, value: 5, to: now)!
 
-        let transaction = TransactionModel(
+        let transaction = try TransactionModel(
             id: UUID(),
             title: "スーパー",
             memo: "買い物",
@@ -92,7 +92,7 @@ struct TransactionStoreTests {
         let (store, category) = try await makeSUT()
         let now = Date()
 
-        let t1 = TransactionModel(
+        let t1 = try TransactionModel(
             id: UUID(),
             title: "カフェラテ",
             memo: "スタバ",
@@ -125,7 +125,7 @@ struct TransactionStoreTests {
         // Range を設定してロード
         try await store.load(from: start, to: end)
 
-        let transaction = TransactionModel(
+        let transaction = try TransactionModel(
             id: UUID(),
             title: "本",
             memo: "技術書",
@@ -162,7 +162,7 @@ struct TransactionStoreTests {
         // Range を設定してロード
         try await store.load(from: start, to: end)
 
-        let transaction = TransactionModel(
+        let transaction = try TransactionModel(
             id: UUID(),
             title: "本",
             memo: "技術書",
@@ -179,7 +179,7 @@ struct TransactionStoreTests {
 
         // When
         let updateDate = Date()
-        let updateTransaction = TransactionModel(
+        let updateTransaction = try TransactionModel(
             id: transaction.id,
             title: "棋書",
             memo: "将棋の本",
@@ -210,7 +210,7 @@ struct TransactionStoreTests {
 
     @Test("読み込み期間の更新確認")
     func updateloadedRangeCheck() async throws {
-        let (store, category) = try await makeSUT()
+        let (store, _) = try await makeSUT()
         let now = Date()
         let calendar = Calendar.current
         let start = calendar.date(byAdding: .day, value: -1, to: now)!

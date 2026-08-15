@@ -22,7 +22,7 @@ struct HomeViewModelTests {
         let categoryStore = CategoryStore(repository: categoryRepo, autoLoad: false)
         let transactionStore = TransactionStore(repository: transactionRepo)
 
-        let dummyCategory = CategoryModel(
+        let dummyCategory = try CategoryModel(
             id: UUID(),
             name: "食費",
             color: .red,
@@ -45,7 +45,7 @@ struct HomeViewModelTests {
         let (viewModel, transactionStore, category) = try await makeSUT()
         let now = Date()
 
-        let expenseTransaction = TransactionModel(
+        let expenseTransaction = try TransactionModel(
             id: UUID(),
             title: "ランチ",
             memo: "",
@@ -56,7 +56,7 @@ struct HomeViewModelTests {
             type: .expense,
             categoryId: category.id
         )
-        let incomeTransaction = TransactionModel(
+        let incomeTransaction = try TransactionModel(
             id: UUID(),
             title: "給料",
             memo: "",
@@ -99,7 +99,7 @@ struct HomeViewModelTests {
         #expect(viewModel.findCategory(id: category.id)?.id == category.id)
         #expect(viewModel.findCategory(id: UUID()) == nil)
 
-        let transaction = TransactionModel(
+        let transaction = try TransactionModel(
             id: UUID(),
             title: "カフェ",
             memo: "",

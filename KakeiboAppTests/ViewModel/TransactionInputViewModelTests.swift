@@ -24,7 +24,7 @@ struct TransactionInputViewModelTests {
         let categoryStore = CategoryStore(repository: categoryRepo, autoLoad: false)
         let transactionStore = TransactionStore(repository: transactionRepo)
 
-        let dummyCategory = CategoryModel(
+        let dummyCategory = try CategoryModel(
             id: UUID(),
             name: "食費",
             color: .red,
@@ -125,7 +125,7 @@ struct TransactionInputViewModelTests {
     func editAndRestoreFormSuccess() async throws {
         let (viewModel, store, dummyCategory) = try await makeSUT()
         let now = Date()
-        let transaction = TransactionModel(
+        let transaction = try TransactionModel(
             id: UUID(),
             title: "旧タイトル",
             memo: "メモ",

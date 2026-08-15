@@ -22,7 +22,7 @@ struct CalendarViewModelTests {
         let categoryStore = CategoryStore(repository: categoryRepo, autoLoad: false)
         let transactionStore = TransactionStore(repository: transactionRepo)
 
-        let dummyCategory = CategoryModel(
+        let dummyCategory = try CategoryModel(
             id: UUID(),
             name: "食費",
             color: .red,
@@ -45,7 +45,7 @@ struct CalendarViewModelTests {
         let (viewModel, transactionStore, category) = try await makeSUT()
         let now = Date()
 
-        let t1 = TransactionModel(
+        let t1 = try TransactionModel(
             id: UUID(),
             title: "コーヒー",
             memo: "",
@@ -56,7 +56,7 @@ struct CalendarViewModelTests {
             type: .expense,
             categoryId: category.id
         )
-        let t2 = TransactionModel(
+        let t2 = try TransactionModel(
             id: UUID(),
             title: "本",
             memo: "",
@@ -107,7 +107,7 @@ struct CalendarViewModelTests {
 
         #expect(viewModel.category(for: category.id)?.id == category.id)
 
-        let transaction = TransactionModel(
+        let transaction = try TransactionModel(
             id: UUID(),
             title: "ランチ",
             memo: "",

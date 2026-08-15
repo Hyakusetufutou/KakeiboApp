@@ -19,7 +19,7 @@ struct TransactionRepositoryTests {
         let categoryRepository = CategoryRepository(container: container)
         let transactionRepository = TransactionRepository(container: container)
 
-        let dummyCategory = CategoryModel(
+        let dummyCategory = try CategoryModel(
             id: UUID(),
             name: "食費",
             color: .red,
@@ -47,7 +47,7 @@ struct TransactionRepositoryTests {
             return
         }
 
-        let transaction1 = TransactionModel(
+        let transaction1 = try TransactionModel(
             id: UUID(),
             title: "スーパーで買い物",
             memo: "食材",
@@ -59,7 +59,7 @@ struct TransactionRepositoryTests {
             categoryId: dummyCategory.id
         )
 
-        let transaction2 = TransactionModel(
+        let transaction2 = try TransactionModel(
             id: UUID(),
             title: "外食",
             memo: "ディナー",
@@ -89,7 +89,7 @@ struct TransactionRepositoryTests {
         let (repository, dummyCategory) = try await makeSUT()
         let now = Date()
 
-        let t1 = TransactionModel(
+        let t1 = try TransactionModel(
             id: UUID(),
             title: "コンビニでお菓子",
             memo: "おやつ",
@@ -101,7 +101,7 @@ struct TransactionRepositoryTests {
             categoryId: dummyCategory.id
         )
 
-        let t2 = TransactionModel(
+        let t2 = try TransactionModel(
             id: UUID(),
             title: "カフェ",
             memo: "コンビニの近く",
@@ -113,7 +113,7 @@ struct TransactionRepositoryTests {
             categoryId: dummyCategory.id
         )
 
-        let t3 = TransactionModel(
+        let t3 = try TransactionModel(
             id: UUID(),
             title: "書店",
             memo: "技術書",
@@ -146,7 +146,7 @@ struct TransactionRepositoryTests {
         let (repository, dummyCategory) = try await makeSUT()
         let now = Date()
 
-        let initialModel = TransactionModel(
+        let initialModel = try TransactionModel(
             id: UUID(),
             title: "ランチ",
             memo: "ラーメン",
@@ -160,7 +160,7 @@ struct TransactionRepositoryTests {
         try await repository.add(initialModel)
 
         // When
-        let updatedModel = TransactionModel(
+        let updatedModel = try TransactionModel(
             id: initialModel.id,
             title: "豪華ランチ",
             memo: "ラーメン（トッピング追加）",
@@ -189,7 +189,7 @@ struct TransactionRepositoryTests {
         let (repository, dummyCategory) = try await makeSUT()
         let now = Date()
 
-        let model = TransactionModel(
+        let model = try TransactionModel(
             id: UUID(),
             title: "コーヒー",
             memo: "",

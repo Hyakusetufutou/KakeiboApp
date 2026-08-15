@@ -71,7 +71,11 @@ struct CategoryModel: Identifiable, Hashable {
         color: CategoryColor,
         type: TransactionType,
         isDefault: Bool
-    ) {
+    ) throws {
+
+        guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw CustomError.invalidData
+        }
         self.id = id
         self.name = name
         self.color = color
@@ -83,50 +87,51 @@ struct CategoryModel: Identifiable, Hashable {
 extension CategoryModel {
     static let defaults: [CategoryModel] = [
         // 支出
-        CategoryModel(
+        try! CategoryModel(
             id: UUID(uuidString: "A0000001-0000-0000-0000-000000000000")!,
             name: "食費",
             color: .orange,
             type: .expense,
             isDefault: true
         ),
-        CategoryModel(
+        try! CategoryModel(
             id: UUID(uuidString: "A0000002-0000-0000-0000-000000000000")!,
             name: "交通費",
             color: .blue,
             type: .expense,
             isDefault: true
         ),
-        CategoryModel(
+        try! CategoryModel(
             id: UUID(uuidString: "A0000003-0000-0000-0000-000000000000")!,
             name: "日用品",
             color: .green,
             type: .expense,
             isDefault: true
         ),
-        CategoryModel(
+        try! CategoryModel(
             id: UUID(uuidString: "A0000004-0000-0000-0000-000000000000")!,
             name: "趣味",
             color: .purple,
             type: .expense,
             isDefault: true
         ),
-        CategoryModel(
+        try! CategoryModel(
             id: UUID(uuidString: "A0000005-0000-0000-0000-000000000000")!,
             name: "その他",
             color: .red,
             type: .expense,
             isDefault: true
         ),
+
         // 収入
-        CategoryModel(
+        try! CategoryModel(
             id: UUID(uuidString: "B0000001-0000-0000-0000-000000000000")!,
             name: "給与",
             color: .teal,
             type: .income,
             isDefault: true
         ),
-        CategoryModel(
+        try! CategoryModel(
             id: UUID(uuidString: "B0000002-0000-0000-0000-000000000000")!,
             name: "副業",
             color: .indigo,
@@ -155,7 +160,7 @@ extension CategoryEntity {
             throw CategoryMapperError.invalidType
         }
 
-        return CategoryModel(
+        return try CategoryModel(
             id: self.id,
             name: self.name,
             color: color,
