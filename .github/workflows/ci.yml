@@ -30,7 +30,7 @@ jobs:
   test:
     name: Build & Test
     runs-on: macos-15
-
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -45,4 +45,5 @@ jobs:
             -scheme KakeiboApp \
             -sdk iphonesimulator \
             -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
-            CODE_SIGNING_ALLOWED=NO
+            CODE_SIGNING_ALLOWED=NO \
+          | xcbeautify
