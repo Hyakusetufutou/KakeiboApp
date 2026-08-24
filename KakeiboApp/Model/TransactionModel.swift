@@ -46,7 +46,7 @@ struct TransactionModel: Identifiable, Hashable {
     }
 }
 
-enum TransactionType: String, CaseIterable, Identifiable {
+enum TransactionType: String, CaseIterable, Identifiable, Codable {
     case income = "収入"
     case expense = "支出"
 
