@@ -21,6 +21,14 @@ struct BackupCategoryModel: Codable {
     let color: CategoryColor
     let type: TransactionType
     let isDefault: Bool
+
+    init(from category: CategoryModel) {
+        self.id = category.id
+        self.name = category.name
+        self.color = category.color
+        self.type = category.type
+        self.isDefault = category.isDefault
+    }
 }
 
 struct BackupTransactionModel: Codable {
@@ -33,4 +41,16 @@ struct BackupTransactionModel: Codable {
     let updatedAt: Date
     let type: TransactionType
     let categoryId: UUID
+
+    init(from transaction: TransactionModel) {
+        self.id = transaction.id
+        self.title = transaction.title
+        self.memo = transaction.memo
+        self.amount = transaction.amount
+        self.date = transaction.date
+        self.createdAt = transaction.createdAt
+        self.updatedAt = transaction.updatedAt
+        self.type = transaction.type
+        self.categoryId = transaction.categoryId
+    }
 }
