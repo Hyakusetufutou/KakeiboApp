@@ -10,10 +10,8 @@ import CoreData
 
 // MARK: - Transaction Repository Protocol
 protocol TransactionRepositoryProtocol: Sendable {
-    func fetch(
-        from start: Date,
-        to end: Date,
-    ) async throws -> [TransactionModel]
+    func fetchAll() async throws -> [TransactionModel]
+    func fetch(from start: Date, to end: Date) async throws -> [TransactionModel]
     func search(text: String) async throws -> [TransactionModel]
     func add(_ model: TransactionModel) async throws
     func update(_ model: TransactionModel) async throws
@@ -26,6 +24,15 @@ actor TransactionRepository: TransactionRepositoryProtocol {
 
     init(container: NSPersistentContainer = PersistenceController.shared.container) {
         self.context = CoreDataRepositorySupport.makeBackgroundContext(from: container)
+    }
+
+    func fetchAll() async throws -> [TransactionModel] {
+        try await CoreDataRepositorySupport.perform(on: context) { context in
+            let request: NSFetchRequest<TransactionEntity> = TransactionEntity.fetchRequest()
+            request.sortDescriptors = Self.transactionSortDescriptors
+
+            return try context.fetch(request).map { try $0.toModel() }
+        }
     }
 
     func fetch(
