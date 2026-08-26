@@ -235,18 +235,9 @@ struct SettingView: View {
 }
 
 #Preview {
-    let backupRespository = BackupRepository()
-    let backupService = BackupService()
+    let factory = ViewModelFactory()
     SettingView(
-        settingViewModel: SettingViewModel(
-            createBackupUseCase: CreateBackupUseCase(
-                backupRepository: backupRespository,
-                backupService: backupService
-            ),
-            restoreBackupUseCase: RestoreBackupUseCase(
-                backupRepository: backupRespository,
-                backupService: backupService
-            )
-        )
+        settingViewModel: factory.settingViewModel
     )
+
 }

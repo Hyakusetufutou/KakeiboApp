@@ -14,6 +14,7 @@ protocol CategoryStoreProtocol {
     var categories: AnyPublisher<[CategoryModel], Never> { get }
     var errorPublisher: AnyPublisher<Error, Never> { get }
 
+    func reload() async
     func find(id: UUID) -> CategoryModel?
     func add(_ category: CategoryModel) async throws
     func update(_ category: CategoryModel) async throws
@@ -48,7 +49,7 @@ final class CategoryStore: CategoryStoreProtocol {
             Task {
                 do {
                     try await seedDefaultsIfNeeded()
-                    try await reload()
+                    await reload()
                 } catch {
                     errorSubject.send(error)
                 }
@@ -57,6 +58,14 @@ final class CategoryStore: CategoryStoreProtocol {
     }
 
     // MARK: - Actions
+    func reload() async {
+        do {
+            categoriesInternal = try await repository.fetchAll()
+        } catch {
+            errorSubject.send(error)
+        }
+    }
+
     func find(id: UUID) -> CategoryModel? {
         categoriesInternal.first { $0.id == id }
     }
@@ -84,13 +93,9 @@ final class CategoryStore: CategoryStoreProtocol {
 
     // MARK: - Private
 
-    private func reload() async throws {
-        categoriesInternal = try await repository.fetchAll()
-    }
-
     private func mutateAndReload(_ operation: () async throws -> Void) async throws {
         try await operation()
-        try await reload()
+        await reload()
     }
 
     private func seedDefaultsIfNeeded() async throws {

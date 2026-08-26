@@ -15,6 +15,7 @@ protocol TransactionStoreProtocol {
     var errorPublisher: AnyPublisher<Error, Never> { get }
 
     func load(from start: Date, to end: Date) async throws
+    func load() async
     func add(_ transaction: TransactionModel) async throws
     func update(_ transaction: TransactionModel) async throws
     func delete(_ transaction: TransactionModel) async throws
@@ -59,6 +60,19 @@ final class TransactionStore: TransactionStoreProtocol {
         )
     }
 
+    func load() async {
+        guard let range = loadedRange else { return }
+
+        do {
+            transactionsInternal = try await repository.fetch(
+                from: range.startDate,
+                to: range.endDate
+            )
+        } catch {
+            errorSubject.send(error)
+        }
+    }
+
     func add(_ transaction: TransactionModel) async throws {
         try await mutateAndReload {
             try await repository.add(transaction)
@@ -82,21 +96,6 @@ final class TransactionStore: TransactionStoreProtocol {
             return []
         }
         return try await repository.search(text: normalizedText)
-    }
-
-    // MARK: - Private
-
-    private func load() async {
-        guard let range = loadedRange else { return }
-
-        do {
-            transactionsInternal = try await repository.fetch(
-                from: range.startDate,
-                to: range.endDate
-            )
-        } catch {
-            errorSubject.send(error)
-        }
     }
 
     private func mutateAndReload(_ operation: () async throws -> Void) async throws {

@@ -50,7 +50,9 @@ final class ViewModelFactory: ObservableObject {
             restoreBackupUseCase: RestoreBackupUseCase(
                 backupRepository: backupRepository,
                 backupService: backupService
-            )
+            ),
+            categoryStore: categoryStore,
+            transactionStore: transactionStore
         )
         self.searchViewModel = SearchViewModel(
             categoryStore: categoryStore,

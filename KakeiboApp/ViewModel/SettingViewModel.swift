@@ -16,13 +16,19 @@ final class SettingViewModel: ObservableObject {
 
     private let createBackupUseCase: CreateBackupUseCaseProtocol
     private let restoreBackupUseCase: RestoreBackupUseCaseProtocol
+    private let categoryStore: CategoryStoreProtocol
+    private let transactionStore: TransactionStoreProtocol
 
     init(
         createBackupUseCase: CreateBackupUseCaseProtocol,
-        restoreBackupUseCase: RestoreBackupUseCaseProtocol
+        restoreBackupUseCase: RestoreBackupUseCaseProtocol,
+        categoryStore: CategoryStoreProtocol,
+        transactionStore: TransactionStoreProtocol
     ) {
         self.createBackupUseCase = createBackupUseCase
         self.restoreBackupUseCase = restoreBackupUseCase
+        self.transactionStore = transactionStore
+        self.categoryStore = categoryStore
     }
 
     func createBackup() async -> Data? {
@@ -51,6 +57,8 @@ final class SettingViewModel: ObservableObject {
 
         do {
             try await restoreBackupUseCase.execute(data: data)
+            await transactionStore.load()
+            await categoryStore.reload()
         } catch {
             errorMessage = ErrorMapper.message(for: error)
         }
