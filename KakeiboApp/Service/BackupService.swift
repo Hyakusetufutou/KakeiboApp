@@ -8,9 +8,9 @@
 
 import Foundation
 
-protocol BackupServiceProtocol {
+protocol BackupServiceProtocol: Sendable {
     func createBackUp(categories: [CategoryModel], transactions: [TransactionModel]) throws -> Data
-    func restoreBackup(from data: Data) throws -> BackupData
+    func decodeBackUp(from data: Data) throws -> BackupData
 }
 
 final class BackupService: BackupServiceProtocol {
@@ -29,7 +29,7 @@ final class BackupService: BackupServiceProtocol {
         return try encoder.encode(backup)
     }
 
-    func restoreBackup(from data: Data) throws -> BackupData {
+    func decodeBackUp(from data: Data) throws -> BackupData {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
 

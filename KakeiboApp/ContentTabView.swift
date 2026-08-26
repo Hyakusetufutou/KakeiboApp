@@ -26,6 +26,7 @@ struct ContentTabView: View {
     @StateObject private var homeViewModel: HomeViewModel
     @StateObject private var calendarViewModel: CalendarViewModel
     @StateObject private var graphViewModel: GraphViewModel
+    @StateObject private var settingViewModel: SettingViewModel
     @StateObject private var transactionInputViewModel: TransactionInputViewModel
     @StateObject private var categoryInputViewModel: CategoryInputViewModel
     @StateObject private var searchViewModel: SearchViewModel
@@ -35,6 +36,7 @@ struct ContentTabView: View {
         _homeViewModel = StateObject(wrappedValue: factory.homeViewModel)
         _calendarViewModel = StateObject(wrappedValue: factory.calendarViewModel)
         _graphViewModel = StateObject(wrappedValue: factory.graphViewModel)
+        _settingViewModel = StateObject(wrappedValue: factory.settingViewModel)
         _transactionInputViewModel = StateObject(wrappedValue: factory.transactionInputViewModel)
         _categoryInputViewModel = StateObject(wrappedValue: factory.categoryInputViewModel)
         _searchViewModel = StateObject(wrappedValue: factory.searchViewModel)
@@ -134,7 +136,7 @@ extension ContentTabView {
             }
             .tag(TabModel.graph)
 
-            SettingView()
+            SettingView(settingViewModel: settingViewModel)
                 .tabItem {
                     Label(TabModel.setting.title, systemImage: TabModel.setting.rawValue)
                 }

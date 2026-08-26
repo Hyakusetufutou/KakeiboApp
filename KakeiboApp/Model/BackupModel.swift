@@ -29,6 +29,16 @@ struct BackupCategoryModel: Codable {
         self.type = category.type
         self.isDefault = category.isDefault
     }
+
+    func toCategoryModel() throws -> CategoryModel {
+        return try CategoryModel(
+            id: self.id,
+            name: self.name,
+            color: self.color,
+            type: self.type,
+            isDefault: self.isDefault
+        )
+    }
 }
 
 struct BackupTransactionModel: Codable {
@@ -52,5 +62,19 @@ struct BackupTransactionModel: Codable {
         self.updatedAt = transaction.updatedAt
         self.type = transaction.type
         self.categoryId = transaction.categoryId
+    }
+
+    func toTransactionModel() throws -> TransactionModel {
+        return try TransactionModel(
+            id: self.id,
+            title: self.title,
+            memo: self.memo,
+            amount: self.amount,
+            date: self.date,
+            createdAt: self.createdAt,
+            updatedAt: self.updatedAt,
+            type: self.type,
+            categoryId: self.categoryId
+        )
     }
 }
