@@ -114,14 +114,4 @@ struct BackupDocumentTests {
 
         #expect(document.data == sampleData)
     }
-
-    @Test("nil分岐系: regularFileContents が nil の場合に空の Data がセットされるか")
-    func initWithNilRegularFileContentsFallback() {
-        // ディレクトリ形式の FileWrapper（regularFileContents が nil になるケース）
-        let directoryFileWrapper = FileWrapper(directoryWithFileWrappers: [:])
-
-        // nil 合体演算子 (?? Data()) のフォールバック処理のカバレッジ確認
-        let fallbackData = directoryFileWrapper.regularFileContents ?? Data()
-        #expect(fallbackData.isEmpty)
-    }
 }
