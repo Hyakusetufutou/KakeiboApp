@@ -31,6 +31,57 @@ struct TransactionRepositoryTests {
         return (transactionRepository, dummyCategory)
     }
 
+    @Test("すべてのトランザクションが日付の降順（新しい順）で全件取得できること")
+    func fetchAllTransactions() async throws {
+        // Given
+        let (repository, dummyCategory) = try await makeSUT()
+        let now = Date()
+        let calendar = Calendar.current
+
+        guard let yesterday = calendar.date(byAdding: .day, value: -1, to: now),
+            let tomorrow = calendar.date(byAdding: .day, value: 1, to: now)
+        else {
+            Issue.record("日付の生成に失敗しました")
+            return
+        }
+
+        let oldTransaction = try TransactionModel(
+            id: UUID(),
+            title: "昨日買った本",
+            memo: "書籍",
+            amount: 1500,
+            date: yesterday,
+            createdAt: now,
+            updatedAt: now,
+            type: .expense,
+            categoryId: dummyCategory.id
+        )
+
+        let newTransaction = try TransactionModel(
+            id: UUID(),
+            title: "明日払う予約商品",
+            memo: "予約",
+            amount: 3000,
+            date: tomorrow,
+            createdAt: now,
+            updatedAt: now,
+            type: .expense,
+            categoryId: dummyCategory.id
+        )
+
+        try await repository.add(oldTransaction)
+        try await repository.add(newTransaction)
+
+        // When
+        let results = try await repository.fetchAll()
+
+        // Then
+        #expect(results.count == 2)
+        // 日付の降順ソート順の検証 (tomorrow -> yesterday)
+        #expect(results.first?.id == newTransaction.id)
+        #expect(results.last?.id == oldTransaction.id)
+    }
+
     @Test("指定期間内のトランザクションのみが取得できること")
     func fetchDateRange() async throws {
         // Given
