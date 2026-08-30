@@ -13,6 +13,7 @@ final class ViewModelFactory: ObservableObject {
     @Published var homeViewModel: HomeViewModel
     @Published var graphViewModel: GraphViewModel
     @Published var calendarViewModel: CalendarViewModel
+    @Published var settingViewModel: SettingViewModel
     @Published var searchViewModel: SearchViewModel
     @Published var transactionInputViewModel: TransactionInputViewModel
     @Published var categoryInputViewModel: CategoryInputViewModel
@@ -21,11 +22,13 @@ final class ViewModelFactory: ObservableObject {
     init() {
         let categoryRepository = CategoryRepository()
         let transactionRepository = TransactionRepository()
+        let backupRepository = BackupRepository()
 
         let categoryStore = CategoryStore(repository: categoryRepository)
         let transactionStore = TransactionStore(
             repository: transactionRepository
         )
+        let backupService = BackupService()
 
         self.homeViewModel = HomeViewModel(
             categoryStore: categoryStore,
@@ -36,6 +39,18 @@ final class ViewModelFactory: ObservableObject {
             transactionStore: transactionStore
         )
         self.calendarViewModel = CalendarViewModel(
+            categoryStore: categoryStore,
+            transactionStore: transactionStore
+        )
+        self.settingViewModel = SettingViewModel(
+            createBackupUseCase: CreateBackupUseCase(
+                backupRepository: backupRepository,
+                backupService: backupService
+            ),
+            restoreBackupUseCase: RestoreBackupUseCase(
+                backupRepository: backupRepository,
+                backupService: backupService
+            ),
             categoryStore: categoryStore,
             transactionStore: transactionStore
         )
