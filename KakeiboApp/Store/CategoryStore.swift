@@ -19,6 +19,12 @@ protocol CategoryStoreProtocol {
     func add(_ category: CategoryModel) async throws
     func update(_ category: CategoryModel) async throws
     func delete(_ category: CategoryModel) async throws
+
+    func reorder(
+        for type: TransactionType,
+        from source: IndexSet,
+        to destination: Int
+    ) async throws
 }
 
 @MainActor
@@ -72,7 +78,17 @@ final class CategoryStore: CategoryStoreProtocol {
 
     func add(_ category: CategoryModel) async throws {
         try await mutateAndReload {
-            try await repository.add(category)
+            let categories = self.categoriesInternal.filter { $0.type == category.type }
+            let sortOrder = Int32(categories.count)
+            let newCategory = try CategoryModel(
+                id: category.id,
+                name: category.name,
+                color: category.color,
+                type: category.type,
+                isDefault: category.isDefault,
+                sortOrder: sortOrder
+            )
+            try await repository.add(newCategory)
         }
     }
 
@@ -88,6 +104,42 @@ final class CategoryStore: CategoryStoreProtocol {
                 throw CustomError.cannotDeletedefaultCategory
             }
             try await repository.delete(category)
+            let categories = currentCategories(for: category.type)
+            try await normalizeSortOrder(categories: categories)
+        }
+    }
+
+    func reorder(
+        for type: TransactionType,
+        from source: IndexSet,
+        to destination: Int
+    ) async throws {
+        try await mutateAndReload {
+            var categories = currentCategories(for: type)
+
+            print("変更前")
+            print(categories.map { "\($0.name): \($0.sortOrder)" })
+
+            categories.move(
+                fromOffsets: source,
+                toOffset: destination
+            )
+
+            print("move後")
+            print(categories.map { "\($0.name): \($0.sortOrder)" })
+
+            for (index, category) in categories.enumerated() {
+                let updated = try CategoryModel(
+                    id: category.id,
+                    name: category.name,
+                    color: category.color,
+                    type: category.type,
+                    isDefault: category.isDefault,
+                    sortOrder: Int32(index)
+                )
+
+                try await repository.update(updated)
+            }
         }
     }
 
@@ -108,5 +160,26 @@ final class CategoryStore: CategoryStoreProtocol {
         for category in missingDefaults {
             try await repository.add(category)
         }
+    }
+
+    private func normalizeSortOrder(
+        categories: [CategoryModel]
+    ) async throws {
+        for (index, category) in categories.enumerated() {
+            let updated = try CategoryModel(
+                id: category.id,
+                name: category.name,
+                color: category.color,
+                type: category.type,
+                isDefault: category.isDefault,
+                sortOrder: Int32(index)
+            )
+
+            try await repository.update(updated)
+        }
+    }
+
+    private func currentCategories(for type: TransactionType) -> [CategoryModel] {
+        self.categoriesInternal.filter { $0.type == type }
     }
 }

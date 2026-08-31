@@ -21,6 +21,7 @@ struct BackupCategoryModel: Codable {
     let color: CategoryColor
     let type: TransactionType
     let isDefault: Bool
+    let sortOrder: Int32
 
     init(from category: CategoryModel) {
         self.id = category.id
@@ -28,6 +29,7 @@ struct BackupCategoryModel: Codable {
         self.color = category.color
         self.type = category.type
         self.isDefault = category.isDefault
+        self.sortOrder = category.sortOrder
     }
 
     func toCategoryModel() throws -> CategoryModel {
@@ -36,7 +38,8 @@ struct BackupCategoryModel: Codable {
             name: self.name,
             color: self.color,
             type: self.type,
-            isDefault: self.isDefault
+            isDefault: self.isDefault,
+            sortOrder: self.sortOrder
         )
     }
 }

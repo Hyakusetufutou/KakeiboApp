@@ -28,7 +28,7 @@ actor CategoryRepository: CategoryRepositoryProtocol {
         try await CoreDataRepositorySupport.perform(on: context) { context in
             let request: NSFetchRequest<CategoryEntity> = CategoryEntity.fetchRequest()
             request.sortDescriptors = [
-                NSSortDescriptor(keyPath: \CategoryEntity.name, ascending: true)
+                NSSortDescriptor(keyPath: \CategoryEntity.sortOrder, ascending: true)
             ]
             return try context.fetch(request).map { try $0.toModel() }
         }
@@ -88,5 +88,6 @@ actor CategoryRepository: CategoryRepositoryProtocol {
         entity.color = model.color.rawValue
         entity.type = model.type.rawValue
         entity.isDefault = model.isDefault
+        entity.sortOrder = model.sortOrder
     }
 }

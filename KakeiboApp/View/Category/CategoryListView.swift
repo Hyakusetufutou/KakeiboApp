@@ -55,8 +55,20 @@ struct CategoryListView: View {
                             categoryListViewModel: categoryListViewModel
                         )
                     }
+                    .onMove { source, destination in
+                        Task {
+                            categoryListViewModel.move(
+                                for: type,
+                                from: source,
+                                to: destination
+                            )
+                        }
+                    }
                 }
                 .listStyle(.insetGrouped)
+                .toolbar {
+                    EditButton()
+                }
             }
         }
     }
