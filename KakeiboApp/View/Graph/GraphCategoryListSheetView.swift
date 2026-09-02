@@ -25,6 +25,16 @@ struct GraphCategoryListSheetView: View {
             .navigationTitle("カテゴリ")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    EditButton()
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        categoryInputViewModel.presentInputView(type: selectedType)
+                    } label: {
+                        Image(systemName: "plus")
+                    }
+                }
                 ToolbarItem(placement: .confirmationAction) {
                     Button {
                         isPresentCategoryList = false

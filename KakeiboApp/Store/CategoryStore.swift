@@ -117,16 +117,10 @@ final class CategoryStore: CategoryStoreProtocol {
         try await mutateAndReload {
             var categories = currentCategories(for: type)
 
-            print("変更前")
-            print(categories.map { "\($0.name): \($0.sortOrder)" })
-
             categories.move(
                 fromOffsets: source,
                 toOffset: destination
             )
-
-            print("move後")
-            print(categories.map { "\($0.name): \($0.sortOrder)" })
 
             for (index, category) in categories.enumerated() {
                 let updated = try CategoryModel(
