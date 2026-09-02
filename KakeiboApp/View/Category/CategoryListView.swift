@@ -44,13 +44,11 @@ struct CategoryListView: View {
                         )
                     }
                     .onMove { source, destination in
-                        Task {
-                            categoryListViewModel.move(
-                                for: type,
-                                from: source,
-                                to: destination
-                            )
-                        }
+                        categoryListViewModel.move(
+                            for: type,
+                            from: source,
+                            to: destination
+                        )
                     }
                 }
                 .listStyle(.insetGrouped)
