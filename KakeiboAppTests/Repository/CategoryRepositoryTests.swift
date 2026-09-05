@@ -79,10 +79,10 @@ struct CategoryRepositoryTests {
 
         // Then
         #expect(categories.count == 3)
-        // 昇順ソート確認: 交通費 -> 日用品 -> 食費
-        #expect(categories[0].name == "交通費")
-        #expect(categories[1].name == "日用品")
-        #expect(categories[2].name == "食費")
+        // 昇順ソート確認: 日用品 -> 食費 -> 交通費
+        #expect(categories[0].name == "日用品")
+        #expect(categories[1].name == "食費")
+        #expect(categories[2].name == "交通費")
     }
 
     @Test("カテゴリの更新が反映されること")

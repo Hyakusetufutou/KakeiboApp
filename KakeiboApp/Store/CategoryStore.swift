@@ -104,7 +104,7 @@ final class CategoryStore: CategoryStoreProtocol {
                 throw CustomError.cannotDeletedefaultCategory
             }
             try await repository.delete(category)
-            let categories = currentCategories(for: category.type)
+            let categories = currentCategories(for: category.type).filter { $0.id != category.id }
             try await normalizeSortOrder(categories: categories)
         }
     }
