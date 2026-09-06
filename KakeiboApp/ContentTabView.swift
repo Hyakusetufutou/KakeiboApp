@@ -15,6 +15,7 @@ struct ContentTabView: View {
     @AppStorage("isAppLockEnabled") private var isAppLockEnabled = false
     @AppStorage("lockWhenAppGoesBackground") private var lockWhenAppGoesBackground = false
     @AppStorage("appearance") private var appearanceRawValue = AppAppearance.system.rawValue
+    @AppStorage("isFirstTime") private var isFirstTime: Bool = true
 
     private var appearance: AppAppearance {
         AppAppearance(rawValue: appearanceRawValue) ?? .system
@@ -81,6 +82,10 @@ struct ContentTabView: View {
                 searchViewModel: searchViewModel,
                 transactionInputViewModel: transactionInputViewModel
             )
+        }
+        .sheet(isPresented: $isFirstTime) {
+            IntroScreen()
+                .interactiveDismissDisabled()
         }
         .onAppear {
             if isAppLockEnabled {
