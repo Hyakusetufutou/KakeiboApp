@@ -19,18 +19,6 @@ struct CategoryListView: View {
         categoryList
             .navigationTitle("\(type.rawValue)カテゴリ")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button {
-                        withAnimation(.snappy) {
-                            categoryInputViewModel.presentInputView(type: type)
-                        }
-                    } label: {
-                        Image(systemName: "plus")
-                    }
-                    .accessibilityLabel("カテゴリを追加")
-                }
-            }
     }
 
     private var categoryList: some View {
@@ -53,6 +41,13 @@ struct CategoryListView: View {
                             type: type,
                             categoryInputViewModel: categoryInputViewModel,
                             categoryListViewModel: categoryListViewModel
+                        )
+                    }
+                    .onMove { source, destination in
+                        categoryListViewModel.move(
+                            for: type,
+                            from: source,
+                            to: destination
                         )
                     }
                 }

@@ -57,6 +57,10 @@ final class MockCategoryStore: CategoryStoreProtocol {
     func add(_ category: CategoryModel) async throws {}
     func update(_ category: CategoryModel) async throws {}
     func delete(_ category: CategoryModel) async throws {}
+    func reorder(for type: TransactionType, from source: IndexSet, to destination: Int) async throws
+    {
+
+    }
 }
 
 @MainActor

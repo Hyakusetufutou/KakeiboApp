@@ -64,13 +64,15 @@ struct CategoryModel: Identifiable, Hashable {
     let color: CategoryColor
     let type: TransactionType
     let isDefault: Bool
+    let sortOrder: Int32
 
     init(
         id: UUID = UUID(),
         name: String,
         color: CategoryColor,
         type: TransactionType,
-        isDefault: Bool
+        isDefault: Bool,
+        sortOrder: Int32 = 0
     ) throws {
 
         guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
@@ -81,6 +83,7 @@ struct CategoryModel: Identifiable, Hashable {
         self.color = color
         self.type = type
         self.isDefault = isDefault
+        self.sortOrder = sortOrder
     }
 }
 
@@ -93,35 +96,40 @@ extension CategoryModel {
             name: "食費",
             color: .orange,
             type: .expense,
-            isDefault: true
+            isDefault: true,
+            sortOrder: 0
         ),
         try! CategoryModel(
             id: UUID(uuidString: "A0000002-0000-0000-0000-000000000000")!,
             name: "交通費",
             color: .blue,
             type: .expense,
-            isDefault: true
+            isDefault: true,
+            sortOrder: 1
         ),
         try! CategoryModel(
             id: UUID(uuidString: "A0000003-0000-0000-0000-000000000000")!,
             name: "日用品",
             color: .green,
             type: .expense,
-            isDefault: true
+            isDefault: true,
+            sortOrder: 2
         ),
         try! CategoryModel(
             id: UUID(uuidString: "A0000004-0000-0000-0000-000000000000")!,
             name: "趣味",
             color: .purple,
             type: .expense,
-            isDefault: true
+            isDefault: true,
+            sortOrder: 3
         ),
         try! CategoryModel(
             id: UUID(uuidString: "A0000005-0000-0000-0000-000000000000")!,
             name: "その他",
             color: .red,
             type: .expense,
-            isDefault: true
+            isDefault: true,
+            sortOrder: 4
         ),
 
         // 収入
@@ -130,14 +138,16 @@ extension CategoryModel {
             name: "給与",
             color: .teal,
             type: .income,
-            isDefault: true
+            isDefault: true,
+            sortOrder: 0
         ),
         try! CategoryModel(
             id: UUID(uuidString: "B0000002-0000-0000-0000-000000000000")!,
             name: "副業",
             color: .indigo,
             type: .income,
-            isDefault: true
+            isDefault: true,
+            sortOrder: 1
         ),
     ]
 }
@@ -166,7 +176,8 @@ extension CategoryEntity {
             name: self.name,
             color: color,
             type: type,
-            isDefault: self.isDefault
+            isDefault: self.isDefault,
+            sortOrder: self.sortOrder
         )
     }
 }

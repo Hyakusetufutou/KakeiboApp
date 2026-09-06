@@ -39,6 +39,16 @@ final class CategoryListViewModel: ObservableObject {
         errorMessage = nil
     }
 
+    func move(for type: TransactionType, from source: IndexSet, to destination: Int) {
+        Task {
+            do {
+                try await categoryStore.reorder(for: type, from: source, to: destination)
+            } catch {
+                errorMessage = ErrorMapper.message(for: error)
+            }
+        }
+    }
+
     // MARK: - Private Methods
 
     private func bindCategories() {

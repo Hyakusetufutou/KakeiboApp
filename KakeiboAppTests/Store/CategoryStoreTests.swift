@@ -89,11 +89,12 @@ struct CategoryStoreTests {
             name: "趣味",
             color: .green,
             type: .expense,
-            isDefault: false
+            isDefault: false,
+            sortOrder: 1
         )
+
         try await store.add(customCategory)
 
-        // When
         try await store.delete(customCategory)
 
         // Then
@@ -131,4 +132,35 @@ struct CategoryStoreTests {
         #expect(fetchedCategory?.isDefault == updateCategory.isDefault)
     }
 
+    @Test("reorder を実行した際に正しく並び替えが行われ、sortOrder が更新されること")
+    func reorderCategoriesSuccess() async throws {
+        // Given
+        let (store, _) = makeSUT(autoLoad: false)
+        let category1 = try CategoryModel(
+            id: UUID(),
+            name: "食費",
+            color: .red,
+            type: .expense,
+            isDefault: false
+        )
+        let category2 = try CategoryModel(
+            id: UUID(),
+            name: "日用品",
+            color: .blue,
+            type: .expense,
+            isDefault: false
+        )
+        try await store.add(category1)
+        try await store.add(category2)
+
+        // When (0番目の要素を1番目へ移動)
+        try await store.reorder(for: .expense, from: IndexSet(integer: 0), to: 2)
+
+        // Then
+        let reorderedCategory1 = store.find(id: category1.id)
+        let reorderedCategory2 = store.find(id: category2.id)
+
+        #expect(reorderedCategory1?.sortOrder == 1)
+        #expect(reorderedCategory2?.sortOrder == 0)
+    }
 }
