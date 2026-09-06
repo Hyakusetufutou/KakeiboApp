@@ -45,5 +45,6 @@ jobs:
             -scheme KakeiboApp \
             -sdk iphonesimulator \
             -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
+            -parallel-testing-enabled NO \
             CODE_SIGNING_ALLOWED=NO \
           | xcbeautify
