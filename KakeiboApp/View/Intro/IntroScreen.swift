@@ -38,25 +38,25 @@ struct IntroScreen: View {
 
             VStack(alignment: .leading, spacing: 28) {
 
-                PointView(
+                pointView(
                     symbol: "plus.circle.fill",
                     title: "かんたん収支管理",
                     subTitle: "日々の収入や支出をすばやく記録できます。"
                 )
 
-                PointView(
+                pointView(
                     symbol: "chart.bar.fill",
                     title: "グラフで見える化",
                     subTitle: "支出の割合や推移をグラフで確認できます。"
                 )
 
-                PointView(
+                pointView(
                     symbol: "calendar",
                     title: "いつでも振り返り",
                     subTitle: "カレンダーや検索から過去の収支を確認できます。"
                 )
 
-                PointView(
+                pointView(
                     symbol: "arrow.clockwise.icloud",
                     title: "大切なデータをバックアップ",
                     subTitle: "家計データをバックアップして、いつでも復元できます。"
@@ -86,7 +86,7 @@ struct IntroScreen: View {
     }
 
     @ViewBuilder
-    private func PointView(
+    private func pointView(
         symbol: String,
         title: String,
         subTitle: String

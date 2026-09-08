@@ -110,6 +110,19 @@ struct SettingView: View {
                     }
                     .disabled(settingViewModel.isProcessing)
                 }
+
+                Section("サポート") {
+                    Link(destination: AppURL.formURL) {
+                        Label(
+                            "お問い合わせ",
+                            systemImage: "envelope"
+                        )
+                    }
+
+                    Link(destination: AppURL.privacyPolicyURL) {
+                        Label("プライバシーポリシー", systemImage: "hand.raised")
+                    }
+                }
             }
             .navigationTitle("設定")
         }
@@ -231,6 +244,25 @@ struct SettingView: View {
             settingViewModel.errorMessage =
                 ErrorMapper.message(for: error)
         }
+    }
+
+    private func openContactMail() {
+        let email = "kakeibo@example.com"
+        let subject = "Kakeiboへのお問い合わせ"
+
+        let encodedSubject = subject.addingPercentEncoding(
+            withAllowedCharacters: .urlQueryAllowed
+        )
+
+        guard
+            let url = URL(
+                string: "mailto:\(email)?subject=\(encodedSubject ?? "")"
+            )
+        else {
+            return
+        }
+
+        UIApplication.shared.open(url)
     }
 }
 
