@@ -149,7 +149,8 @@ struct LockView: View {
         case .biometryLockout: return "試行回数が多すぎます。パスコードで解除してください"
         case .passcodeNotSet: return "デバイスにパスコードが設定されていません"
         case .systemCancel: return ""
-        default: return "認証エラーが発生しました（コード: \(error.code.rawValue)）"
+        default: return ""
+        //        default: return "認証エラーが発生しました（コード: \(error.code.rawValue)）"
         }
     }
 }
