@@ -27,6 +27,7 @@ struct HomeView: View {
     var body: some View {
         NavigationStack {
             List {
+                titleSection
                 dateRangeSection
                 summarySection
                 controlSection
@@ -39,6 +40,7 @@ struct HomeView: View {
             .padding(.horizontal, 16)
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
+            .scrollIndicators(.hidden)
             .background(AppTheme.background)
             .refreshable {
                 await homeViewModel.reload()
@@ -50,8 +52,6 @@ struct HomeView: View {
                         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
                 }
             }
-            .navigationTitle(userName.isEmpty ? "ホーム" : "おかえりなさい、\(userName)さん")
-            .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
@@ -88,6 +88,32 @@ struct HomeView: View {
 
     // MARK: - Subviews (HomeView直下にとどめる軽量な表示)
 
+    private var titleSection: some View {
+        Section {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("ホーム")
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+
+                if !userName.isEmpty {
+                    Text("\(userName)さんおかえりなさい!")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .hSpacing(.leading)
+        }
+        .listRowSeparatorHiddenAndBackgroundClear()
+        .listRowInsets(
+            EdgeInsets(
+                top: 0,
+                leading: 0,
+                bottom: 0,
+                trailing: 0
+            )
+        )
+    }
+
     private var dateRangeSection: some View {
         Section {
             Text(
@@ -96,8 +122,7 @@ struct HomeView: View {
             .font(.caption)
             .foregroundStyle(.secondary)
         }
-        .listRowSeparator(.hidden)
-        .listRowBackground(Color.clear)
+        .listRowSeparatorHiddenAndBackgroundClear()
         .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 0, trailing: 0))
     }
 
@@ -108,8 +133,7 @@ struct HomeView: View {
                 expense: homeViewModel.transactionSummary.expense
             )
         }
-        .listRowSeparator(.hidden)
-        .listRowBackground(Color.clear)
+        .listRowSeparatorHiddenAndBackgroundClear()
         .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
     }
 
@@ -128,10 +152,8 @@ struct HomeView: View {
             }
             .padding(.top, 4)
         }
-        .listRowSeparator(.hidden)
-        .listRowBackground(Color.clear)
-        .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 8, trailing: 0))
-        .padding(.vertical, 8)
+        .listRowSeparatorHiddenAndBackgroundClear()
+        .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
     }
 
     // MARK: - Helpers

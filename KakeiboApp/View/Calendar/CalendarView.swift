@@ -22,26 +22,24 @@ struct CalendarView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                VStack(spacing: 0) {
-                    monthNavigationView
-                        .padding(.horizontal, 16)
-                        .padding(.top, 8)
 
-                    CalendarGridView(calendarViewModel: calendarViewModel)
-                        .padding(.horizontal, 16)
-                        .padding(.bottom, 12)
-                }
-                .background(AppTheme.background)
+            List {
+                monthNavigationView
+
+                CalendarGridView(calendarViewModel: calendarViewModel)
+                    .listRowSeparatorHiddenAndBackgroundClear()
+                    .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
 
                 CalendarSelectedDateContentView(
                     calendarViewModel: calendarViewModel,
                     transactionInputViewModel: transactionInputViewModel
                 )
-                .padding(.horizontal, 16)
-                .padding(.top, 16)
-                .padding(.bottom, 20)
+                .listRowSeparatorHiddenAndBackgroundClear()
+                .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
             }
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
+            .scrollIndicators(.hidden)
             .background(AppTheme.background)
             .navigationTitle("カレンダー")
             .navigationBarTitleDisplayMode(.inline)
@@ -49,9 +47,7 @@ struct CalendarView: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("今日") {
                         withAnimation(.snappy) {
-                            let today = Date()
-                            calendarViewModel.currentDate = today
-                            calendarViewModel.selectedDate = today
+                            calendarViewModel.goToToday()
                         }
                     }
                 }
@@ -99,6 +95,8 @@ struct CalendarView: View {
                     ) ?? calendarViewModel.currentDate
             }
         )
+        .listRowSeparatorHiddenAndBackgroundClear()
+        .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
     }
 
     private var errorAlertBinding: Binding<Bool> {

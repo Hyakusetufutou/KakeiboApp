@@ -38,7 +38,7 @@ struct CalendarSelectedDateContentView: View {
                         }
                         .frame(minHeight: 160)
                     } else {
-                        List {
+                        LazyVStack {
                             transactionListView(transactions: transactions)
                         }
                         .listStyle(.plain)
@@ -73,7 +73,7 @@ struct CalendarSelectedDateContentView: View {
                     category: calendarViewModel.category(for: transaction.categoryId)
                 )
                 .frame(maxWidth: .infinity)
-                .listRowSeparator(.hidden)
+                .listRowSeparatorHiddenAndBackgroundClear()
                 .listRowBackground(Color.clear)
                 .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
                 .contentShape(Rectangle())

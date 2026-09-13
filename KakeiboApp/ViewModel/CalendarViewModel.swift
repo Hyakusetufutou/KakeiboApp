@@ -39,6 +39,13 @@ final class CalendarViewModel: ObservableObject {
         dateRange = DateRange(start: newDate.startOfMonth, end: newDate.endOfMonth)
     }
 
+    func goToToday() {
+        let today = Date()
+        dateRange = DateRange(start: today.startOfMonth, end: today.endOfMonth)
+        currentDate = today
+        selectedDate = today
+    }
+
     func delete(_ transaction: TransactionModel) async {
         isLoading = true
         defer { isLoading = false }

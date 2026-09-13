@@ -66,8 +66,7 @@ struct TransactionListByCategory: View {
                         .fill(AppTheme.cardBackground)
                         .shadow(color: AppTheme.primaryText.opacity(0.06), radius: 2, y: 1)
                 )
-                .listRowSeparator(.hidden)
-                .listRowBackground(Color.clear)
+                .listRowSeparatorHiddenAndBackgroundClear()
             }
 
             Section {
@@ -76,8 +75,7 @@ struct TransactionListByCategory: View {
                         transaction: transaction,
                         category: graphViewModel.findCategory(id: transaction.categoryId)
                     )
-                    .listRowSeparator(.hidden)
-                    .listRowBackground(Color.clear)
+                    .listRowSeparatorHiddenAndBackgroundClear()
                     .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
                     .contentShape(Rectangle())
                     .onTapGesture {
