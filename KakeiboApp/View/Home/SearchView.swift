@@ -67,8 +67,7 @@ struct SearchView: View {
                     transaction: transaction,
                     category: searchViewModel.findCategory(id: transaction.categoryId),
                 )
-                .listRowSeparator(.hidden)
-                .listRowBackground(Color.clear)
+                .listRowSeparatorHiddenAndBackgroundClear()
                 .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
                 .contentShape(Rectangle())
                 .onTapGesture {
