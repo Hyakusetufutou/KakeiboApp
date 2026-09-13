@@ -21,18 +21,16 @@ struct LockView: View {
                 .fill(.ultraThinMaterial)
                 .ignoresSafeArea()
 
-            AppTheme.primaryText.opacity(0.55)
+            AppTheme.background.opacity(0.55)
                 .ignoresSafeArea()
 
             VStack(spacing: 30) {
                 Image(systemName: "lock.fill")
                     .font(.system(size: 80))
-                    .foregroundStyle(AppTheme.cardBackground)
 
                 Text("アプリがロックされています")
                     .font(.title2)
                     .fontWeight(.semibold)
-                    .foregroundStyle(AppTheme.cardBackground)
 
                 unlockButton
 
