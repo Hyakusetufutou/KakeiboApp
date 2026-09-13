@@ -47,9 +47,7 @@ struct CalendarView: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("今日") {
                         withAnimation(.snappy) {
-                            let today = Date()
-                            calendarViewModel.currentDate = today
-                            calendarViewModel.selectedDate = today
+                            calendarViewModel.goToToday()
                         }
                     }
                 }

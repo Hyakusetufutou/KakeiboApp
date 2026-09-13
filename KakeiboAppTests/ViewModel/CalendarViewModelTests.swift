@@ -100,6 +100,39 @@ struct CalendarViewModelTests {
         )
     }
 
+    @Test("goToToday() で currentDate、selectedDate、dateRange が当日にリセットされること")
+    func goToToday() async throws {
+        let (viewModel, _, _) = try await makeSUT()
+
+        // 事前準備: 意図的に別の月に変更しておく
+        viewModel.changeMonth(by: -2)
+        viewModel.selectedDate = nil
+
+        // 実行
+        viewModel.goToToday()
+
+        // 検証: 今日の日付と一致していること
+        let today = Date()
+        let calendar = Calendar.current
+
+        #expect(viewModel.selectedDate != nil)
+        if let selectedDate = viewModel.selectedDate {
+            #expect(calendar.isDate(selectedDate, inSameDayAs: today))
+        }
+        #expect(calendar.isDate(viewModel.currentDate, inSameDayAs: today))
+
+        #expect(
+            calendar.isDate(
+                viewModel.dateRange.start,
+                equalTo: today.startOfMonth,
+                toGranularity: .day
+            )
+        )
+        #expect(
+            calendar.isDate(viewModel.dateRange.end, equalTo: today.endOfMonth, toGranularity: .day)
+        )
+    }
+
     @Test("category / delete / reload / clearError の検証")
     func helperMethodsCoverage() async throws {
         let (viewModel, store, category) = try await makeSUT()

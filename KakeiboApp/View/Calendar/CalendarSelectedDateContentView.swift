@@ -61,7 +61,7 @@ struct CalendarSelectedDateContentView: View {
                 .frame(minHeight: 200)
             }
         }
-        //        .animation(.snappy, value: calendarViewModel.selectedDate)
+        .animation(.snappy, value: calendarViewModel.selectedDate)
     }
 
     @ViewBuilder
