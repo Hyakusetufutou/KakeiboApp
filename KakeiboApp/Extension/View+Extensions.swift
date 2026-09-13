@@ -73,4 +73,11 @@ extension View {
                 }
         }
     }
+
+    @ViewBuilder
+    func listRowSeparatorHiddenAndBackgroundClear() -> some View {
+        self
+            .listRowSeparator(.hidden)
+            .listRowBackground(Color.clear)
+    }
 }

@@ -39,6 +39,7 @@ struct HomeView: View {
             .padding(.horizontal, 16)
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
+            .scrollIndicators(.hidden)
             .background(AppTheme.background)
             .refreshable {
                 await homeViewModel.reload()
@@ -96,8 +97,7 @@ struct HomeView: View {
             .font(.caption)
             .foregroundStyle(.secondary)
         }
-        .listRowSeparator(.hidden)
-        .listRowBackground(Color.clear)
+        .listRowSeparatorHiddenAndBackgroundClear()
         .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 0, trailing: 0))
     }
 
@@ -108,8 +108,7 @@ struct HomeView: View {
                 expense: homeViewModel.transactionSummary.expense
             )
         }
-        .listRowSeparator(.hidden)
-        .listRowBackground(Color.clear)
+        .listRowSeparatorHiddenAndBackgroundClear()
         .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
     }
 
@@ -128,10 +127,8 @@ struct HomeView: View {
             }
             .padding(.top, 4)
         }
-        .listRowSeparator(.hidden)
-        .listRowBackground(Color.clear)
-        .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 8, trailing: 0))
-        .padding(.vertical, 8)
+        .listRowSeparatorHiddenAndBackgroundClear()
+        .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
     }
 
     // MARK: - Helpers

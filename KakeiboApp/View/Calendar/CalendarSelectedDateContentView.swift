@@ -38,7 +38,7 @@ struct CalendarSelectedDateContentView: View {
                         }
                         .frame(minHeight: 160)
                     } else {
-                        List {
+                        LazyVStack {
                             transactionListView(transactions: transactions)
                         }
                         .listStyle(.plain)
@@ -61,7 +61,7 @@ struct CalendarSelectedDateContentView: View {
                 .frame(minHeight: 200)
             }
         }
-        .animation(.snappy, value: calendarViewModel.selectedDate)
+        //        .animation(.snappy, value: calendarViewModel.selectedDate)
     }
 
     @ViewBuilder
