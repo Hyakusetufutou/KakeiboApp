@@ -203,9 +203,17 @@ struct SettingView: View {
     ) {
         switch result {
         case .success(let url):
+            guard url.startAccessingSecurityScopedResource() else {
+                settingViewModel.errorMessage = "ファイルへのアクセス権を取得できませんでした。"
+                return
+            }
+
+            defer {
+                url.stopAccessingSecurityScopedResource()
+            }
+
             do {
                 let data = try Data(contentsOf: url)
-
                 selectedBackupData = data
                 isShowingRestoreConfirmation = true
             } catch {
@@ -244,25 +252,6 @@ struct SettingView: View {
             settingViewModel.errorMessage =
                 ErrorMapper.message(for: error)
         }
-    }
-
-    private func openContactMail() {
-        let email = "kakeibo@example.com"
-        let subject = "Kakeiboへのお問い合わせ"
-
-        let encodedSubject = subject.addingPercentEncoding(
-            withAllowedCharacters: .urlQueryAllowed
-        )
-
-        guard
-            let url = URL(
-                string: "mailto:\(email)?subject=\(encodedSubject ?? "")"
-            )
-        else {
-            return
-        }
-
-        UIApplication.shared.open(url)
     }
 }
 

@@ -42,9 +42,7 @@ struct CalendarGridView: View {
                             inSameDayAs: calendarViewModel.selectedDate ?? Date.distantPast
                         ),
                         onSelect: {
-                            withAnimation(.snappy) {
-                                calendarViewModel.selectedDate = date
-                            }
+                            calendarViewModel.selectedDate = date
                         }
                     )
                 }
@@ -78,12 +76,12 @@ struct CalendarGridView: View {
             let range = Calendar.current.range(
                 of: .day,
                 in: .month,
-                for: calendarViewModel.currentDate
+                for: calendarViewModel.dateRange.startDate
             ),
             let monthStart = Calendar.current.date(
                 from: Calendar.current.dateComponents(
                     [.year, .month],
-                    from: calendarViewModel.currentDate
+                    from: calendarViewModel.dateRange.startDate
                 )
             )
         else { return [] }

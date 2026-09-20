@@ -17,7 +17,6 @@ final class CalendarViewModel: ObservableObject {
     @Published private(set) var errorMessage: String?
 
     @Published var selectedDate: Date?
-    @Published var currentDate: Date = Date()
     @Published var dateRange: DateRange = DateRange()
 
     private let categoryStore: CategoryStoreProtocol
@@ -41,8 +40,9 @@ final class CalendarViewModel: ObservableObject {
 
     func goToToday() {
         let today = Date()
-        dateRange = DateRange(start: today.startOfMonth, end: today.endOfMonth)
-        currentDate = today
+        if !dateRange.contains(today.startOfMonth) || !dateRange.contains(today.endOfMonth) {
+            dateRange = DateRange(start: today.startOfMonth, end: today.endOfMonth)
+        }
         selectedDate = today
     }
 
@@ -74,14 +74,6 @@ final class CalendarViewModel: ObservableObject {
 
     func clearError() {
         errorMessage = nil
-    }
-
-    func resetDateRangeIfNeeded() {
-        let today = Date()
-
-        guard !Calendar.current.isDate(today, equalTo: dateRange.startDate, toGranularity: .month)
-        else { return }
-        dateRange = DateRange()
     }
 
     // MARK: - Private Methods

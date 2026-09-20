@@ -43,12 +43,15 @@ struct CalendarView: View {
             .background(AppTheme.background)
             .navigationTitle("カレンダー")
             .navigationBarTitleDisplayMode(.inline)
+            .refreshable {
+                Task {
+                    await calendarViewModel.reload()
+                }
+            }
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("今日") {
-                        withAnimation(.snappy) {
-                            calendarViewModel.goToToday()
-                        }
+                        calendarViewModel.goToToday()
                     }
                 }
             }
@@ -75,24 +78,12 @@ struct CalendarView: View {
 
     private var monthNavigationView: some View {
         ChangeMonthView(
-            date: $calendarViewModel.currentDate,
+            date: $calendarViewModel.dateRange.start,
             onPreviousMonth: {
                 calendarViewModel.changeMonth(by: -1)
-                calendarViewModel.currentDate =
-                    Calendar.current.date(
-                        byAdding: .month,
-                        value: -1,
-                        to: calendarViewModel.currentDate
-                    ) ?? calendarViewModel.currentDate
             },
             onNextMonth: {
                 calendarViewModel.changeMonth(by: 1)
-                calendarViewModel.currentDate =
-                    Calendar.current.date(
-                        byAdding: .month,
-                        value: 1,
-                        to: calendarViewModel.currentDate
-                    ) ?? calendarViewModel.currentDate
             }
         )
         .listRowSeparatorHiddenAndBackgroundClear()
