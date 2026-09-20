@@ -162,16 +162,4 @@ struct CalendarViewModelTests {
         viewModel.clearError()
         #expect(viewModel.errorMessage == nil)
     }
-
-    @Test("resetDateRangeIfNeeded の動作検証")
-    func resetDateRangeIfNeeded() async throws {
-        let (viewModel, _, _) = try await makeSUT()
-
-        // 現在の月と一致している場合は処理されない
-        viewModel.resetDateRangeIfNeeded()
-
-        // 範囲外の月に変更後に呼び出し
-        viewModel.changeMonth(by: -3)
-        viewModel.resetDateRangeIfNeeded()
-    }
 }
