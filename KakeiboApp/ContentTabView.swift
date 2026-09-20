@@ -74,13 +74,15 @@ struct ContentTabView: View {
         ) {
             TransactionInputView(
                 transactionInputViewModel: transactionInputViewModel,
-                categoryInputViewModel: categoryInputViewModel
+                categoryInputViewModel: categoryInputViewModel,
+                onSave: nil
             )
         }
         .fullScreenCover(isPresented: $searchViewModel.isPresented) {
             SearchView(
                 searchViewModel: searchViewModel,
-                transactionInputViewModel: transactionInputViewModel
+                transactionInputViewModel: transactionInputViewModel,
+                categoryInputViewModel: categoryInputViewModel
             )
         }
         .sheet(isPresented: $isFirstTime) {

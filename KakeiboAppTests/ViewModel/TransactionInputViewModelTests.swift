@@ -4,7 +4,6 @@
 //
 //  Created by Hyakusetufutou on 2026/03/16
 //
-//
 
 import Testing
 import CoreData
@@ -54,7 +53,8 @@ struct TransactionInputViewModelTests {
         viewModel.amount = "1000"
         viewModel.selectedCategoryId = dummyCategory.id
         #expect(viewModel.isFormValid == false)
-        await viewModel.save()
+        let saveResult1 = await viewModel.save()
+        #expect(saveResult1 == false)
         #expect(
             viewModel.errorMessage
                 == ErrorMapper.message(for: TransactionInputViewModel.ValidationError.emptyTitle)
@@ -64,7 +64,8 @@ struct TransactionInputViewModelTests {
         viewModel.title = "テスト"
         viewModel.amount = "abc"
         #expect(viewModel.isFormValid == false)
-        await viewModel.save()
+        let saveResult2 = await viewModel.save()
+        #expect(saveResult2 == false)
         #expect(
             viewModel.errorMessage
                 == ErrorMapper.message(for: TransactionInputViewModel.ValidationError.invalidAmount)
@@ -74,7 +75,8 @@ struct TransactionInputViewModelTests {
         viewModel.amount = "1000"
         viewModel.selectedCategoryId = nil
         #expect(viewModel.isFormValid == false)
-        await viewModel.save()
+        let saveResult3 = await viewModel.save()
+        #expect(saveResult3 == false)
         #expect(
             viewModel.errorMessage
                 == ErrorMapper.message(for: TransactionInputViewModel.ValidationError.noCategory)
@@ -105,6 +107,16 @@ struct TransactionInputViewModelTests {
         #expect(!viewModel.availableCategories.contains(where: { $0.id == dummyCategory.id }))
     }
 
+    @Test("resetSelectedCategory() の直接呼び出しで選択カテゴリがクリアされること")
+    func resetSelectedCategory() async throws {
+        let (viewModel, _, dummyCategory) = try await makeSUT()
+        viewModel.selectedCategoryId = dummyCategory.id
+
+        viewModel.resetSelectedCategory()
+
+        #expect(viewModel.selectedCategoryId == nil)
+    }
+
     // MARK: - 保存・編集・キャンセルのテスト
 
     @Test("新規追加モードでの save() 成功時に Transaction が追加され画面が閉じること")
@@ -115,10 +127,40 @@ struct TransactionInputViewModelTests {
         viewModel.amount = "2500"
         viewModel.selectedCategoryId = dummyCategory.id
 
-        await viewModel.save()
+        let success = await viewModel.save()
 
+        #expect(success == true)
         #expect(viewModel.errorMessage == nil)
         #expect(viewModel.isPresentInputView == false)
+    }
+
+    @Test("prepareInput() による入力初期化および復元動作の検証")
+    func prepareInputBehavior() async throws {
+        let (viewModel, _, dummyCategory) = try await makeSUT()
+        let now = Date()
+        let transaction = try TransactionModel(
+            id: UUID(),
+            title: "旧タイトル",
+            memo: "メモ",
+            amount: 1000,
+            date: now,
+            createdAt: now,
+            updatedAt: now,
+            type: .expense,
+            categoryId: dummyCategory.id
+        )
+
+        // 編集モードでの動作確認
+        viewModel.prepareInput(for: transaction)
+        #expect(viewModel.isEdit == true)
+        #expect(viewModel.title == "旧タイトル")
+        #expect(viewModel.amount == "1000")
+
+        // 新規作成モードへのリセット確認
+        viewModel.prepareInput(for: nil)
+        #expect(viewModel.isEdit == false)
+        #expect(viewModel.title.isEmpty)
+        #expect(viewModel.amount.isEmpty)
     }
 
     @Test("編集モードでの復元(restoreForm)と更新(update)の成功")
@@ -143,8 +185,9 @@ struct TransactionInputViewModelTests {
         #expect(viewModel.title == "旧タイトル")
 
         viewModel.title = "新タイトル"
-        await viewModel.save()
+        let success = await viewModel.save()
 
+        #expect(success == true)
         #expect(viewModel.errorMessage == nil)
         #expect(viewModel.isPresentInputView == false)
     }
@@ -157,9 +200,9 @@ struct TransactionInputViewModelTests {
 
         viewModel.cancel()
         #expect(viewModel.isPresentInputView == false)
-        #expect(viewModel.title.isEmpty)
 
-        await viewModel.save()  // バリデーションエラー発生
+        let success = await viewModel.save()  // バリデーションエラー発生
+        #expect(success == false)
         #expect(viewModel.errorMessage != nil)
 
         viewModel.clearError()

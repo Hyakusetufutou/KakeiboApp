@@ -4,7 +4,6 @@
 //
 //  Created by Hyakusetufutou on 2026/03/16
 //
-//
 
 import Testing
 import CoreData
@@ -89,6 +88,36 @@ struct SearchViewModelTests {
         try await Task.sleep(nanoseconds: 400_000_000)
 
         #expect(viewModel.searchText == "あいう")
+    }
+
+    @Test("refreshSeach() の実行で検索が手動再実行されること")
+    func refreshSearchExecutesSearchManually() async throws {
+        let (viewModel, store, category) = try await makeSUT()
+        let now = Date()
+
+        let transaction = try TransactionModel(
+            id: UUID(),
+            title: "日用品購入",
+            memo: "洗剤",
+            amount: 500,
+            date: now,
+            createdAt: now,
+            updatedAt: now,
+            type: .expense,
+            categoryId: category.id
+        )
+        try await store.add(transaction)
+
+        viewModel.searchText = "日用品"
+        await viewModel.refreshSeach()
+
+        #expect(viewModel.resultTransactions.count == 1)
+        #expect(viewModel.resultTransactions.first?.title == "日用品購入")
+
+        // 空文字の場合は検索結果がクリアされること
+        viewModel.searchText = "  "
+        await viewModel.refreshSeach()
+        #expect(viewModel.resultTransactions.isEmpty)
     }
 
     // MARK: - 操作・ヘルパーメソッドのテスト

@@ -72,7 +72,7 @@ final class TransactionInputViewModel: ObservableObject {
     }
 
     // MARK: - Public Methods
-    func presentInputView(for transaction: TransactionModel? = nil) {
+    func prepareInput(for transaction: TransactionModel? = nil) {
         if let transaction = transaction {
             restoreForm(from: transaction)
             isEdit = true
@@ -80,17 +80,21 @@ final class TransactionInputViewModel: ObservableObject {
             resetForm()
             isEdit = false
         }
+    }
+
+    func presentInputView(for transaction: TransactionModel? = nil) {
+        prepareInput(for: transaction)
         isPresentInputView = true
     }
 
-    func save() async {
+    func save() async -> Bool {
         // Clear previous error
         errorMessage = nil
 
         // Validate form
         if let error = validationError {
             errorMessage = ErrorMapper.message(for: error)
-            return
+            return false
         }
 
         // Save transaction
@@ -106,8 +110,10 @@ final class TransactionInputViewModel: ObservableObject {
             }
             // Success: close the view
             closeInputView()
+            return true
         } catch {
             errorMessage = ErrorMapper.message(for: error)
+            return false
         }
     }
 
@@ -193,7 +199,6 @@ final class TransactionInputViewModel: ObservableObject {
     private func closeInputView() {
         isPresentInputView = false
         errorMessage = nil
-        resetForm()
     }
 
     private func bindError() {

@@ -12,7 +12,10 @@ struct TransactionInputView: View {
     @ObservedObject var transactionInputViewModel: TransactionInputViewModel
     @ObservedObject var categoryInputViewModel: CategoryInputViewModel
 
+    let onSave: (() async -> Void)?
+
     @FocusState private var focusedField: Field?
+    @Environment(\.dismiss) private var dismiss
 
     private enum Field {
         case title, memo, amount
@@ -138,6 +141,7 @@ struct TransactionInputView: View {
     private var cancelButton: some View {
         Button {
             transactionInputViewModel.cancel()
+            dismiss()
         } label: {
             Image(systemName: "xmark")
                 .font(.headline)
@@ -148,7 +152,12 @@ struct TransactionInputView: View {
 
     private var saveButton: some View {
         Button {
-            Task { await transactionInputViewModel.save() }
+            Task {
+                if await transactionInputViewModel.save() {
+                    await onSave?()
+                    dismiss()
+                }
+            }
         } label: {
             Image(systemName: "checkmark")
                 .font(.headline)
