@@ -42,9 +42,7 @@ struct CalendarGridView: View {
                             inSameDayAs: calendarViewModel.selectedDate ?? Date.distantPast
                         ),
                         onSelect: {
-                            withAnimation(.snappy) {
-                                calendarViewModel.selectedDate = date
-                            }
+                            calendarViewModel.selectedDate = date
                         }
                     )
                 }
