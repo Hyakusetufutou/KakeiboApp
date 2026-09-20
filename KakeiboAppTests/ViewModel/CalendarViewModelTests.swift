@@ -119,7 +119,6 @@ struct CalendarViewModelTests {
         if let selectedDate = viewModel.selectedDate {
             #expect(calendar.isDate(selectedDate, inSameDayAs: today))
         }
-        #expect(calendar.isDate(viewModel.currentDate, inSameDayAs: today))
 
         #expect(
             calendar.isDate(

@@ -101,7 +101,6 @@ struct ContentTabView: View {
             {
                 isUnlocked = false
             } else if phase == .active {
-                calendarViewModel.updateToday()
                 homeViewModel.resetDateRangeIfNeeded()
                 graphViewModel.resetDateRangeIfNeeded()
             }

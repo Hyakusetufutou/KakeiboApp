@@ -17,7 +17,6 @@ final class CalendarViewModel: ObservableObject {
     @Published private(set) var errorMessage: String?
 
     @Published var selectedDate: Date?
-    @Published var currentDate: Date = Date()
     @Published var dateRange: DateRange = DateRange()
 
     private let categoryStore: CategoryStoreProtocol
@@ -44,12 +43,7 @@ final class CalendarViewModel: ObservableObject {
         if !dateRange.contains(today.startOfMonth) || !dateRange.contains(today.endOfMonth) {
             dateRange = DateRange(start: today.startOfMonth, end: today.endOfMonth)
         }
-        updateToday()
         selectedDate = today
-    }
-
-    func updateToday(now: Date = Date()) {
-        currentDate = now
     }
 
     func delete(_ transaction: TransactionModel) async {
