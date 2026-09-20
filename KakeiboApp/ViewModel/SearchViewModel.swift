@@ -46,6 +46,23 @@ final class SearchViewModel: ObservableObject {
         categoryStore.find(id: id)
     }
 
+    func refreshSeach() async {
+        let text = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard !text.isEmpty else {
+            resultTransactions = []
+            return
+        }
+
+        do {
+            let results = try await transactionStore.search(text: text)
+            resultTransactions = results
+        } catch {
+            let message = ErrorMapper.message(for: error)
+            errorMessage = "検索に失敗しました: \(message)"
+        }
+    }
+
     func clearError() {
         errorMessage = nil
     }

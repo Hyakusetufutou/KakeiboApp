@@ -11,6 +11,9 @@ import SwiftUI
 struct SearchView: View {
     @ObservedObject var searchViewModel: SearchViewModel
     @ObservedObject var transactionInputViewModel: TransactionInputViewModel
+    @ObservedObject var categoryInputViewModel: CategoryInputViewModel
+
+    @State private var isPresentTransactionInputView = false
 
     var body: some View {
         NavigationStack {
@@ -38,6 +41,15 @@ struct SearchView: View {
                 if let errorMessage = searchViewModel.errorMessage {
                     Text(errorMessage)
                 }
+            }
+            .fullScreenCover(isPresented: $isPresentTransactionInputView) {
+                TransactionInputView(
+                    transactionInputViewModel: transactionInputViewModel,
+                    categoryInputViewModel: categoryInputViewModel,
+                    onSave: {
+                        await searchViewModel.refreshSeach()
+                    }
+                )
             }
         }
     }
@@ -71,7 +83,8 @@ struct SearchView: View {
                 .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
                 .contentShape(Rectangle())
                 .onTapGesture {
-                    transactionInputViewModel.presentInputView(for: transaction)
+                    transactionInputViewModel.prepareInput(for: transaction)
+                    isPresentTransactionInputView = true
                 }
                 .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                     Button(role: .destructive) {
@@ -128,6 +141,7 @@ struct SearchView: View {
     let viewModelFactory = ViewModelFactory()
     SearchView(
         searchViewModel: viewModelFactory.searchViewModel,
-        transactionInputViewModel: viewModelFactory.transactionInputViewModel
+        transactionInputViewModel: viewModelFactory.transactionInputViewModel,
+        categoryInputViewModel: viewModelFactory.categoryInputViewModel
     )
 }
