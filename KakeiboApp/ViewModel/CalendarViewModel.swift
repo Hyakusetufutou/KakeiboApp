@@ -41,9 +41,15 @@ final class CalendarViewModel: ObservableObject {
 
     func goToToday() {
         let today = Date()
-        dateRange = DateRange(start: today.startOfMonth, end: today.endOfMonth)
-        currentDate = today
+        if !dateRange.contains(today.startOfMonth) || !dateRange.contains(today.endOfMonth) {
+            dateRange = DateRange(start: today.startOfMonth, end: today.endOfMonth)
+        }
+        updateToday()
         selectedDate = today
+    }
+
+    func updateToday(now: Date = Date()) {
+        currentDate = now
     }
 
     func delete(_ transaction: TransactionModel) async {
@@ -74,14 +80,6 @@ final class CalendarViewModel: ObservableObject {
 
     func clearError() {
         errorMessage = nil
-    }
-
-    func resetDateRangeIfNeeded() {
-        let today = Date()
-
-        guard !Calendar.current.isDate(today, equalTo: dateRange.startDate, toGranularity: .month)
-        else { return }
-        dateRange = DateRange()
     }
 
     // MARK: - Private Methods
