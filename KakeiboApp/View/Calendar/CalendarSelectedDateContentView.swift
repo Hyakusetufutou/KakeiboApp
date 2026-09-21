@@ -19,35 +19,32 @@ struct CalendarSelectedDateContentView: View {
                 let summary = calendarViewModel.dailySummaries[selected]
                 let transactions = summary?.transactions ?? []
 
-                VStack(spacing: 16) {
-                    if let summary {
-                        DaySummaryView(
-                            income: summary.income,
-                            expense: summary.expense
-                        )
-                    }
+                if let summary {
+                    DaySummaryView(
+                        income: summary.income,
+                        expense: summary.expense
+                    )
+                    .listRowSeparatorHiddenAndBackgroundClear()
+                    .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 4, trailing: 0))
+                }
 
-                    if transactions.isEmpty {
-                        VStack {
-                            Spacer()
-                            EmptyStateView(
-                                icon: "calendar.badge.clock",
-                                message: "この日の取引はありません"
-                            )
-                            Spacer()
-                        }
-                        .frame(minHeight: 160)
-                    } else {
-                        LazyVStack {
-                            transactionListView(transactions: transactions)
-                        }
+                if transactions.isEmpty {
+                    VStack {
+                        Spacer()
+                        EmptyStateView(
+                            icon: "calendar.badge.clock",
+                            message: "この日の取引はありません"
+                        )
+                        Spacer()
+                    }
+                    .frame(minHeight: 160)
+                    .listRowSeparatorHiddenAndBackgroundClear()
+                    .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+                } else {
+                    transactionListView(transactions: transactions)
                         .listStyle(.plain)
                         .scrollContentBackground(.hidden)
                         .background(AppTheme.background)
-                        .refreshable {
-                            await calendarViewModel.reload()
-                        }
-                    }
                 }
             } else {
                 VStack {
@@ -59,6 +56,8 @@ struct CalendarSelectedDateContentView: View {
                     Spacer()
                 }
                 .frame(minHeight: 200)
+                .listRowSeparatorHiddenAndBackgroundClear()
+                .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
             }
         }
     }
@@ -73,7 +72,6 @@ struct CalendarSelectedDateContentView: View {
                 )
                 .frame(maxWidth: .infinity)
                 .listRowSeparatorHiddenAndBackgroundClear()
-                .listRowBackground(Color.clear)
                 .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
                 .contentShape(Rectangle())
                 .onTapGesture {

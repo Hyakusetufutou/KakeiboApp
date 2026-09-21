@@ -27,16 +27,13 @@ struct CalendarView: View {
                 monthNavigationView
 
                 CalendarGridView(calendarViewModel: calendarViewModel)
-                    .listRowSeparatorHiddenAndBackgroundClear()
-                    .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
 
                 CalendarSelectedDateContentView(
                     calendarViewModel: calendarViewModel,
                     transactionInputViewModel: transactionInputViewModel
                 )
-                .listRowSeparatorHiddenAndBackgroundClear()
-                .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
             }
+            .padding(.horizontal, 16)
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
             .scrollIndicators(.hidden)
