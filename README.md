@@ -8,10 +8,10 @@ iOS向けのシンプルな家計簿アプリです。
 
 ## スクリーンショット
 
-<img width="428" height="926" alt="Image" src="https://github.com/user-attachments/assets/088650c4-c3f2-4440-bd14-b7b2f5d486af" />
-<img width="428" height="926" alt="Image" src="https://github.com/user-attachments/assets/d1d85f9f-d93e-4220-a0b2-7c58f2a9cacc" />
-<img width="428" height="926" alt="Image" src="https://github.com/user-attachments/assets/3fc7c9c4-2ede-40f1-ad35-7adb82fe0bc4" />
-<img width="428" height="926" alt="Image" src="https://github.com/user-attachments/assets/d7966158-c8db-4cb3-aa53-3a62b40aa485" />
+<img width="214" height="463" alt="Image" src="https://github.com/user-attachments/assets/088650c4-c3f2-4440-bd14-b7b2f5d486af" />
+<img width="214" height="463" alt="Image" src="https://github.com/user-attachments/assets/d1d85f9f-d93e-4220-a0b2-7c58f2a9cacc" />
+<img width="214" height="463" alt="Image" src="https://github.com/user-attachments/assets/3fc7c9c4-2ede-40f1-ad35-7adb82fe0bc4" />
+<img width="214" height="463" alt="Image" src="https://github.com/user-attachments/assets/d7966158-c8db-4cb3-aa53-3a62b40aa485" />
 
 ## 機能
 
